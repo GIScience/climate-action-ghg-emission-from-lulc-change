@@ -1,0 +1,12 @@
+name: ghg-emission-from-lulc-change
+channels:
+  - conda-forge
+dependencies:
+  - pip=23.2.1
+  - pydantic=2.3.0
+  - pytest=7.4.2
+  - python=3.11.5
+  - matplotlib=3.8.0
+  - pip:
+      - git+https://climate-action:${GIT_PROJECT_TOKEN}@gitlab.gistools.geog.uni-heidelberg.de/climate-action/climatoology.git@v2.1
+      - geopandas==0.14.0

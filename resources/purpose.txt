@@ -1,0 +1,8 @@
+The purpose of this operator is to calculate carbon emissions from land use and land cover
+(LULC) change, given an area of interest and a certain observation period. The operator
+provides geotiffs of the LULC classification at the beginning and at the end of the
+observation period, a geotiff showing the LULC change carbon emissions in t/ha, and two
+CSV files with statistics such as LULC change area by change type, emissions by change
+type, total net emissions, total gross emissions, total carbon sink, and total change
+area. It also provides a Geopackage file with the emissions per hectare and the absolute
+emissions of each LULC change.

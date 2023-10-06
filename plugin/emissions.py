@@ -1,0 +1,328 @@
+import logging
+from pathlib import Path
+from typing import Tuple
+
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import rasterio
+from rasterio.features import geometry_mask
+from shapely.geometry import shape
+from rasterio.features import shapes
+
+from plugin.utils import apply_conditions
+
+log = logging.getLogger(__name__)
+
+
+class EmissionCalculator:
+
+    def __init__(self, compute_dir: Path):
+        self.compute_dir = compute_dir
+
+    @staticmethod
+    def derive_lulc_changes(lulc_array1: np.ndarray, lulc_array2: np.ndarray) -> Tuple[np.ndarray, int]:
+        """
+
+        Check if there is a LULC change in each cell and what kind of LULC change. Then it assigns a specific integer
+        for each LULC change type to the cell and returns a ndarray. Changes to or from water get the value 0 because
+        we cannot calculate emissions for them.
+
+         Cell value and corresponding LULC change type:
+        -11 settlement to forest
+        -10 farmland to forest
+        -9  meadow to forest
+        -8  settlement to meadow
+        -7  settlement to farmland
+        -6  farmland to meadow
+        0   default value or change from or to water
+        1-5 no change
+        6   meadow to farmland
+        7   farmland to settlement
+        8   meadow to settlement
+        9   forest to meadow
+        10  forest to farmland
+        11  forest to settlement
+
+        :param lulc_array1: LULC classification of first time period
+        :param lulc_array2: LULC classification of second time period
+        :return: ndarray with LULC changes between first and second time period
+        """
+
+        log.info("deriving LULC changes")
+
+        reclassification = [(1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 4), (5, 5, 5), (1, 2, -11), (1, 4, -7), (1, 5, -8),
+                            (2, 1, 11), (2, 4, 10), (2, 5, 9), (4, 1, 7), (4, 2, -10), (4, 5, -6), (5, 1, 8),
+                            (5, 2, -9), (5, 4, 6)]
+
+        changes = np.zeros_like(lulc_array1)
+
+        for a1, a2, target in reclassification:
+            changes[(lulc_array1 == a1) & (lulc_array2 == a2)] = target
+
+        return changes
+
+    # TODO unit test
+    def export_raster(self, changes, meta) -> Path:
+        """
+
+        :param changes: ndarray with LULC changes between first and second time period
+        :param meta: parameters for generation of geotiff
+        :return: raster with LULC changes between first and second time period saved as geotiff
+        """
+        change_file = self.compute_dir / 'LULC_change.tif'
+
+        with rasterio.open(change_file, 'w', **meta) as dst:
+            dst.write(changes, 1)
+        return change_file
+
+    # TODO unit test
+    def convert_raster(self) -> Tuple[pd.DataFrame, float]:
+        """
+
+        Converts the LULC change raster to a geodataframe. Then, it reprojects the geodataframe to the projected
+        coordinate system (EPSG:25832), so we can perform area-based calculations on it. For study areas outside UTM
+        zone 32N, the coordinate system must be adapted!
+
+        :return: geodataframe with LULC change polygons
+        """
+
+        with rasterio.open(self.compute_dir / 'LULC_change.tif') as src:
+            image = src.read(1).astype(np.int16)
+            crs = src.crs
+
+            log.info("converting raster to vector")
+            results = (
+                {'properties': {'change_id': v}, 'geometry': s}
+                for i, (s, v) in enumerate(shapes(image, mask=None, transform=src.transform))
+            )
+
+            org_df = gpd.GeoDataFrame.from_features(results, crs=crs)
+
+        log.info("reprojecting geodataframe from %s to EPSG:25832" % crs)
+        emission_factor_df = org_df.to_crs('EPSG:25832')
+
+        return emission_factor_df
+
+    @staticmethod
+    def allocate_emissions(emission_factor_df, emission_factors):
+        """
+
+        The LULC change emissions [t/ha] are allocated to the LULC change polygons depending on the LULC change type.
+
+        Carbon emissions in t/ha and corresponding LULC change type:
+        -156    settlement to forest
+        -121    farmland to forest
+        -119.5  meadow to forest
+        -36.5   settlement to meadow
+        -35     settlement to farmland
+        -1.5    farmland to meadow
+        0       no change
+        1.5     meadow to farmland
+        35      farmland to settlement
+        36.5    meadow to settlement
+        119.5   forest to meadow
+        121     forest to farmland
+        156     forest to settlement
+
+        :param emission_factor_df: geodataframe with LULC change polygons
+        :param emission_factors: change_id and corresponding emission factor
+        :return: geodataframe with LULC change polygons and their emissions in t/ha
+        """
+        log.info("allocating emission factors to the LULC change types")
+
+        for i, v in emission_factors:
+            emission_factor_df.loc[emission_factor_df["change_id"] == i, "emissions_per_ha"] = v
+            emission_factor_df.loc[emission_factor_df["change_id"] == -i, "emissions_per_ha"] = -v
+
+        return emission_factor_df
+
+    @staticmethod
+    def calculate_total_change_area(emission_factor_df) -> pd.DataFrame:
+        """
+
+        calculate total LULC change area (ha) by summing up areas of polygons where emission factor != 0
+
+        :param emission_factor_df: geodataframe with LULC change polygons and their emissions in t/ha
+        :return: total LULC change area [ha]
+        """
+        subset = emission_factor_df[emission_factor_df['emissions_per_ha'] != 0]
+        log.info("dividing area by 10000 to convert from m2 to ha")
+        total_area = round(subset['geometry'].area.sum() / 10000, 2)
+
+        return total_area
+
+    @staticmethod
+    def calculate_area_by_change_type(emission_factor_df) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+
+        :param emission_factor_df: geodataframe with LULC change polygons and their emissions in t/ha
+        :return: emission_factor_df with additional area column
+        :return: dataframe with total change area by LULC change type
+        """
+
+        log.info("dividing area by 10000 to convert from m2 to ha")
+        emission_factor_df['area'] = round(emission_factor_df['geometry'].area / 10000, 2)
+        area_df = emission_factor_df.groupby('emissions_per_ha')['area'].sum().reset_index()
+        area_df.rename(columns={'area': 'area_change_type'}, inplace=True)
+
+        return emission_factor_df, area_df
+
+    @staticmethod
+    def calculate_absolute_emissions_per_poly(emission_factor_df) -> pd.DataFrame:
+        """
+
+        calculate absolute LULC change emissions per polygon by multiplying emission factor with area
+        :param emission_factor_df: geodataframe with LULC change polygons, their area and their emissions in t/ha
+        :return: emission_factor_df with additional absolute emissions column
+        """
+        emission_factor_df['emissions'] = emission_factor_df['area'] * emission_factor_df['emissions_per_ha']
+
+        return emission_factor_df
+
+    def export_vector(self, emission_factor_df) -> Path:
+        """
+
+        Exports the LULC change polygons as a vector map to enable the visualization of absolute LULC change emissions
+        per change polygon.
+        :param emission_factor_df: geodataframe with LULC change polygons
+        :return: vector file with LULC change polygons and their emissions
+        """
+        change_vector_file = self.compute_dir / 'LULC_change_vector.gpkg'
+        export_df = emission_factor_df.to_crs('EPSG:4326')
+        export_df.to_file(change_vector_file, driver="GPKG")
+        return change_vector_file
+
+    @staticmethod
+    def calculate_total_emissions(emission_factor_df) -> Tuple[float, float, float]:
+        """
+
+        calculate total LULC change net carbon emissions, total gross emissions, and total sink
+        :param emission_factor_df: geodataframe with LULC change polygons
+        :return: total_net_emissions (net difference between emissions and sinks)
+        :return: total_gross_emissions (only emissions)
+        :return: total_sink (only sink)
+        """
+        subset_pos = emission_factor_df[emission_factor_df['emissions'] > 0]
+        subset_neg = emission_factor_df[emission_factor_df['emissions'] < 0]
+
+        total_net_emissions = round(emission_factor_df['emissions'].sum(), 1)
+        total_gross_emissions = round(subset_pos['emissions'].sum(), 1)
+        total_sink = round(subset_neg['emissions'].sum(), 1)
+
+        return total_net_emissions, total_gross_emissions, total_sink
+
+    @staticmethod
+    def calculate_emissions_by_change_type(emission_factor_df) -> pd.DataFrame:
+        """
+
+        calculate LULC change emissions by LULC change type by grouping the polygons by their emission factor and then
+        summing up the absolute emissions for each group
+        :param emission_factor_df: geodataframe with LULC change polygons
+        :return: dataframe with the total LULC change emissions by change type
+        """
+
+        emission_sum_df = emission_factor_df.groupby('emissions_per_ha')['emissions'].sum().reset_index()
+        emission_sum_df.rename(columns={'emissions': 'emissions_change_type'}, inplace=True)
+
+        return emission_sum_df
+
+    def change_type_stats(self, area_df, emission_sum_df) -> Tuple[pd.DataFrame, Path]:
+        """
+
+        :param area_df: dataframe with total change area by LULC change type
+        :param emission_sum_df: dataframe with the total LULC change emissions by change type
+        :return: out_df (dataframe with stats per change type)
+        :return: change_type_file (csv file with stats per change type)
+        """
+        out_df = area_df.merge(emission_sum_df, on='emissions_per_ha')
+        change_type_file = self.compute_dir / 'stats_change_type.csv'
+        out_df['change_type'] = out_df.apply(apply_conditions, axis=1)
+        out_df.to_csv(change_type_file)
+
+        return out_df, change_type_file
+
+    def summary_stats(self, total_area, total_net_emissions, total_gross_emissions, total_sink) -> Path:
+        """
+
+        Exports dataframe with summary stats to csv
+        :param total_area: total LULC change area [ha]
+        :param total_net_emissions: net difference between total emissions and sinks
+        :param total_gross_emissions: total emissions from all LULC changes
+        :param total_sink: total sink from all LULC changes
+        :return: csv file with summary statistics
+        """
+        summary_file = self.compute_dir / 'summary.csv'
+
+        summary = pd.DataFrame()
+        summary.loc[0, 'total_change_area [ha]'] = total_area
+        summary.loc[0, 'total_net_emissions [t]'] = total_net_emissions
+        summary.loc[0, 'total_gross_emissions [t]'] = total_gross_emissions
+        summary.loc[0, 'total_sink [t]'] = total_sink
+        summary.to_csv(summary_file)
+
+        return summary_file
+
+    def area_plot(self, out_gdf) -> Path:
+        """
+
+        :param out_gdf: dataframe with stats per change type
+        :return: pie chart with change area by LULC change type
+        """
+        condition = out_gdf['change_type'] == 'no LULC change'
+        out_gdf = out_gdf.loc[~condition]
+        labels = out_gdf['change_type']
+        sizes = out_gdf['area_change_type']
+        fig, ax = plt.subplots()
+        ax.pie(sizes,
+               labels=labels,
+               # autopct=lambda p: '{:.0f}'.format(p * sum(sizes) / 100),
+               colors=['midnightblue', 'mediumblue', 'blue', 'royalblue', 'cornflowerblue', 'lightsteelblue',
+                       'mistyrose', 'pink', 'lightcoral', 'indianred', 'firebrick', 'darkred'])
+
+        areas_chart_file = self.compute_dir / 'areas.png'
+
+        plt.title('Change area by LULC change type [ha]')
+        plt.savefig(areas_chart_file, dpi=300, bbox_inches='tight')
+        plt.show()
+        plt.clf()
+
+        return areas_chart_file
+
+    def emission_plot(self, out_gdf) -> Path:
+        """
+
+        :param out_gdf: dataframe with stats per change type
+        :return: horizontal bar chart with carbon emissions by LULC change type
+        """
+        condition = out_gdf['change_type'] == 'no LULC change'
+        out_gdf = out_gdf.loc[~condition]
+        categories = out_gdf['change_type']
+        values = round(out_gdf['emissions_change_type'], 0)
+        y_pos = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75]
+
+        fig, (ax) = plt.subplots(figsize=(8, 4))
+        bars = ax.barh(y_pos, values, height=0.2, color=['midnightblue', 'mediumblue', 'blue',
+                                                         'royalblue', 'cornflowerblue', 'lightsteelblue',
+                                                         'mistyrose', 'pink', 'lightcoral',
+                                                         'indianred', 'firebrick', 'darkred'])
+        ax.bar_label(bars, padding=2)
+
+        ax.set_xlabel('carbon emissions [t]')
+        ax.set_title('Carbon emissions by LULC change type [t]')
+        ax.set_yticks(y_pos, categories)
+
+        x_min = values.min() + values.min() / 3
+        x_max = values.max() + values.max() / 3
+
+        ax.set_xlim(x_min, x_max)
+
+        fig.tight_layout()
+
+        emission_chart_file = self.compute_dir / 'emissions.png'
+        plt.savefig(emission_chart_file, dpi=300, bbox_inches='tight')
+        plt.show()
+        plt.clf()
+
+        return emission_chart_file

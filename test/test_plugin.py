@@ -5,7 +5,7 @@ import pytest
 import rasterio
 from climatoology.base.operator import ComputationScope
 
-from plugin.plugin import GHGEmissionFromLULC, ComputeInput
+from ghg_lulc.plugin import GHGEmissionFromLULC, ComputeInput
 
 
 @pytest.fixture

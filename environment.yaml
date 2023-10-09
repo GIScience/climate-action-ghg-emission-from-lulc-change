@@ -8,5 +8,5 @@ dependencies:
   - python=3.11.5
   - matplotlib=3.8.0
   - pip:
-      - git+https://climate-action:${GIT_PROJECT_TOKEN}@gitlab.gistools.geog.uni-heidelberg.de/climate-action/climatoology.git@v2.1
+      - git+ssh://git@gitlab.gistools.geog.uni-heidelberg.de:2022/climate-action/climatoology.git@v2.3
       - geopandas==0.14.0

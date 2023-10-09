@@ -7,11 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
-from rasterio.features import geometry_mask
-from shapely.geometry import shape
 from rasterio.features import shapes
 
-from plugin.utils import apply_conditions
+from ghg_lulc.utils import apply_conditions
 
 log = logging.getLogger(__name__)
 

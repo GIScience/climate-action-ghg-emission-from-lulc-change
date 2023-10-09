@@ -8,9 +8,7 @@ import pandas as pd
 from shapely.geometry import Polygon
 
 from climatoology.base.operator import ComputationScope
-from plugin.emissions import EmissionCalculator
-
-"""Tests functions in EmissionCalculator"""
+from ghg_lulc.emissions import EmissionCalculator
 
 
 @pytest.fixture()
@@ -22,58 +20,31 @@ def computation_resources():
 def test_derive_lulc_changes(computation_resources):
     """test whether LULC changes are derived correctly"""
     lulc_array1 = np.array([[1, 2, 3, 4, 5],
-                           [1, 2, 3, 4, 5],
-                           [1, 2, 3, 4, 5],
-                           [1, 2, 3, 4, 5],
-                           [1, 2, 3, 4, 5]])
+                            [1, 2, 3, 4, 5],
+                            [1, 2, 3, 4, 5],
+                            [1, 2, 3, 4, 5],
+                            [1, 2, 3, 4, 5]])
 
     lulc_array2 = np.array([[1, 2, 3, 4, 5],
-                           [2, 3, 4, 5, 1],
-                           [3, 4, 5, 1, 2],
-                           [4, 5, 1, 2, 3],
-                           [1, 2, 3, 4, 5]])
+                            [2, 3, 4, 5, 1],
+                            [3, 4, 5, 1, 2],
+                            [4, 5, 1, 2, 3],
+                            [1, 2, 3, 4, 5]])
 
     calculator = EmissionCalculator(computation_resources.computation_dir)
     changes = calculator.derive_lulc_changes(lulc_array1, lulc_array2)
     assert np.array_equal(changes, np.array([[1, 2, 3, 4, 5],
-                           [-11, 0, 0, -6, 8],
-                           [0, 10, 0, 7, -9],
-                           [-7, 9, 0, -10, 0],
-                           [1, 2, 3, 4, 5]]))
-
-# def test_export_raster(computation_resources):
-#     """tets whether the raster is exported as expected"""
-#     changes = np.array([[1, 2, 3, 4, 5],
-#                            [-11, 0, 0, -6, 8],
-#                            [0, 10, 0, 7, -9],
-#                            [-7, 9, 0, -10, 0],
-#                            [1, 2, 3, 4, 5]])
-#     meta = {
-#         "driver": "GTiff",
-#         "dtype": np.int16,
-#         "count": 1,
-#         "width": 5,
-#         "height": 5,
-#         "transform": transform,
-#         "crs": crs
-#     }
-#     calculator = EmissionCalculator(computation_resources.computation_dir)
-#     change_file = calculator.export_raster(changes, meta)
-
-
-# def test_convert_raster(computation_resources):
-#     """tests whether change raster is converted to geodataframe correctly"""
-#     test_df = gpd.read_file('change_df.gpkg')
-#     calculator = EmissionCalculator(computation_resources.computation_dir)
-#     emission_factor_df = calculator.convert_raster()
-#     assert np.array_equal(test_df, emission_factor_df)
+                                             [-11, 0, 0, -6, 8],
+                                             [0, 10, 0, 7, -9],
+                                             [-7, 9, 0, -10, 0],
+                                             [1, 2, 3, 4, 5]]))
 
 
 def test_allocate_emissions(computation_resources):
     changes = {'change_id': [1, 2, 3, 4, 5, -11, 0, 0, -6, 8, 0, 10, 0, 7, -9, -7, 9, 0, -10, 0, 1, 2, 3, 4, 5]}
     changes = gpd.GeoDataFrame(changes)
     emission_factors = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7, 35), (8, 36.5), (9, 119.5),
-                           (10, 121), (11, 156)]
+                        (10, 121), (11, 156)]
     expected_df = {'change_id': [1, 2, 3, 4, 5, -11, 0, 0, -6, 8, 0, 10, 0, 7, -9, -7, 9, 0, -10, 0, 1, 2, 3, 4, 5],
                    'emissions_per_ha': [0, 0, 0, 0, 0, -156, 0, 0, -1.5, 36.5, 0, 121, 0, 35, -119.5, -35, 119.5, 0,
                                         -121, 0, 0, 0, 0, 0, 0]}

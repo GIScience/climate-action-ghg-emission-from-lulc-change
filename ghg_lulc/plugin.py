@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import uuid
@@ -8,14 +9,14 @@ import numpy as np
 import rasterio
 from climatoology.app.plugin import PlatformPlugin
 from climatoology.base.operator import Operator, Info, Artifact, ArtifactModality, Concern, ComputationResources
-from climatoology.broker.message_broker import RabbitMQ
+from climatoology.broker.message_broker import AsyncRabbitMQ
 from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
 from pydantic import field_validator, model_validator, BaseModel, Field
 from semver import Version
 from datetime import datetime
 
-from plugin.emissions import EmissionCalculator
+from ghg_lulc.emissions import EmissionCalculator
 
 log = logging.getLogger(__name__)
 PROJECT_DIR = Path(__file__).parent.parent
@@ -26,10 +27,10 @@ class ComputeInput(BaseModel):
                                                                                                                   48.2246726495652,
                                                                                                                   12.480468750000002,
                                                                                                                   48.3416461723746]])
-    start_date_1: str = Field(description='Beginning of first time period for LULC classification', examples="2018-05-01")
-    end_date_1: str = Field(description='End of first time period for LULC classification', examples="2018-06-01")
-    start_date_2: str = Field(description='Beginning of second time period for LULC classification', examples="2023-05-01")
-    end_date_2: str = Field(description='End of second time period for LULC classification', examples="2023-06-01")
+    start_date_1: str = Field(description='Beginning of first time period for LULC classification', examples=["2018-05-01"])
+    end_date_1: str = Field(description='End of first time period for LULC classification', examples=["2018-06-01"])
+    start_date_2: str = Field(description='Beginning of second time period for LULC classification', examples=["2023-05-01"])
+    end_date_2: str = Field(description='End of second time period for LULC classification', examples=["2023-06-01"])
 
     @field_validator("start_date_1", "end_date_1", "start_date_2", "end_date_2")
     @classmethod
@@ -212,30 +213,38 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         return lulc_array, meta, transform, crs, lulc_tif
 
 
-def start_plugin() -> None:
+async def start_plugin() -> None:
     """ Function to start the plugin within the architecture.
 
     Please adjust the class reference to the class you created above. Apart from that **DO NOT TOUCH**.
 
     :return:
     """
+
+    lulc_utility = LulcUtilityUtility(root_url='/api/lulc/v1/')
+    operator = GHGEmissionFromLULC(lulc_utility)
+    log.info(f'Configuring plugin: {operator.info().name}')
+
     storage = MinioStorage(host=os.environ.get('MINIO_HOST'),
                            port=int(os.environ.get('MINIO_PORT')),
                            access_key=os.environ.get('MINIO_ACCESS_KEY'),
                            secret_key=os.environ.get('MINIO_SECRET_KEY'),
                            bucket=os.environ.get('MINIO_BUCKET'),
                            secure=os.environ.get('MINIO_SECURE') == 'True')
-    broker = RabbitMQ(host=os.environ.get('RABBITMQ_HOST'),
-                      port=int(os.environ.get('RABBITMQ_PORT')))
+    broker = AsyncRabbitMQ(host=os.environ.get('RABBITMQ_HOST'),
+                           port=int(os.environ.get('RABBITMQ_PORT')),
+                           user=os.environ.get('RABBITMQ_USER'),
+                           password=os.environ.get('RABBITMQ_PASSWORD'))
 
-    # TODO config
-    lulc_utility = LulcUtilityUtility(root_url='/api/lulc/v1/')
+    await broker.async_init()
+    log.info(f'Configuring async broker: {os.environ.get("RABBITMQ_HOST")}')
 
     plugin = PlatformPlugin(operator=GHGEmissionFromLULC(lulc_utility),
                             storage=storage,
                             broker=broker)
-    plugin.run()
+    log.info(f'Running plugin: {operator.info().name}')
+    await plugin.run()
 
 
 if __name__ == '__main__':
-    start_plugin()
+    asyncio.run(start_plugin())

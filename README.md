@@ -1,86 +1,39 @@
-# Plugin Blueprint
+# Carbon emissions from LULC change
 
-This repository is a plueprint for operator creators. Operators are science2production facilitators that will make it easy for you to bring your ideas and research results to the Climate Action (CA) platform. Operators are the main workers inside plugins. You will create a plugin but all you need to do is code the operator functionality, the plugin wrapper is already set to go. The terms Operator and Plugin are therefore mostly synonymous for you. For more information on the architecture, please contact the [CA team](https://heigit.org/).
+## Purpose
 
-Please follow the subsequent steps to bring your operator to life.
+The purpose of this plugin is to calculate carbon emissions from land use and land cover (LULC) change, given an area of interest and a specific observation period. The plugin provides a GeoTIFF of the LULC classification at the beginning and at the end of the observation period, a GeoTIFF showing the LULC change carbon emissions in t/ha, and two CSV files with statistics such as LULC change area by change type, emissions by change type, total net emissions, total gross emissions, total carbon sink, and total change area. It also provides a Geopackage file with the emissions per hectare and the absolute emissions of each LULC change.
 
-## Preparation
+## Installation
 
-A new operator should be thoroughly discussed with the CA team. But don't be hesitant, they are very welcoming to new ideas :-) !
+Use git to clone this repository to your computer.
 
-### Git
+We use mamba (i.e. conda) as an environment management system. Make sure you have it installed. Apart from python, pytest, pydantic and pip, there is only one fixed dependency for you, which is the climatoology package that holds all the infrastructure functionality.
 
-The CA team will then fork this repository for you and you will get full access to the fork. You can then clone the fork and work on it as in any other git project. For the record, this is the forking process:
- - create a new repository under the [operator contributions group](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/operator-contributions)
- - in the plugin-blueprint (**this**) repository run `git remote add {your-operator-name} {your-new-url}`
- - and `git push -u {your-operator-name} -f`. Now the new operator repository is ready to go.
+Please set up the Python environment by running the following commands:
 
-You can simply `git clone` that new repository. Create a new branch by running `git checkout -b my_new_operator`. After you have finished your implementation, you can create a merge request to the `main` branch that can be reviewed by the CA team. Yet we highly encourage you to create smaller intermediate MRs for review.
-
-### Python Environment
-
-We use [mamba](https://mamba.readthedocs.io/en/latest/) (i.e. conda) as an environment management system. Make sure you have it installed. Apart from python, pytest, pydantic and pip, there is only one fixed dependency for you, which is the [climatoology](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/climatoology) package that holds all the infrastructure functionality.
-
-The CA team will provide you with an access token. Head over to the [environment.yaml](environment.yaml) and replace 
- 
- - the environment name `ca-plugin-blueprint` with your plugin name. While we are at it, please also replace all occurences of that name in the [Dockerfile](Dockerfile).
- - put the provided git token in a file called `GIT_PROJECT_TOKEN`. Then run `export GIT_PROJECT_TOKEN=$(cat GIT_PROJECT_TOKEN)` to set the token as en environment variable
-
-Run `mamba env create -f environment.yaml`. You are now ready to code within your mamba environment.
-
-## Start Coding
-
-### Tests
-
-We highly encourage [test driven development](https://en.wikipedia.org/wiki/Test-driven_development). In fact, we require two predefined test to successfully run on your plugin. These test ensure that the development contract is met.
-
-Please take some time to adapt the blueprint version of the tests. You will need a clear definition and description of your plugin as well as an idea of the required input and the produced output. You can of course adapt this later, but you should have a rough idea from the start.
-
-Ensure all tests are passing on the unmodified repository. Then open [test/test_plugin.py](test/test_plugin.py). Adapt the content of the three `pytest.fixture` functions to meet your expectations.
-
-The **info test** is quite easy to write: simply declare an `Info` element. Have a look at the classes source code to see all required attributes. Make sure you add the icon and bibliography files to your repository. The list of concerns is limited on purpose to have a curated set of keywords. If you feel that your operator would benefit, from an extension of that list, feel free to contact the CA team or create a MR in the [climatoology](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/climatoology) repository.
-
-The **compute tests** will probably grow over time. For now, you can leave the input fixture as is. But you should define a first output result you would like to create through your plugin. Define it in the test and add the required file to the repository. 
-
-That's it, the tests should fail, and you can start coding towards making them succeed.
-
-Unfortunately, if you use external services, they need to be mocked. The CA team can help you implement [mocks](https://docs.python.org/3/library/unittest.mock.html). But let's create some code first.
-
-### Names
-
-We have to replace names at multiple level. Let's start with refactoring the name of the `BlueprintComputeInput` and the `BlueprintOperator` classes in [plugin/plugin.py](plugin/plugin.py).
-
-### Info Function
-
-Now lets make the tests succeed. For the info function this is very simple. Just copy the test artifact declaration over to the plugin file. Done.
-
-### Compute Function
-
-Now comes the main coding part. This function is where you can explode your genius and create ohsome results. Keep in mind to update the input parameter class and the tests while you are coding away.
-
-If you need more inspiration, the full workflow above has been completed for the [dummy plugin](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/operator-contributions/dummy).
-
-## Finalisation
-
-If you are satisfied with the results and the tests pass, you have succeeded! Please create a merge request to main and ask the CA team for a review.
-
-Unfortunately, seeing your plugin in production takes a bit more setup. You will have to set up the [infrastructure](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/infrastructure) and set a range of environment variables. But the CA team can support you here.
-
-After your plugin is ready for production, the CA team will create a Docker image and deploy your code to the infrastructure.
-
-## Docker (for devs)
-
-To deploy this plugin run
-
-```shell
-DOCKER_BUILDKIT=1 docker build --secret id=GIT_PROJECT_TOKEN . --tag heigit/{plugin-name}:devel
-docker image push heigit/{plugin-name}:devel
+```
+mamba create -f environment.yaml
+mamba activate ghg-emission-from-lulc-change
 ```
 
-If the infrastructure is reachable you can copy [.env_template](.env_template) to `.env` and then run 
+## Usage
 
-```shell
-docker run --env-file .env --network=host heigit/{plugin-name}:devel
-```
+The plugin uses a LULC classification provided by the [LULC utility](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/lulc-utility). The LULC utility processes satellite images to create two distinct land use and land cover (LULC) classifications: one representing the beginning and another representing the end of the observation period. Since individual satellite images vary in quality due to factors like cloud cover, the utility combines multiple images for each classification. To generate accurate results, users need to specify a time period for which the utility will use satellite images. We recommend setting these periods to one month, ensuring an ample supply of images for robust LULC classifications.
 
-Don't forget to add the plugin to the [infrastructure](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/infrastructure) and deploy it.
+For optimal results, it's advisable to choose time periods falling between May and September, particularly in temperate regions of the northern hemisphere. This timeframe increases the likelihood of obtaining cloud-free images. Please note that this utility supports observation periods from 2017 onwards.
+
+In ghg_lulc/test_plugin.py, please adjust the following parameters to your needs:
+- area_coords: Coordinates defining the bounding box of your area of interest
+- start_date_1: Start date for LULC classification at the beginning of the observation period
+- end_date_1: End date for LULC classification at the beginning of the observation period
+- start_date_2: Start date for LULC classification at the end of the observation period
+- end_date_2: End date for LULC classification at the end of the observation period
+
+When you have adjusted your settings, execute the plugin by running ghg_lulc/test_plugin.py using pytest.
+
+More information on the [methodology](resources/methodology.md)
+
+## Contribute
+
+Contributions are welcome. Feel free to create a merge request and contact the [CA team](mailto:climate-action@heigit.org).

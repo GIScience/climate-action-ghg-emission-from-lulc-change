@@ -75,7 +75,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                     minor=0,
                                     patch=1),
                     purpose=(PROJECT_DIR / 'resources/purpose.txt').read_text(),
-                    methodology=(PROJECT_DIR / 'resources/methodology.txt').read_text(),
+                    methodology=(PROJECT_DIR / 'resources/methodology.md').read_text(),
                     sources=PROJECT_DIR / 'resources/sources.bib',
                     concerns=[Concern.GHG_EMISSION])
 

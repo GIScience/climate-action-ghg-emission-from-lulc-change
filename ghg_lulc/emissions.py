@@ -20,7 +20,7 @@ class EmissionCalculator:
         self.compute_dir = compute_dir
 
     @staticmethod
-    def derive_lulc_changes(lulc_array1: np.ndarray, lulc_array2: np.ndarray) -> Tuple[np.ndarray, int]:
+    def derive_lulc_changes(lulc_array1: np.ndarray, lulc_array2: np.ndarray) -> np.ndarray:
         """
 
         Check if there is a LULC change in each cell and what kind of LULC change. Then it assigns a specific integer
@@ -76,7 +76,7 @@ class EmissionCalculator:
         return change_file
 
     # TODO unit test
-    def convert_raster(self) -> Tuple[pd.DataFrame, float]:
+    def convert_raster(self) -> gpd.GeoDataFrame:
         """
 
         Converts the LULC change raster to a geodataframe. Then, it reprojects the geodataframe to the projected

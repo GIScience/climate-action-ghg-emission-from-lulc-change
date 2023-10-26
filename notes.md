@@ -10,7 +10,7 @@
 	+ Area by LULC change type, e.g. agriculture to urban (ha)
 	+ total LULC change emissions
 	+ LULC change emissions by LULC change type, e.g. agriculture to urban
-- **Should we account for LULC imissions, e.g. agriculture to forest or only emissions? (In my master thesis I did only emissions but I can just do the emissions vice versa. e.g. if agriculture to urban would lead to emissions of 40 t/ha, urban to agriculture would lead to a carbon sink of 40 t/ha)**
+- **Should we account for LULC imissions, e.g. agriculture to forest or only emissions? (In my master thesis I did only emissions, but I can just do the emissions vice versa. e.g. if agriculture to urban would lead to emissions of 40 t/ha, urban to agriculture would lead to a carbon sink of 40 t/ha)**
 
 ## Method
 **How do I access the LULC utility?** Do I just follow the instructions in the Gitlab to set it up?

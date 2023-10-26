@@ -9,6 +9,7 @@ from shapely.geometry import Polygon
 
 from climatoology.base.operator import ComputationScope
 from ghg_lulc.emissions import EmissionCalculator
+from ghg_lulc.plugin import EMISSION_FACTORS
 
 
 @pytest.fixture()
@@ -43,14 +44,13 @@ def test_derive_lulc_changes(computation_resources):
 def test_allocate_emissions(computation_resources):
     changes = {'change_id': [1, 2, 3, 4, 5, -11, 0, 0, -6, 8, 0, 10, 0, 7, -9, -7, 9, 0, -10, 0, 1, 2, 3, 4, 5]}
     changes = gpd.GeoDataFrame(changes)
-    emission_factors = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7, 35), (8, 36.5), (9, 119.5),
-                        (10, 121), (11, 156)]
+
     expected_df = {'change_id': [1, 2, 3, 4, 5, -11, 0, 0, -6, 8, 0, 10, 0, 7, -9, -7, 9, 0, -10, 0, 1, 2, 3, 4, 5],
                    'emissions_per_ha': [0, 0, 0, 0, 0, -156, 0, 0, -1.5, 36.5, 0, 121, 0, 35, -119.5, -35, 119.5, 0,
                                         -121, 0, 0, 0, 0, 0, 0]}
     expected_df = gpd.GeoDataFrame(expected_df)
     calculator = EmissionCalculator(computation_resources.computation_dir)
-    emission_factor_df = calculator.allocate_emissions(changes, emission_factors)
+    emission_factor_df = calculator.allocate_emissions(changes, EMISSION_FACTORS)
     assert emission_factor_df.equals(expected_df)
 
 

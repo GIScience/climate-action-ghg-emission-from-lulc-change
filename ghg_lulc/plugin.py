@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
 
@@ -14,12 +15,13 @@ from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
 from pydantic import field_validator, model_validator, BaseModel, Field
 from semver import Version
-from datetime import datetime
 
 from ghg_lulc.emissions import EmissionCalculator
 
 log = logging.getLogger(__name__)
 PROJECT_DIR = Path(__file__).parent.parent
+
+EMISSION_FACTORS = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7, 35), (8, 36.5), (9, 119.5), (10, 121), (11, 156)]
 
 
 class ComputeInput(BaseModel):
@@ -105,16 +107,13 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                              end_date=params.end_date_2,
                              area_coords=params.area_coords)
 
-        emissions_per_class = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7, 35), (8, 36.5), (9, 119.5),
-                               (10, 121), (11, 156)]
-
         lulc_array1, meta, transform, crs, lulc_tif1 = self.fetch_lulc(resources.computation_dir, area1)
         lulc_array2, meta, transform, crs, lulc_tif2 = self.fetch_lulc(resources.computation_dir, area2)
 
         changes = emissions_calculator.derive_lulc_changes(lulc_array1, lulc_array2)
         change_file = emissions_calculator.export_raster(changes, meta)
         emission_factor_df = emissions_calculator.convert_raster()
-        emission_factor_df = emissions_calculator.allocate_emissions(emission_factor_df, emissions_per_class)
+        emission_factor_df = emissions_calculator.allocate_emissions(emission_factor_df, EMISSION_FACTORS)
         total_area = emissions_calculator.calculate_total_change_area(emission_factor_df)
         emission_factor_df, area_df = emissions_calculator.calculate_area_by_change_type(emission_factor_df)
         emission_factor_df = emissions_calculator.calculate_absolute_emissions_per_poly(emission_factor_df)

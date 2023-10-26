@@ -1,3 +1,4 @@
+import os
 import uuid
 from unittest.mock import patch
 
@@ -11,7 +12,7 @@ from ghg_lulc.plugin import GHGEmissionFromLULC, ComputeInput
 @pytest.fixture
 def lulc_utility_mock():
     with patch('climatoology.utility.api.LulcUtilityUtility') as lulc_utility:
-        lulc_utility.compute_raster.side_effect = [rasterio.open('test_1.tif'), rasterio.open('test_2.tif')]
+        lulc_utility.compute_raster.side_effect = [rasterio.open(f'{os.path.dirname(__file__)}/test_1.tif'), rasterio.open(f'{os.path.dirname(__file__)}/test_2.tif')]
 
         yield lulc_utility
 

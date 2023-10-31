@@ -1,12 +1,12 @@
 FROM condaforge/mambaforge:23.1.0-4 AS build
 
-COPY environment.yaml environment.yaml
+COPY environment_deploy.yaml environment.yaml
 
 RUN --mount=type=secret,id=GIT_PROJECT_TOKEN \
     export GIT_PROJECT_TOKEN=$(cat /run/secrets/GIT_PROJECT_TOKEN) && \
     mamba env create -f environment.yaml && \
     mamba install -c conda-forge conda-pack && \
-    conda-pack -f --ignore-missing-files -n ca-plugin-blueprint -o /tmp/env.tar && \
+    conda-pack -f --ignore-missing-files -n ca-ghg-emission-from-lulc-change -o /tmp/env.tar && \
     mkdir /venv && \
     cd /venv && \
     tar xf /tmp/env.tar && \
@@ -16,14 +16,14 @@ RUN --mount=type=secret,id=GIT_PROJECT_TOKEN \
 
 FROM python:3.11.5-bookworm as runtime
 
-WORKDIR /ca-plugin-blueprint
-COPY --from=build /venv /ca-plugin-blueprint/venv
+WORKDIR /ca-ghg-emission-from-lulc-change
+COPY --from=build /venv /ca-ghg-emission-from-lulc-change/venv
 
-COPY plugin plugin
+COPY ghg_lulc ghg_lulc
 COPY resources resources
 
-ENV PYTHONPATH "${PYTHONPATH}:/ca-plugin-blueprint/plugin"
+ENV PYTHONPATH "${PYTHONPATH}:/ca-ghg-emission-from-lulc-change/ghg_lulc"
 
 SHELL ["/bin/bash", "-c"]
-ENTRYPOINT source /ca-plugin-blueprint/venv/bin/activate && \
-           python plugin/plugin.py
+ENTRYPOINT source /ca-ghg-emission-from-lulc-change/venv/bin/activate && \
+           python ghg_lulc/plugin.py

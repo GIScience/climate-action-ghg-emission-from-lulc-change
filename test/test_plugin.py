@@ -24,16 +24,29 @@ def test_plugin_info(lulc_utility_mock):
 
 def test_plugin_compute(lulc_utility_mock):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
-    operator_input = ComputeInput(area_coords=(12.304687500000002,
-                                               48.2246726495652,
-                                               12.480468750000002,
-                                               48.3416461723746),
-                                  start_date_1="2018-05-01",
-                                  end_date_1="2018-06-01",
-                                  start_date_2="2023-05-01",
-                                  end_date_2="2023-06-01")
+    operator_input = ComputeInput(aoi={"type": "Feature",
+                                       "properties": {},
+                                       "geometry": {
+                                           "type": "MultiPolygon",
+                                           "coordinates": [
+                                               [
+                                                   [
+                                                       [12.3, 48.22],
+                                                       [12.3, 48.34],
+                                                       [12.48, 48.34],
+                                                       [12.48, 48.22],
+                                                       [12.3, 48.22]
+                                                   ]
+                                               ]
+                                           ]
+                                       }
+                                       },
+                                  date_1="2018-05-01",
+                                  date_2="2023-06-01")
 
     with ComputationScope(uuid.uuid4()) as resources:
         artifacts = operator.compute(resources, operator_input)
 
-        assert {a.name for a in artifacts} == {'classification_1', 'classification_2', 'LULC_change', 'LULC_change_vector', 'stats_change_type', 'summary', 'area_plot', 'emission_plot'}
+        assert {a.name for a in artifacts} == {'classification_1', 'classification_2', 'LULC_change',
+                                               'LULC_change_vector', 'stats_change_type', 'summary', 'area_plot',
+                                               'emission_plot'}

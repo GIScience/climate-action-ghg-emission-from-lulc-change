@@ -2,12 +2,14 @@ import asyncio
 import logging
 import os
 import uuid
-from datetime import datetime
+from datetime import date
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Dict
 
+import geojson_pydantic
 import numpy as np
 import rasterio
+import shapely
 from climatoology.app.plugin import PlatformPlugin
 from climatoology.base.operator import Operator, Info, Artifact, ArtifactModality, Concern, ComputationResources
 from climatoology.broker.message_broker import AsyncRabbitMQ
@@ -25,39 +27,62 @@ EMISSION_FACTORS = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7
 
 
 class ComputeInput(BaseModel):
-    area_coords: Tuple[float, float, float, float] = Field(description='Area of interest coordinates', examples=[[12.304687500000002,
-                                                                                                                  48.2246726495652,
-                                                                                                                  12.480468750000002,
-                                                                                                                  48.3416461723746]])
-    start_date_1: str = Field(description='Beginning of first time period for LULC classification', examples=["2018-05-01"])
-    end_date_1: str = Field(description='End of first time period for LULC classification', examples=["2018-06-01"])
-    start_date_2: str = Field(description='Beginning of second time period for LULC classification', examples=["2023-05-01"])
-    end_date_2: str = Field(description='End of second time period for LULC classification', examples=["2023-06-01"])
+    aoi: geojson_pydantic.Feature[
+        geojson_pydantic.MultiPolygon,
+        Optional[Dict]
+    ] = Field(title='Area of Interest',
+              description='Area to calculate GHG emissions for. Be aware that the plugin currently works on the '
+                          'bounding box of that area!',
+              validate_default=True,
+              examples=[{
+                  "type": "Feature",
+                  "properties": {},
+                  "geometry": {
+                      "type": "MultiPolygon",
+                      "coordinates": [
+                          [
+                              [
+                                  [12.3, 48.22],
+                                  [12.3, 48.34],
+                                  [12.48, 48.34],
+                                  [12.48, 48.22],
+                                  [12.3, 48.22]
+                              ]
+                          ]
+                      ]
+                  }
+              }])
 
-    @field_validator("start_date_1", "end_date_1", "start_date_2", "end_date_2")
+    def get_geom(self) -> shapely.MultiPolygon:
+        """Convert the input geojson geometry to a shapely geometry.
+
+        :return: A shapely.MultiPolygon representing the area of interest defined by the user.
+        """
+        return shapely.geometry.shape(self.aoi.geometry)
+
+    date_1: date = Field(title="Period Start",
+                         description='First timestamp of the period of analysis',
+                         examples=[date(2018, 5, 1)],
+                         gt=date(2017, 1, 1),
+                         lt=date.today())
+    date_2: date = Field(title="Period End",
+                         description='Last timestamp of the period of analysis',
+                         examples=[date(2020, 5, 1)],
+                         gt=date(2017, 1, 1),
+                         lt=date.today())
+
+    @field_validator("date_1", "date_2")
     @classmethod
     def check_month_year(cls, value):
-        date_obj = datetime.strptime(value, '%Y-%m-%d')
-        if not 5 <= date_obj.month <= 9:
+        if not 5 <= value.month <= 9:
             raise ValueError("Dates must be within the months May to September.")
-        if not 2017 <= date_obj.year <= 2023:
-            raise ValueError("Years must be between 2017 and 2023.")
         return value
 
-    @model_validator(mode='before')
-    @classmethod
-    def check_order(cls, field_values):
-        sd1 = datetime.strptime(field_values['start_date_1'], '%Y-%m-%d')
-        ed1 = datetime.strptime(field_values['end_date_1'], '%Y-%m-%d')
-        sd2 = datetime.strptime(field_values['start_date_2'], '%Y-%m-%d')
-        ed2 = datetime.strptime(field_values['end_date_2'], '%Y-%m-%d')
-        if not ed1 > sd1:
-            raise ValueError("End_date_1 must be after start_date_1.")
-        if not sd2 > ed1:
-            raise ValueError("Second time period must be after first time period.")
-        if not ed2 > sd2:
-            raise ValueError("End_date_2 must be after start_date_2.")
-        return field_values
+    @model_validator(mode='after')
+    def check_order(self):
+        if not self.date_2 > self.date_1:
+            raise ValueError("Period start must be before period end.")
+        return self
 
 
 class GHGEmissionFromLULC(Operator[ComputeInput]):
@@ -79,7 +104,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                     purpose=(PROJECT_DIR / 'resources/purpose.txt').read_text(),
                     methodology=(PROJECT_DIR / 'resources/methodology.md').read_text(),
                     sources=PROJECT_DIR / 'resources/sources.bib',
-                    concerns=[Concern.GHG_EMISSION])
+                    concerns=[Concern.CLIMATE_ACTION__GHG_EMISSION])
 
     def compute(self, resources: ComputationResources, params: ComputeInput) -> List[Artifact]:
         """
@@ -97,15 +122,31 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
 
         emissions_calculator = EmissionCalculator(compute_dir=resources.computation_dir)
 
-        log.info(f'The Operator report-method was called and will return LULC changes and LULC change emissions in the area: {params.area_coords}')
+        aoi_box = params.get_geom().bounds
 
-        area1 = LULCWorkUnit(start_date=params.start_date_1,
-                             end_date=params.end_date_1,
-                             area_coords=params.area_coords)
+        log.info('The Operator report-method was called and will return LULC changes and LULC change emissions in '
+                 f'the area: {aoi_box}')
 
-        area2 = LULCWorkUnit(start_date=params.start_date_2,
-                             end_date=params.end_date_2,
-                             area_coords=params.area_coords)
+        area1 = LULCWorkUnit(area_coords=aoi_box,
+                             end_date=params.date_1.isoformat(),
+                             threshold=0)
+
+        area2 = LULCWorkUnit(area_coords=aoi_box,
+                             end_date=params.date_2.isoformat(),
+                             threshold=0)
+
+        emissions_per_class = [(0, 0),
+                               (1, 0),
+                               (2, 0),
+                               (3, 0),
+                               (4, 0),
+                               (5, 0),
+                               (6, 1.5),
+                               (7, 35),
+                               (8, 36.5),
+                               (9, 119.5),
+                               (10, 121),
+                               (11, 156)]
 
         lulc_array1, meta, transform, crs, lulc_tif1 = self.fetch_lulc(resources.computation_dir, area1)
         lulc_array2, meta, transform, crs, lulc_tif2 = self.fetch_lulc(resources.computation_dir, area2)
@@ -120,14 +161,16 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
 
         change_vector_file = emissions_calculator.export_vector(emission_factor_df)
 
-        total_net_emissions, total_gross_emissions, total_sink = emissions_calculator.calculate_total_emissions(emission_factor_df)
+        total_net_emissions, total_gross_emissions, total_sink = emissions_calculator.calculate_total_emissions(
+            emission_factor_df)
         emission_sum_df = emissions_calculator.calculate_emissions_by_change_type(emission_factor_df)
         out_df, change_type_file = emissions_calculator.change_type_stats(area_df, emission_sum_df)
 
         areas_chart_file = emissions_calculator.area_plot(out_df)
 
         emission_chart_file = emissions_calculator.emission_plot(out_df)
-        summary_file = emissions_calculator.summary_stats(total_area, total_net_emissions, total_gross_emissions, total_sink)
+        summary_file = emissions_calculator.summary_stats(total_area, total_net_emissions, total_gross_emissions,
+                                                          total_sink)
 
         return [Artifact(name='classification_1',
                          modality=ArtifactModality.MAP_LAYER,
@@ -220,7 +263,9 @@ async def start_plugin() -> None:
     :return:
     """
 
-    lulc_utility = LulcUtilityUtility(root_url='/api/lulc/v1/')
+    lulc_utility = LulcUtilityUtility(host=os.environ.get('LULC_HOST'),
+                                      port=int(os.environ.get('LULC_PORT')),
+                                      root_url=os.environ.get('LULC_ROOT_URL'))
     operator = GHGEmissionFromLULC(lulc_utility)
     log.info(f'Configuring plugin: {operator.info().name}')
 

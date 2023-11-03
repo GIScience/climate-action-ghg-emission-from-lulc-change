@@ -3,4 +3,4 @@
 __pycache__/
 output/**
 
-GIT_PROJECT_TOKEN
+CI_JOB_TOKEN

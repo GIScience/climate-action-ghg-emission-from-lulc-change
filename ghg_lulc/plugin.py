@@ -11,7 +11,8 @@ import numpy as np
 import rasterio
 import shapely
 from climatoology.app.plugin import PlatformPlugin
-from climatoology.base.operator import Operator, Info, Artifact, ArtifactModality, Concern, ComputationResources
+from climatoology.base.artifact import ArtifactModality
+from climatoology.base.operator import Operator, Info, Artifact, Concern, ComputationResources
 from climatoology.broker.message_broker import AsyncRabbitMQ
 from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
@@ -173,19 +174,19 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                                           total_sink)
 
         return [Artifact(name='classification_1',
-                         modality=ArtifactModality.MAP_LAYER,
+                         modality=ArtifactModality.MAP_LAYER_GEOTIFF,
                          file_path=lulc_tif1,
                          summary='LULC classification at beginning of observation period',
                          description='LULC classification at beginning of observation period. The classes are forest, '
                                      'agriculture, and settlement.'),
                 Artifact(name='classification_2',
-                         modality=ArtifactModality.MAP_LAYER,
+                         modality=ArtifactModality.MAP_LAYER_GEOTIFF,
                          file_path=lulc_tif2,
                          summary='LULC classification at end of observation period',
                          description='LULC classification at end of observation period. The classes are forest, '
                                      'agriculture, and settlement.'),
                 Artifact(name='LULC_change',
-                         modality=ArtifactModality.MAP_LAYER,
+                         modality=ArtifactModality.MAP_LAYER_GEOTIFF,
                          file_path=change_file,
                          summary='LULC changes within the observation period',
                          description='LULC changes within the observation period. The raster cell values represent '
@@ -193,7 +194,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                      'represents a certain LULC change type, so the map shows what kind of LULC change '
                                      'happened and at the same time the emissions per ha of these changes.'),
                 Artifact(name='LULC_change_vector',
-                         modality=ArtifactModality.MAP_LAYER,
+                         modality=ArtifactModality.MAP_LAYER_GEOJSON,
                          file_path=change_vector_file,
                          summary='LULC changes within the observation period in vector format',
                          description='LULC changes within the observation period. The emissions per ha values '

@@ -5,9 +5,9 @@ import pytest
 import geopandas as gpd
 import os
 import pandas as pd
+from climatoology.base.computation import ComputationScope
 from shapely.geometry import Polygon
 
-from climatoology.base.operator import ComputationScope
 from ghg_lulc.emissions import EmissionCalculator
 from ghg_lulc.plugin import EMISSION_FACTORS
 

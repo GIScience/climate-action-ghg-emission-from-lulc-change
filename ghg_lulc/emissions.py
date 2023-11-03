@@ -187,9 +187,10 @@ class EmissionCalculator:
         :param emission_factor_df: geodataframe with LULC change polygons
         :return: vector file with LULC change polygons and their emissions
         """
-        change_vector_file = self.compute_dir / 'LULC_change_vector.gpkg'
+        change_vector_file = self.compute_dir / 'LULC_change_vector.geojson'
         export_df = emission_factor_df.to_crs('EPSG:4326')
-        export_df.to_file(change_vector_file, driver="GPKG")
+        export_df.to_file(change_vector_file, driver="GeoJSON")
+
         return change_vector_file
 
     @staticmethod

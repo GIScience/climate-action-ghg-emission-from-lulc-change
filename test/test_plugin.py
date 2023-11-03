@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import rasterio
-from climatoology.base.operator import ComputationScope
+from climatoology.base.computation import ComputationScope
 
 from ghg_lulc.plugin import GHGEmissionFromLULC, ComputeInput
 

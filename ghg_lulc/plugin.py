@@ -1,9 +1,11 @@
 import asyncio
 import geojson_pydantic
 import logging
+import logging.config
 import numpy as np
 import os
 import shapely
+import yaml
 from PIL import Image
 from datetime import date
 from pathlib import Path
@@ -22,7 +24,10 @@ from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
 from ghg_lulc.emissions import EmissionCalculator
 
+log_level = os.getenv('LOG_LEVEL', 'INFO')
+log_config = 'conf/logging.yaml'
 log = logging.getLogger(__name__)
+
 PROJECT_DIR = Path(__file__).parent.parent
 
 EMISSION_FACTORS = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7, 35), (8, 36.5), (9, 119.5), (10, 121),
@@ -303,4 +308,9 @@ async def start_plugin() -> None:
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=log_level.upper())
+    with open(log_config) as file:
+        logging.config.dictConfig(yaml.safe_load(file))
+    log.info('Starting Plugin')
+
     asyncio.run(start_plugin())

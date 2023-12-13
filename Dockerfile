@@ -21,6 +21,7 @@ COPY --from=build /venv /ca-ghg-emission-from-lulc-change/venv
 
 COPY ghg_lulc ghg_lulc
 COPY resources resources
+COPY conf conf
 
 ENV PYTHONPATH "${PYTHONPATH}:/ca-ghg-emission-from-lulc-change/ghg_lulc"
 

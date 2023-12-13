@@ -9,6 +9,7 @@ dependencies:
   - python=3.11.5
   - matplotlib=3.8.0
   - shapely=2.0.2
+  - yaml=0.2.5
   - pip:
       - git+ssh://git@gitlab.gistools.geog.uni-heidelberg.de:2022/climate-action/climatoology.git@v2.6.4
       - ruff==0.0.280

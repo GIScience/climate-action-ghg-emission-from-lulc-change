@@ -1,25 +1,25 @@
 import asyncio
+import geojson_pydantic
 import logging
+import numpy as np
 import os
+import shapely
+from PIL import Image
 from datetime import date
 from pathlib import Path
+from pydantic import condate
+from pydantic import field_validator, model_validator, BaseModel, Field
+from pydantic_extra_types.color import Color
+from semver import Version
 from typing import List, Optional, Dict
 
-import geojson_pydantic
-import numpy as np
-import shapely
 from climatoology.app.plugin import PlatformPlugin
-from climatoology.base.artifact import ArtifactModality, create_geotiff_artifact, create_geojson_artifact, \
+from climatoology.base.artifact import create_geotiff_artifact, create_geojson_artifact, \
     create_table_artifact, create_image_artifact
 from climatoology.base.operator import Operator, Info, Artifact, Concern, ComputationResources
 from climatoology.broker.message_broker import AsyncRabbitMQ
 from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
-from pydantic import field_validator, model_validator, BaseModel, Field
-from pydantic_extra_types.color import Color
-from semver import Version
-from PIL import Image
-
 from ghg_lulc.emissions import EmissionCalculator
 
 log = logging.getLogger(__name__)
@@ -63,16 +63,14 @@ class ComputeInput(BaseModel):
         """
         return shapely.geometry.shape(self.aoi.geometry)
 
-    date_1: date = Field(title="Period Start",
-                         description='First timestamp of the period of analysis',
-                         examples=[date(2018, 5, 1)],
-                         gt=date(2017, 1, 1),
-                         lt=date.today())
-    date_2: date = Field(title="Period End",
-                         description='Last timestamp of the period of analysis',
-                         examples=[date(2020, 5, 1)],
-                         gt=date(2017, 1, 1),
-                         lt=date.today())
+    date_1: condate(ge=date(2017, 1, 1),
+                    le=date.today()) = Field(title="Period Start",
+                                             description='First timestamp of the period of analysis',
+                                             examples=[date(2018, 5, 1)])
+    date_2: condate(ge=date(2017, 1, 1),
+                    le=date.today()) = Field(title="Period End",
+                                             description='Last timestamp of the period of analysis',
+                                             examples=[date(2020, 5, 1)])
 
     @field_validator("date_1", "date_2")
     @classmethod
@@ -197,7 +195,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                         layer_name='LULC_change',
                                         caption='LULC changes within the observation period',
                                         description='LULC changes within the observation period. The raster cell values'
-                                        'are defined in the file methodology.md.',
+                                                    'are defined in the file methodology.md.',
                                         resources=resources,
                                         filename='LULC_change'),
                 create_geojson_artifact(features=emission_factor_df['geometry'],

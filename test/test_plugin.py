@@ -48,5 +48,7 @@ def test_plugin_compute(lulc_utility_mock):
         artifacts = operator.compute(resources, operator_input)
 
         assert {a.name for a in artifacts} == {'classification_1', 'classification_2', 'LULC_change',
-                                               'LULC_change_vector', 'stats_change_type', 'summary', 'area_plot',
-                                               'emission_plot'}
+                                               'LULC_change_vector', 'Change areas and emissions by LULC change type',
+                                               'Total net emissions, gross emissions, and carbon sink in the '
+                                               'observation period', 'Change areas by LULC change type [ha]',
+                                               'Carbon emissions by LULC change type [t]'}

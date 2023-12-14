@@ -33,21 +33,21 @@ def test_derive_lulc_changes(computation_resources):
                             [1, 2, 3, 4, 5]])
 
     calculator = EmissionCalculator(computation_resources.computation_dir)
-    changes = calculator.derive_lulc_changes(lulc_array1, lulc_array2)
+    changes, change_colormap = calculator.derive_lulc_changes(lulc_array1, lulc_array2)
     assert np.array_equal(changes, np.array([[1, 2, 3, 4, 5],
-                                             [-11, 0, 0, -6, 8],
-                                             [0, 10, 0, 7, -9],
-                                             [-7, 9, 0, -10, 0],
+                                             [12, 0, 0, 17, 8],
+                                             [0, 10, 0, 7, 14],
+                                             [16, 9, 0, 13, 0],
                                              [1, 2, 3, 4, 5]]))
 
 
 def test_allocate_emissions(computation_resources):
-    changes = {'change_id': [1, 2, 3, 4, 5, -11, 0, 0, -6, 8, 0, 10, 0, 7, -9, -7, 9, 0, -10, 0, 1, 2, 3, 4, 5]}
+    changes = {'change_id': [1, 2, 3, 4, 5, 11, 0, 0, 12, 8, 0, 10, 0, 7, 13, 14, 9, 0, 15, 0, 1, 2, 3, 4, 5]}
     changes = gpd.GeoDataFrame(changes)
 
-    expected_df = {'change_id': [1, 2, 3, 4, 5, -11, 0, 0, -6, 8, 0, 10, 0, 7, -9, -7, 9, 0, -10, 0, 1, 2, 3, 4, 5],
-                   'emissions_per_ha': [0, 0, 0, 0, 0, -156, 0, 0, -1.5, 36.5, 0, 121, 0, 35, -119.5, -35, 119.5, 0,
-                                        -121, 0, 0, 0, 0, 0, 0]}
+    expected_df = {'change_id': [1, 2, 3, 4, 5, 11, 0, 0, 12, 8, 0, 10, 0, 7, 13, 14, 9, 0, 15, 0, 1, 2, 3, 4, 5],
+                   'emissions_per_ha': [0, 0, 0, 0, 0, 156, 0, 0, -156, 36.5, 0, 121, 0, 35, -121, -119.5, 119.5, 0,
+                                        -36.5, 0, 0, 0, 0, 0, 0]}
     expected_df = gpd.GeoDataFrame(expected_df)
     calculator = EmissionCalculator(computation_resources.computation_dir)
     emission_factor_df = calculator.allocate_emissions(changes, EMISSION_FACTORS)
@@ -119,23 +119,6 @@ def test_calculate_absolute_emissions_per_poly():
     assert emission_factor_df.equals(expected_ef_df)
 
 
-def test_export_vector(computation_resources):
-    """tests whether vector emission map is exported properly"""
-    polygons = [
-        Polygon([(0, 0), (0, 100), (100, 100), (100, 0), (0, 0)]),
-        Polygon([(100, 0), (100, 100), (200, 100), (200, 0), (100, 0)]),
-        Polygon([(200, 0), (200, 100), (300, 100), (300, 0), (200, 0)]),
-        Polygon([(300, 0), (300, 100), (400, 100), (400, 0), (300, 0)]),
-        Polygon([(400, 0), (400, 100), (500, 100), (500, 0), (400, 0)])
-    ]
-    emissions_per_ha = [0, -1.5, 35, -36.5, 119.5]
-    emission_factor_df = gpd.GeoDataFrame(geometry=polygons, crs='EPSG:25832')
-    emission_factor_df['emissions_per_ha'] = emissions_per_ha
-    calculator = EmissionCalculator(computation_resources.computation_dir)
-    change_vector_file = calculator.export_vector(emission_factor_df)
-    assert os.path.exists(change_vector_file) is True
-
-
 def test_calculate_total_emissions():
     """tests whether total net emissions, gross emissions, and sink are calculated correctly"""
     polygons = [
@@ -194,9 +177,8 @@ def test_change_type_stats(computation_resources):
     expected_out_df = pd.DataFrame(data=d)
 
     emissions_calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
-    out_df, change_type_file = emissions_calculator.change_type_stats(area_df, emission_sum_df)
+    out_df = emissions_calculator.change_type_stats(area_df, emission_sum_df)
     assert out_df.equals(expected_out_df)
-    assert os.path.exists(change_type_file) is True
 
 
 def test_summary_stats(computation_resources):
@@ -207,8 +189,11 @@ def test_summary_stats(computation_resources):
     total_sink = -1936.0
 
     calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
-    summary_file = calculator.summary_stats(total_area, total_net_emissions, total_gross_emissions, total_sink)
-    assert os.path.exists(summary_file) is True
+    summary = calculator.summary_stats(total_area, total_net_emissions, total_gross_emissions, total_sink)
+    assert summary['total_change_area [ha]'][0] == 348.0
+    assert summary['total_net_emissions [t]'][0] == 48.0
+    assert summary['total_gross_emissions [t]'][0] == 1984.0
+    assert summary['total_sink [t]'][0] == -1936.0
 
 
 def test_area_plot(computation_resources):

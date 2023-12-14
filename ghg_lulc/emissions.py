@@ -28,20 +28,24 @@ class EmissionCalculator:
         we cannot calculate emissions for them.
 
          Cell value and corresponding LULC change type:
-        -11 settlement to forest
-        -10 farmland to forest
-        -9  meadow to forest
-        -8  settlement to meadow
-        -7  settlement to farmland
-        -6  farmland to meadow
         0   default value or change from or to water
-        1-5 no change
+        1   settlement remaining settlement
+        2   forest remaining forest
+        3   water remaining water
+        4   farmland remaining farmland
+        5   meadow remaining meadow
         6   meadow to farmland
         7   farmland to settlement
         8   meadow to settlement
         9   forest to meadow
         10  forest to farmland
         11  forest to settlement
+        12  settlement to forest
+        13  farmland to forest
+        14  meadow to forest
+        15  settlement to meadow
+        16  settlement to farmland
+        17  farmland to meadow
 
         :param lulc_array1: LULC classification of first time period
         :param lulc_array2: LULC classification of second time period
@@ -50,16 +54,36 @@ class EmissionCalculator:
 
         log.info("deriving LULC changes")
 
-        reclassification = [(1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 4), (5, 5, 5), (1, 2, -11), (1, 4, -7), (1, 5, -8),
-                            (2, 1, 11), (2, 4, 10), (2, 5, 9), (4, 1, 7), (4, 2, -10), (4, 5, -6), (5, 1, 8),
-                            (5, 2, -9), (5, 4, 6)]
+        reclassification = [(1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 4), (5, 5, 5), (1, 2, 12), (1, 4, 16), (1, 5, 15),
+                            (2, 1, 11), (2, 4, 10), (2, 5, 9), (4, 1, 7), (4, 2, 13), (4, 5, 17), (5, 1, 8),
+                            (5, 2, 14), (5, 4, 6)]
 
         changes = np.zeros_like(lulc_array1)
 
         for a1, a2, target in reclassification:
             changes[(lulc_array1 == a1) & (lulc_array2 == a2)] = target
 
-        return changes
+        change_colormap = {
+            0: (0, 0, 0, 255),
+            1: (255, 0, 0, 255),
+            2: (77, 200, 0, 255),
+            3: (130, 200, 250, 255),
+            4: (255, 255, 80, 255),
+            5: (205, 235, 176, 255),
+            6: (255, 102, 102, 255),
+            7: (255, 51, 51, 255),
+            8: (255, 0, 0, 255),
+            9: (204, 0, 0, 255),
+            10: (153, 0, 0, 255),
+            11: (102, 0, 0, 255),
+            12: (0, 0, 153, 255),
+            13: (0, 0, 204, 255),
+            14: (0, 0, 255, 255),
+            15: (51, 51, 255, 255),
+            16: (0, 128, 255, 255),
+            17: (102, 178, 255, 255)}
+
+        return changes, change_colormap
 
     # TODO unit test
     def export_raster(self, changes, meta) -> Path:
@@ -75,7 +99,7 @@ class EmissionCalculator:
             dst.write(changes, 1)
         return change_file
 
-    # TODO unit test
+    # TODO get rid of functions export_raster and convert_raster and instead directly convert np array to gdf
     def convert_raster(self) -> gpd.GeoDataFrame:
         """
 
@@ -132,7 +156,6 @@ class EmissionCalculator:
 
         for i, v in emission_factors:
             emission_factor_df.loc[emission_factor_df["change_id"] == i, "emissions_per_ha"] = v
-            emission_factor_df.loc[emission_factor_df["change_id"] == -i, "emissions_per_ha"] = -v
 
         return emission_factor_df
 
@@ -179,20 +202,6 @@ class EmissionCalculator:
 
         return emission_factor_df
 
-    def export_vector(self, emission_factor_df) -> Path:
-        """
-
-        Exports the LULC change polygons as a vector map to enable the visualization of absolute LULC change emissions
-        per change polygon.
-        :param emission_factor_df: geodataframe with LULC change polygons
-        :return: vector file with LULC change polygons and their emissions
-        """
-        change_vector_file = self.compute_dir / 'LULC_change_vector.geojson'
-        export_df = emission_factor_df.to_crs('EPSG:4326')
-        export_df.to_file(change_vector_file, driver="GeoJSON")
-
-        return change_vector_file
-
     @staticmethod
     def calculate_total_emissions(emission_factor_df) -> Tuple[float, float, float]:
         """
@@ -227,7 +236,7 @@ class EmissionCalculator:
 
         return emission_sum_df
 
-    def change_type_stats(self, area_df, emission_sum_df) -> Tuple[pd.DataFrame, Path]:
+    def change_type_stats(self, area_df, emission_sum_df) -> pd.DataFrame:
         """
 
         :param area_df: dataframe with total change area by LULC change type
@@ -238,11 +247,10 @@ class EmissionCalculator:
         out_df = area_df.merge(emission_sum_df, on='emissions_per_ha')
         change_type_file = self.compute_dir / 'stats_change_type.csv'
         out_df['change_type'] = out_df.apply(apply_conditions, axis=1)
-        out_df.to_csv(change_type_file)
 
-        return out_df, change_type_file
+        return out_df
 
-    def summary_stats(self, total_area, total_net_emissions, total_gross_emissions, total_sink) -> Path:
+    def summary_stats(self, total_area, total_net_emissions, total_gross_emissions, total_sink) -> pd.DataFrame:
         """
 
         Exports dataframe with summary stats to csv
@@ -252,16 +260,14 @@ class EmissionCalculator:
         :param total_sink: total sink from all LULC changes
         :return: csv file with summary statistics
         """
-        summary_file = self.compute_dir / 'summary.csv'
 
         summary = pd.DataFrame()
         summary.loc[0, 'total_change_area [ha]'] = total_area
         summary.loc[0, 'total_net_emissions [t]'] = total_net_emissions
         summary.loc[0, 'total_gross_emissions [t]'] = total_gross_emissions
         summary.loc[0, 'total_sink [t]'] = total_sink
-        summary.to_csv(summary_file)
 
-        return summary_file
+        return summary
 
     def area_plot(self, out_gdf) -> Path:
         """

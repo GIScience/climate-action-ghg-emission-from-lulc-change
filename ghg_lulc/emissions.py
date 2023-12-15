@@ -52,7 +52,7 @@ class EmissionCalculator:
         :return: ndarray with LULC changes between first and second time period
         """
 
-        log.info("deriving LULC changes")
+        log.info('deriving LULC changes')
 
         reclassification = [(1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 4), (5, 5, 5), (1, 2, 12), (1, 4, 16), (1, 5, 15),
                             (2, 1, 11), (2, 4, 10), (2, 5, 9), (4, 1, 7), (4, 2, 13), (4, 5, 17), (5, 1, 8),
@@ -86,18 +86,16 @@ class EmissionCalculator:
         return changes, change_colormap
 
     # TODO unit test
-    def export_raster(self, changes, meta) -> Path:
+    def export_raster(self, changes, meta):
         """
 
         :param changes: ndarray with LULC changes between first and second time period
         :param meta: parameters for generation of geotiff
-        :return: raster with LULC changes between first and second time period saved as geotiff
         """
         change_file = self.compute_dir / 'LULC_change.tif'
 
         with rasterio.open(change_file, 'w', **meta) as dst:
             dst.write(changes, 1)
-        return change_file
 
     # TODO get rid of functions export_raster and convert_raster and instead directly convert np array to gdf
     def convert_raster(self) -> gpd.GeoDataFrame:
@@ -114,7 +112,7 @@ class EmissionCalculator:
             image = src.read(1).astype(np.int16)
             crs = src.crs
 
-            log.info("converting raster to vector")
+            log.info('converting raster to vector')
             results = (
                 {'properties': {'change_id': v}, 'geometry': s}
                 for i, (s, v) in enumerate(shapes(image, mask=None, transform=src.transform))
@@ -122,7 +120,7 @@ class EmissionCalculator:
 
             org_df = gpd.GeoDataFrame.from_features(results, crs=crs)
 
-        log.info("reprojecting geodataframe from %s to EPSG:25832" % crs)
+        log.info('reprojecting geodataframe from %s to EPSG:25832' % crs)
         emission_factor_df = org_df.to_crs('EPSG:25832')
 
         return emission_factor_df
@@ -152,10 +150,10 @@ class EmissionCalculator:
         :param emission_factors: change_id and corresponding emission factor
         :return: geodataframe with LULC change polygons and their emissions in t/ha
         """
-        log.info("allocating emission factors to the LULC change types")
+        log.info('allocating emission factors to the LULC change types')
 
         for i, v in emission_factors:
-            emission_factor_df.loc[emission_factor_df["change_id"] == i, "emissions_per_ha"] = v
+            emission_factor_df.loc[emission_factor_df['change_id'] == i, 'emissions_per_ha'] = v
 
         return emission_factor_df
 
@@ -169,7 +167,7 @@ class EmissionCalculator:
         :return: total LULC change area [ha]
         """
         subset = emission_factor_df[emission_factor_df['emissions_per_ha'] != 0]
-        log.info("dividing area by 10000 to convert from m2 to ha")
+        log.info('dividing area by 10000 to convert from m2 to ha')
         total_area = round(subset['geometry'].area.sum() / 10000, 2)
 
         return total_area
@@ -183,7 +181,7 @@ class EmissionCalculator:
         :return: dataframe with total change area by LULC change type
         """
 
-        log.info("dividing area by 10000 to convert from m2 to ha")
+        log.info('dividing area by 10000 to convert from m2 to ha')
         emission_factor_df['area'] = round(emission_factor_df['geometry'].area / 10000, 2)
         area_df = emission_factor_df.groupby('emissions_per_ha')['area'].sum().reset_index()
         area_df.rename(columns={'area': 'area_change_type'}, inplace=True)
@@ -242,10 +240,8 @@ class EmissionCalculator:
         :param area_df: dataframe with total change area by LULC change type
         :param emission_sum_df: dataframe with the total LULC change emissions by change type
         :return: out_df (dataframe with stats per change type)
-        :return: change_type_file (csv file with stats per change type)
         """
         out_df = area_df.merge(emission_sum_df, on='emissions_per_ha')
-        change_type_file = self.compute_dir / 'stats_change_type.csv'
         out_df['change_type'] = out_df.apply(apply_conditions, axis=1)
 
         return out_df
@@ -258,7 +254,6 @@ class EmissionCalculator:
         :param total_net_emissions: net difference between total emissions and sinks
         :param total_gross_emissions: total emissions from all LULC changes
         :param total_sink: total sink from all LULC changes
-        :return: csv file with summary statistics
         """
 
         summary = pd.DataFrame()

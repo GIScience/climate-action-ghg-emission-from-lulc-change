@@ -54,3 +54,7 @@ More information on the [methodology](resources/methodology.md)
 
 Contributions are welcome. Feel free to create a merge request and contact
 the [CA team](mailto:climate-action@heigit.org).
+
+### Linting
+
+Please activate the linter by running `pre-commit install`.

@@ -24,11 +24,11 @@ def test_plugin_info(lulc_utility_mock):
 
 def test_plugin_compute(lulc_utility_mock):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
-    operator_input = ComputeInput(aoi={"type": "Feature",
-                                       "properties": {},
-                                       "geometry": {
-                                           "type": "MultiPolygon",
-                                           "coordinates": [
+    operator_input = ComputeInput(aoi={'type': 'Feature',
+                                       'properties': {},
+                                       'geometry': {
+                                           'type': 'MultiPolygon',
+                                           'coordinates': [
                                                [
                                                    [
                                                        [12.3, 48.22],
@@ -41,8 +41,8 @@ def test_plugin_compute(lulc_utility_mock):
                                            ]
                                        }
                                        },
-                                  date_1="2018-05-01",
-                                  date_2="2023-06-01")
+                                  date_1='2018-05-01',
+                                  date_2='2023-06-01')
 
     with ComputationScope(uuid.uuid4()) as resources:
         artifacts = operator.compute(resources, operator_input)

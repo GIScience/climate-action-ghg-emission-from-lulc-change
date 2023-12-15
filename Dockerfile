@@ -6,7 +6,7 @@ RUN --mount=type=secret,id=CI_JOB_TOKEN \
     export CI_JOB_TOKEN=$(cat /run/secrets/CI_JOB_TOKEN) && \
     mamba env create -f environment.yaml && \
     mamba install -c conda-forge conda-pack && \
-    conda-pack -f --ignore-missing-files -n ca-ghg-emission-from-lulc-change -o /tmp/env.tar && \
+    conda-pack -f --ignore-missing-files -n ca-plugin -o /tmp/env.tar && \
     mkdir /venv && \
     cd /venv && \
     tar xf /tmp/env.tar && \
@@ -16,15 +16,17 @@ RUN --mount=type=secret,id=CI_JOB_TOKEN \
 
 FROM python:3.11.5-bookworm as runtime
 
-WORKDIR /ca-ghg-emission-from-lulc-change
-COPY --from=build /venv /ca-ghg-emission-from-lulc-change/venv
+ENV PACKAGE_NAME='ghg_lulc'
 
-COPY ghg_lulc ghg_lulc
+WORKDIR /ca-plugin
+COPY --from=build /venv /ca-plugin/venv
+
+COPY $PACKAGE_NAME $PACKAGE_NAME
 COPY resources resources
 COPY conf conf
 
-ENV PYTHONPATH "${PYTHONPATH}:/ca-ghg-emission-from-lulc-change/ghg_lulc"
+ENV PYTHONPATH "${PYTHONPATH}:/ca-plugin/${PACKAGE_NAME}"
 
 SHELL ["/bin/bash", "-c"]
-ENTRYPOINT source /ca-ghg-emission-from-lulc-change/venv/bin/activate && \
-           python ghg_lulc/plugin.py
+ENTRYPOINT source /ca-plugin/venv/bin/activate && \
+           python ${PACKAGE_NAME}/plugin.py

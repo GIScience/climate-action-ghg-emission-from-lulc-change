@@ -43,11 +43,11 @@ class ComputeInput(BaseModel):
                           'bounding box of that area!',
               validate_default=True,
               examples=[{
-                  "type": "Feature",
-                  "properties": {},
-                  "geometry": {
-                      "type": "MultiPolygon",
-                      "coordinates": [
+                  'type': 'Feature',
+                  'properties': {},
+                  'geometry': {
+                      'type': 'MultiPolygon',
+                      'coordinates': [
                           [
                               [
                                   [12.3, 48.22],
@@ -69,25 +69,25 @@ class ComputeInput(BaseModel):
         return shapely.geometry.shape(self.aoi.geometry)
 
     date_1: condate(ge=date(2017, 1, 1),
-                    le=date.today()) = Field(title="Period Start",
+                    le=date.today()) = Field(title='Period Start',
                                              description='First timestamp of the period of analysis',
                                              examples=[date(2018, 5, 1)])
     date_2: condate(ge=date(2017, 1, 1),
-                    le=date.today()) = Field(title="Period End",
+                    le=date.today()) = Field(title='Period End',
                                              description='Last timestamp of the period of analysis',
                                              examples=[date(2020, 5, 1)])
 
-    @field_validator("date_1", "date_2")
+    @field_validator('date_1', 'date_2')
     @classmethod
     def check_month_year(cls, value):
         if not 5 <= value.month <= 9:
-            raise ValueError("Dates must be within the months May to September.")
+            raise ValueError('Dates must be within the months May to September.')
         return value
 
     @model_validator(mode='after')
     def check_order(self):
         if not self.date_2 > self.date_1:
-            raise ValueError("Period start must be before period end.")
+            raise ValueError('Period start must be before period end.')
         return self
 
 
@@ -146,7 +146,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         lulc_array2, meta, transform, crs, colormap = self.fetch_lulc(area2)
 
         changes, change_colormap = emissions_calculator.derive_lulc_changes(lulc_array1, lulc_array2)
-        change_file = emissions_calculator.export_raster(changes, meta)
+        emissions_calculator.export_raster(changes, meta)
         emission_factor_df = emissions_calculator.convert_raster()
         emission_factor_df = emissions_calculator.allocate_emissions(emission_factor_df, EMISSION_FACTORS)
         total_area = emissions_calculator.calculate_total_change_area(emission_factor_df)
@@ -260,13 +260,13 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
             lulc_array = lulc_array.reshape([rows, cols])
 
         meta = {
-            "driver": "GTiff",
-            "dtype": np.int8,
-            "count": 1,
-            "width": cols,
-            "height": rows,
-            "transform": transform,
-            "crs": crs,
+            'driver': 'GTiff',
+            'dtype': np.int8,
+            'count': 1,
+            'width': cols,
+            'height': rows,
+            'transform': transform,
+            'crs': crs,
         }
 
         return lulc_array, meta, transform, crs, colormap

@@ -11,7 +11,6 @@ from datetime import date
 from pathlib import Path
 from pydantic import condate
 from pydantic import field_validator, model_validator, BaseModel, Field
-from pydantic_extra_types.color import Color
 from semver import Version
 from typing import List, Optional, Dict
 
@@ -152,6 +151,8 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         total_area = emissions_calculator.calculate_total_change_area(emission_factor_df)
         emission_factor_df, area_df = emissions_calculator.calculate_area_by_change_type(emission_factor_df)
         emission_factor_df = emissions_calculator.calculate_absolute_emissions_per_poly(emission_factor_df)
+        color_col = emissions_calculator.add_colormap(emission_factor_df['emissions'])
+        emission_factor_df['color'] = color_col
 
         total_net_emissions, total_gross_emissions, total_sink = emissions_calculator.calculate_total_emissions(
             emission_factor_df)
@@ -175,7 +176,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                         crs=crs,
                                         transformation=transform,
                                         colormap=colormap,
-                                        layer_name='classification_1',
+                                        layer_name='Classification 1',
                                         caption='LULC classification at beginning of observation period',
                                         description='LULC classification at beginning of observation period. The '
                                                     'classes are forest, agriculture, and settlement. The '
@@ -186,7 +187,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                         crs=crs,
                                         transformation=transform,
                                         colormap=colormap,
-                                        layer_name='classification_2',
+                                        layer_name='Classification 2',
                                         caption='LULC classification at end of observation period',
                                         description='LULC classification at end of observation period. The '
                                                     'classes are forest, agriculture, and settlement. The '
@@ -197,25 +198,22 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                         crs=crs,
                                         transformation=transform,
                                         colormap=change_colormap,
-                                        layer_name='LULC_change',
+                                        layer_name='LULC Change',
                                         caption='LULC changes within the observation period',
                                         description='LULC changes within the observation period. The raster cell values'
                                                     'are defined in the file methodology.md.',
                                         resources=resources,
                                         filename='LULC_change'),
                 create_geojson_artifact(features=emission_factor_df['geometry'],
-                                        layer_name='LULC_change_vector',
-                                        caption='LULC changes within the observation period in vector format',
+                                        layer_name='LULC Emissions',
+                                        caption='Absolute carbon emissions of LULC change areas within the observation '
+                                                'period [t]',
                                         resources=resources,
-                                        description='LULC changes within the observation period. The emissions per ha '
-                                                    'values represent the emission factors (carbon emissions per '
-                                                    'hectare) depending on the LULC change type. Each emission factor '
-                                                    'represents a certain LULC change type, so the map shows what kind'
-                                                    'of LULC change happened and at the same time the emissions per ha'
-                                                    'of these changes. The emissions value represents the absolute'
-                                                    'carbon emissions of each LULC change polygon.',
-                                        color=Color('#590d08'),
-                                        filename='LULC_change_vector'),
+                                        description='LULC change emissions within the observation period. The polygons '
+                                                    'are colored by their absolute carbon emissions or sinks during '
+                                                    'the observation period.',
+                                        color=emission_factor_df['color'].to_list(),
+                                        filename='LULC_emissions'),
                 create_table_artifact(data=out_df,
                                       title='Change areas and emissions by LULC change type',
                                       caption='The table contains the total change area by LULC change type and the '

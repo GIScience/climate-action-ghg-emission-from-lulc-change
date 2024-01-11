@@ -1,3 +1,4 @@
+from climatoology.base.computation import ComputationScope
 import uuid
 
 import numpy as np
@@ -5,9 +6,8 @@ import pytest
 import geopandas as gpd
 import os
 import pandas as pd
-from climatoology.base.computation import ComputationScope
+from pydantic_extra_types.color import Color
 from shapely.geometry import Polygon
-
 from ghg_lulc.emissions import EmissionCalculator
 from ghg_lulc.plugin import EMISSION_FACTORS
 
@@ -117,6 +117,14 @@ def test_calculate_absolute_emissions_per_poly():
 
     emission_factor_df = EmissionCalculator.calculate_absolute_emissions_per_poly(emission_factor_df)
     assert emission_factor_df.equals(expected_ef_df)
+
+
+def test_add_colormap():
+    """tests whether the colors for the emission map are assigned to the LULC change objects correctly"""
+    emissions = pd.Series([-376.6, -19.12, 0, 16.8, 310.97])
+    colors = pd.Series([Color('#00004c'), Color('#e5e5ff'), Color('#fffdfd'), Color('#ffe9e9'), Color('#ac0000')])
+    color_col = EmissionCalculator.add_colormap(emissions)
+    pd.testing.assert_series_equal(color_col, colors)
 
 
 def test_calculate_total_emissions():

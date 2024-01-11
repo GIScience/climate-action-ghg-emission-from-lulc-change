@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import rasterio
 from rasterio.features import shapes
+from matplotlib.colors import TwoSlopeNorm, to_hex
+from pydantic_extra_types.color import Color
 
 from ghg_lulc.utils import apply_conditions
 
@@ -199,6 +201,22 @@ class EmissionCalculator:
         emission_factor_df['emissions'] = emission_factor_df['area'] * emission_factor_df['emissions_per_ha']
 
         return emission_factor_df
+
+    @staticmethod
+    def add_colormap(emissions_col: pd.Series) -> pd.Series:
+        """
+
+        :param emissions_col: emission column that we want to display
+        :return: additional color column that can be used for the color map
+        """
+        cmap = plt.get_cmap('seismic')
+        min_val = emissions_col.min()
+        max_val = emissions_col.max()
+        abs_max_val = max(abs(min_val), abs(max_val))
+        norm = TwoSlopeNorm(vmin=-abs_max_val, vcenter=0, vmax=abs_max_val)
+        color_col = emissions_col.apply(lambda x: Color(to_hex(cmap(norm(x)))))
+
+        return color_col
 
     @staticmethod
     def calculate_total_emissions(emission_factor_df) -> Tuple[float, float, float]:

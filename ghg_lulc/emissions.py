@@ -1,12 +1,13 @@
 import logging
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
+from climatoology.base.artifact import Chart2dData, ChartType
 from rasterio.features import shapes
 from matplotlib.colors import TwoSlopeNorm, to_hex
 from pydantic_extra_types.color import Color
@@ -282,49 +283,52 @@ class EmissionCalculator:
 
         return summary
 
-    def area_plot(self, out_gdf) -> Path:
+    def area_plot(self, out_df: pd.DataFrame, plot_colors: List[str]) -> Tuple[Chart2dData, Path]:
         """
 
-        :param out_gdf: dataframe with stats per change type
-        :return: pie chart with change area by LULC change type
+        :param out_df: dataframe with stats per change type
+        :param plot_colors: list with colors for the different change types
+        :return: Chart2dData object with change area by LULC change type
+        :return: pie chart image with change area by LULC change type
         """
-        condition = out_gdf['change_type'] == 'no LULC change'
-        out_gdf = out_gdf.loc[~condition]
-        labels = out_gdf['change_type']
-        sizes = out_gdf['area_change_type']
+        condition = out_df['change_type'] == 'no LULC change'
+        out_df = out_df.loc[~condition]
+        labels = out_df['change_type']
+        sizes = out_df['area_change_type']
         fig, ax = plt.subplots()
         ax.pie(sizes,
                labels=labels,
-               # autopct=lambda p: '{:.0f}'.format(p * sum(sizes) / 100),
-               colors=['midnightblue', 'mediumblue', 'blue', 'royalblue', 'cornflowerblue', 'lightsteelblue',
-                       'mistyrose', 'pink', 'lightcoral', 'indianred', 'firebrick', 'darkred'])
+               colors=plot_colors)
 
         areas_chart_file = self.compute_dir / 'areas.png'
 
         plt.title('Change area by LULC change type [ha]')
         plt.savefig(areas_chart_file, dpi=300, bbox_inches='tight')
-        plt.show()
         plt.clf()
 
-        return areas_chart_file
+        area_chart_data = Chart2dData(x=labels.to_list(),
+                                      y=sizes,
+                                      color=[Color(color) for color in plot_colors],
+                                      chart_type=ChartType.PIE)
 
-    def emission_plot(self, out_gdf) -> Path:
+        return area_chart_data, areas_chart_file
+
+    def emission_plot(self, out_df: pd.DataFrame, plot_colors: List[str]) -> Tuple[Chart2dData, Path]:
         """
 
-        :param out_gdf: dataframe with stats per change type
-        :return: horizontal bar chart with carbon emissions by LULC change type
+        :param out_df: dataframe with stats per change type
+        :param plot_colors: list with colors for the different change types
+        :return: Chart2dData object with carbon emissions by LULC change type
+        :return: horizontal bar chart image with carbon emissions by LULC change type
         """
-        condition = out_gdf['change_type'] == 'no LULC change'
-        out_gdf = out_gdf.loc[~condition]
-        categories = out_gdf['change_type']
-        values = round(out_gdf['emissions_change_type'], 0)
+        condition = out_df['change_type'] == 'no LULC change'
+        out_df = out_df.loc[~condition]
+        categories = out_df['change_type']
+        values = round(out_df['emissions_change_type'], 0)
         y_pos = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75]
 
         fig, (ax) = plt.subplots(figsize=(8, 4))
-        bars = ax.barh(y_pos, values, height=0.2, color=['midnightblue', 'mediumblue', 'blue',
-                                                         'royalblue', 'cornflowerblue', 'lightsteelblue',
-                                                         'mistyrose', 'pink', 'lightcoral',
-                                                         'indianred', 'firebrick', 'darkred'])
+        bars = ax.barh(y_pos, values, height=0.2, color=plot_colors)
         ax.bar_label(bars, padding=2)
 
         ax.set_xlabel('carbon emissions [t]')
@@ -340,7 +344,11 @@ class EmissionCalculator:
 
         emission_chart_file = self.compute_dir / 'emissions.png'
         plt.savefig(emission_chart_file, dpi=300, bbox_inches='tight')
-        plt.show()
         plt.clf()
 
-        return emission_chart_file
+        emission_chart_data = Chart2dData(x=values.to_list(),
+                                          y=y_pos,
+                                          color=[Color(color) for color in plot_colors],
+                                          chart_type=ChartType.BAR)
+
+        return emission_chart_data, emission_chart_file

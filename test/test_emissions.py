@@ -1,4 +1,3 @@
-from climatoology.base.computation import ComputationScope
 import uuid
 
 import numpy as np
@@ -6,10 +5,11 @@ import pytest
 import geopandas as gpd
 import os
 import pandas as pd
+from climatoology.base.computation import ComputationScope
 from pydantic_extra_types.color import Color
 from shapely.geometry import Polygon
 from ghg_lulc.emissions import EmissionCalculator
-from ghg_lulc.plugin import EMISSION_FACTORS
+from ghg_lulc.plugin import EMISSION_FACTORS, PLOT_COLORS
 
 
 @pytest.fixture()
@@ -205,21 +205,32 @@ def test_summary_stats(computation_resources):
 
 
 def test_area_plot(computation_resources):
-    """tests whether the areas chart file is saved"""
-    d = {'emissions_per_ha': [0.0, 35.0, 119.5], 'area_change_type': [2.0, 2.0, 1.0],
-         'emissions_change_type': [0.0, 117.0, 379.0], 'change_type': ['no LULC change', 'farmland to settlement',
-                                                                       'forest to meadow']}
+    """tests whether the Chart2dData object is generated correctly and the areas chart file is saved"""
+    d = {'area_change_type': [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+         'change_type': ['settlement to forest', 'farmland to forest', 'meadow to forest', 'settlement to meadow',
+                         'settlement to farmland', 'farmland to meadow', 'meadow to farmland', 'farmland to settlement',
+                         'meadow to settlement', 'forest to meadow', 'forest to farmland', 'forest to settlement']}
     out_df = pd.DataFrame(data=d)
+    shares = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.0, 0.0]
     calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
-    areas_chart_file = calculator.area_plot(out_df)
+    area_chart_data, areas_chart_file = calculator.area_plot(out_df, PLOT_COLORS)
+    assert area_chart_data.x == d['change_type']
+    assert area_chart_data.y == shares
+    assert area_chart_data.color[0] == Color('midnightblue')
     assert os.path.exists(areas_chart_file) is True
 
 
 def test_emission_plot(computation_resources):
-    """tests whether the emissions chart file is saved"""
+    """tests whether the Chart2dData object is generated correctly and the emissions chart file is saved"""
     d = {'emissions_change_type': [-23, -35, -25, -67, -10, -64, 12, 24, 35, 49, 67, 25],
-         'change_type': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']}
+         'change_type': ['settlement to forest', 'farmland to forest', 'meadow to forest', 'settlement to meadow',
+                         'settlement to farmland', 'farmland to meadow', 'meadow to farmland', 'farmland to settlement',
+                         'meadow to settlement', 'forest to meadow', 'forest to farmland', 'forest to settlement']}
     out_df = pd.DataFrame(data=d)
+    y_pos = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75]
     calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
-    emission_chart_file = calculator.emission_plot(out_df)
+    emission_chart_data, emission_chart_file = calculator.emission_plot(out_df, PLOT_COLORS)
+    assert emission_chart_data.x == d['emissions_change_type']
+    assert emission_chart_data.y == y_pos
+    assert emission_chart_data.color[0] == Color('midnightblue')
     assert os.path.exists(emission_chart_file) is True

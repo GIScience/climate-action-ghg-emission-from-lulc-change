@@ -1,26 +1,26 @@
 import asyncio
-import geojson_pydantic
-import logging
 import logging.config
-import numpy as np
 import os
+from datetime import date
+from pathlib import Path
+from typing import List, Optional, Dict
+
+import geojson_pydantic
+import numpy as np
 import shapely
 import yaml
 from PIL import Image
-from datetime import date
-from pathlib import Path
-from pydantic import condate
-from pydantic import field_validator, model_validator, BaseModel, Field
-from semver import Version
-from typing import List, Optional, Dict
-
 from climatoology.app.plugin import PlatformPlugin
 from climatoology.base.artifact import create_geotiff_artifact, create_geojson_artifact, \
-    create_table_artifact, create_image_artifact
+    create_table_artifact, create_image_artifact, create_chart_artifact
 from climatoology.base.operator import Operator, Info, Artifact, Concern, ComputationResources
 from climatoology.broker.message_broker import AsyncRabbitMQ
 from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
+from pydantic import condate
+from pydantic import field_validator, model_validator, BaseModel, Field
+from semver import Version
+
 from ghg_lulc.emissions import EmissionCalculator
 
 log_level = os.getenv('LOG_LEVEL', 'INFO')
@@ -31,6 +31,8 @@ PROJECT_DIR = Path(__file__).parent.parent
 
 EMISSION_FACTORS = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7, 35), (8, 36.5), (9, 119.5), (10, 121),
                     (11, 156), (12, -156), (13, -121), (14, -119.5), (15, -36.5), (16, -35), (17, -1.5)]
+PLOT_COLORS = ['midnightblue', 'mediumblue', 'blue', 'royalblue', 'cornflowerblue', 'lightsteelblue', 'mistyrose',
+               'pink', 'lightcoral', 'indianred', 'firebrick', 'darkred']
 
 
 class ComputeInput(BaseModel):
@@ -159,9 +161,8 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         emission_sum_df = emissions_calculator.calculate_emissions_by_change_type(emission_factor_df)
         out_df = emissions_calculator.change_type_stats(area_df, emission_sum_df)
 
-        areas_chart_file = emissions_calculator.area_plot(out_df)
-
-        emission_chart_file = emissions_calculator.emission_plot(out_df)
+        area_chart_data, areas_chart_file = emissions_calculator.area_plot(out_df, PLOT_COLORS)
+        emission_chart_data, emission_chart_file = emissions_calculator.emission_plot(out_df, PLOT_COLORS)
         summary = emissions_calculator.summary_stats(total_area, total_net_emissions, total_gross_emissions, total_sink)
 
         # Transform arrays to 3D arrays because it is not working to create the artifact with 2D arrays somehow
@@ -232,6 +233,20 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                                   'as a result of LULC change.',
                                       resources=resources,
                                       filename='summary'),
+                create_chart_artifact(data=area_chart_data,
+                                      title='Change areas by LULC change type [ha]',
+                                      caption='This pie chart shows the change areas by LULC change type [ha] in the '
+                                              'observation period.',
+                                      resources=resources,
+                                      description='description',
+                                      filename='area_plot'),
+                create_chart_artifact(data=emission_chart_data,
+                                      title='Carbon emissions by LULC change type [t]',
+                                      caption='This bar chart shows the carbon emissions by LULC change'
+                                              'type [t] in the observation period.',
+                                      resources=resources,
+                                      description='description',
+                                      filename='emission_plot'),
                 create_image_artifact(image=area_plot,
                                       title='Change areas by LULC change type [ha]',
                                       caption='This pie chart shows the change areas by LULC change type [ha] in the '
@@ -241,11 +256,12 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                       filename='area_plot'),
                 create_image_artifact(image=emission_plot,
                                       title='Carbon emissions by LULC change type [t]',
-                                      caption='This horizontal bar chart shows the carbon emissions by LULC change'
+                                      caption='This bar chart shows the carbon emissions by LULC change'
                                               'type [t] in the observation period.',
                                       resources=resources,
                                       description='description',
-                                      filename='emission_plot')]
+                                      filename='emission_plot')
+                ]
 
     def fetch_lulc(self, area):
         with self.lulc_utility.compute_raster([area]) as lulc_classification:

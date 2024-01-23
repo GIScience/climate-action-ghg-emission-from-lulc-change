@@ -23,7 +23,7 @@ class EmissionCalculator:
         self.compute_dir = compute_dir
 
     @staticmethod
-    def derive_lulc_changes(lulc_array1: np.ndarray, lulc_array2: np.ndarray) -> np.ndarray:
+    def derive_lulc_changes(lulc_array1: np.ndarray, lulc_array2: np.ndarray) -> Tuple[np.ndarray, dict]:
         """
 
         Check if there is a LULC change in each cell and what kind of LULC change. Then it assigns a specific integer
@@ -88,8 +88,7 @@ class EmissionCalculator:
 
         return changes, change_colormap
 
-    # TODO unit test
-    def export_raster(self, changes, meta):
+    def export_raster(self, changes: np.ndarray, meta: dict):
         """
 
         :param changes: ndarray with LULC changes between first and second time period
@@ -100,7 +99,6 @@ class EmissionCalculator:
         with rasterio.open(change_file, 'w', **meta) as dst:
             dst.write(changes, 1)
 
-    # TODO get rid of functions export_raster and convert_raster and instead directly convert np array to gdf
     def convert_raster(self) -> gpd.GeoDataFrame:
         """
 
@@ -129,7 +127,7 @@ class EmissionCalculator:
         return emission_factor_df
 
     @staticmethod
-    def allocate_emissions(emission_factor_df, emission_factors):
+    def allocate_emissions(emission_factor_df: gpd.GeoDataFrame, emission_factors: list) -> gpd.GeoDataFrame:
         """
 
         The LULC change emissions [t/ha] are allocated to the LULC change polygons depending on the LULC change type.
@@ -157,11 +155,12 @@ class EmissionCalculator:
 
         for i, v in emission_factors:
             emission_factor_df.loc[emission_factor_df['change_id'] == i, 'emissions_per_ha'] = v
+        emission_factor_df = emission_factor_df.dropna(subset=['emissions_per_ha'])
 
         return emission_factor_df
 
     @staticmethod
-    def calculate_total_change_area(emission_factor_df) -> pd.DataFrame:
+    def calculate_total_change_area(emission_factor_df: gpd.GeoDataFrame) -> float:
         """
 
         calculate total LULC change area (ha) by summing up areas of polygons where emission factor != 0
@@ -176,7 +175,7 @@ class EmissionCalculator:
         return total_area
 
     @staticmethod
-    def calculate_area_by_change_type(emission_factor_df) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def calculate_area_by_change_type(emission_factor_df: gpd.GeoDataFrame) -> Tuple[gpd.GeoDataFrame, pd.DataFrame]:
         """
 
         :param emission_factor_df: geodataframe with LULC change polygons and their emissions in t/ha
@@ -192,7 +191,7 @@ class EmissionCalculator:
         return emission_factor_df, area_df
 
     @staticmethod
-    def calculate_absolute_emissions_per_poly(emission_factor_df) -> pd.DataFrame:
+    def calculate_absolute_emissions_per_poly(emission_factor_df: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         """
 
         calculate absolute LULC change emissions per polygon by multiplying emission factor with area
@@ -220,7 +219,7 @@ class EmissionCalculator:
         return color_col
 
     @staticmethod
-    def calculate_total_emissions(emission_factor_df) -> Tuple[float, float, float]:
+    def calculate_total_emissions(emission_factor_df: gpd.GeoDataFrame) -> Tuple[float, float, float]:
         """
 
         calculate total LULC change net carbon emissions, total gross emissions, and total sink
@@ -239,7 +238,7 @@ class EmissionCalculator:
         return total_net_emissions, total_gross_emissions, total_sink
 
     @staticmethod
-    def calculate_emissions_by_change_type(emission_factor_df) -> pd.DataFrame:
+    def calculate_emissions_by_change_type(emission_factor_df: gpd.GeoDataFrame) -> pd.DataFrame:
         """
 
         calculate LULC change emissions by LULC change type by grouping the polygons by their emission factor and then
@@ -253,7 +252,8 @@ class EmissionCalculator:
 
         return emission_sum_df
 
-    def change_type_stats(self, area_df, emission_sum_df) -> pd.DataFrame:
+    @staticmethod
+    def change_type_stats(area_df: pd.DataFrame, emission_sum_df: pd.DataFrame) -> pd.DataFrame:
         """
 
         :param area_df: dataframe with total change area by LULC change type
@@ -265,7 +265,9 @@ class EmissionCalculator:
 
         return out_df
 
-    def summary_stats(self, total_area, total_net_emissions, total_gross_emissions, total_sink) -> pd.DataFrame:
+    @staticmethod
+    def summary_stats(total_area: float, total_net_emissions: float, total_gross_emissions: float,
+                      total_sink: float) -> pd.DataFrame:
         """
 
         Exports dataframe with summary stats to csv

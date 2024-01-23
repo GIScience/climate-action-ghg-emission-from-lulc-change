@@ -1,15 +1,5 @@
+from affine import Affine
 import asyncio
-import logging.config
-import os
-from datetime import date
-from pathlib import Path
-from typing import List, Optional, Dict
-
-import geojson_pydantic
-import numpy as np
-import shapely
-import yaml
-from PIL import Image
 from climatoology.app.plugin import PlatformPlugin
 from climatoology.base.artifact import create_geotiff_artifact, create_geojson_artifact, \
     create_table_artifact, create_image_artifact, create_chart_artifact
@@ -17,11 +7,25 @@ from climatoology.base.operator import Operator, Info, Artifact, Concern, Comput
 from climatoology.broker.message_broker import AsyncRabbitMQ
 from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
+from dataclasses import dataclass
+from datetime import date
+import geojson_pydantic
+from ghg_lulc.emissions import EmissionCalculator
+import logging.config
+import numpy as np
+from numpy.typing import ArrayLike
+from numbers import Number
+import os
+from pathlib import Path
+from PIL import Image
 from pydantic import condate
 from pydantic import field_validator, model_validator, BaseModel, Field
+from rasterio import CRS
+from rasterio.features import geometry_mask
 from semver import Version
-
-from ghg_lulc.emissions import EmissionCalculator
+import shapely
+from typing import List, Optional, Dict, Tuple
+import yaml
 
 log_level = os.getenv('LOG_LEVEL', 'INFO')
 log_config = 'conf/logging.yaml'
@@ -33,6 +37,16 @@ EMISSION_FACTORS = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7
                     (11, 156), (12, -156), (13, -121), (14, -119.5), (15, -36.5), (16, -35), (17, -1.5)]
 PLOT_COLORS = ['midnightblue', 'mediumblue', 'blue', 'royalblue', 'cornflowerblue', 'lightsteelblue', 'mistyrose',
                'pink', 'lightcoral', 'indianred', 'firebrick', 'darkred']
+
+
+@dataclass
+class LULCObject:
+    """Class for the LULC array and its meta information"""
+    lulc_array: ArrayLike
+    meta: dict
+    transform: Affine
+    crs: CRS
+    colormap: Optional[Dict[Number, Tuple[int, int, int]]] = None
 
 
 class ComputeInput(BaseModel):
@@ -130,6 +144,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         emissions_calculator = EmissionCalculator(compute_dir=resources.computation_dir)
 
         aoi_box = params.get_geom().bounds
+        aoi = params.get_geom()
 
         log.info('The Operator report-method was called and will return LULC changes and LULC change emissions in '
                  f'the area: {aoi_box}')
@@ -137,17 +152,16 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         area1 = LULCWorkUnit(area_coords=aoi_box,
                              end_date=params.date_1.isoformat(),
                              threshold=0)
-        print(area1)
 
         area2 = LULCWorkUnit(area_coords=aoi_box,
                              end_date=params.date_2.isoformat(),
                              threshold=0)
 
-        lulc_array1, meta, transform, crs, colormap = self.fetch_lulc(area1)
-        lulc_array2, meta, transform, crs, colormap = self.fetch_lulc(area2)
+        lulc_output1 = self.fetch_lulc(area1, aoi)
+        lulc_output2 = self.fetch_lulc(area2, aoi)
 
-        changes, change_colormap = emissions_calculator.derive_lulc_changes(lulc_array1, lulc_array2)
-        emissions_calculator.export_raster(changes, meta)
+        changes, change_colormap = emissions_calculator.derive_lulc_changes(lulc_output1.lulc_array, lulc_output2.lulc_array)
+        emissions_calculator.export_raster(changes, lulc_output1.meta)
         emission_factor_df = emissions_calculator.convert_raster()
         emission_factor_df = emissions_calculator.allocate_emissions(emission_factor_df, EMISSION_FACTORS)
         total_area = emissions_calculator.calculate_total_change_area(emission_factor_df)
@@ -166,17 +180,17 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         summary = emissions_calculator.summary_stats(total_area, total_net_emissions, total_gross_emissions, total_sink)
 
         # Transform arrays to 3D arrays because it is not working to create the artifact with 2D arrays somehow
-        lulc_array1 = lulc_array1[np.newaxis, :, :]
-        lulc_array2 = lulc_array2[np.newaxis, :, :]
+        lulc_array1 = lulc_output1.lulc_array[np.newaxis, :, :]
+        lulc_array2 = lulc_output2.lulc_array[np.newaxis, :, :]
         changes = changes[np.newaxis, :, :]
 
         area_plot = Image.open(areas_chart_file)
         emission_plot = Image.open(emission_chart_file)
 
         return [create_geotiff_artifact(data=lulc_array1,
-                                        crs=crs,
-                                        transformation=transform,
-                                        colormap=colormap,
+                                        crs=lulc_output1.crs,
+                                        transformation=lulc_output1.transform,
+                                        colormap=lulc_output1.colormap,
                                         layer_name='Classification 1',
                                         caption='LULC classification at beginning of observation period',
                                         description='LULC classification at beginning of observation period. The '
@@ -185,9 +199,9 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                         resources=resources,
                                         filename='lulc_classification_1'),
                 create_geotiff_artifact(data=lulc_array2,
-                                        crs=crs,
-                                        transformation=transform,
-                                        colormap=colormap,
+                                        crs=lulc_output2.crs,
+                                        transformation=lulc_output2.transform,
+                                        colormap=lulc_output2.colormap,
                                         layer_name='Classification 2',
                                         caption='LULC classification at end of observation period',
                                         description='LULC classification at end of observation period. The '
@@ -196,8 +210,8 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                         resources=resources,
                                         filename='lulc_classification_2'),
                 create_geotiff_artifact(data=changes,
-                                        crs=crs,
-                                        transformation=transform,
+                                        crs=lulc_output1.crs,
+                                        transformation=lulc_output1.transform,
                                         colormap=change_colormap,
                                         layer_name='LULC Change',
                                         caption='LULC changes within the observation period',
@@ -263,15 +277,19 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                       filename='emission_plot')
                 ]
 
-    def fetch_lulc(self, area):
-        with self.lulc_utility.compute_raster([area]) as lulc_classification:
+    def fetch_lulc(self, lulc_area: LULCWorkUnit, aoi: shapely.MultiPolygon) -> LULCObject:
+        with self.lulc_utility.compute_raster([lulc_area]) as lulc_classification:
             lulc_array = lulc_classification.read()
             crs = lulc_classification.crs
             transform = lulc_classification.transform
             colormap = lulc_classification.colormap(1)
-            rows = lulc_array.shape[1]
-            cols = lulc_array.shape[2]
-            lulc_array = lulc_array.reshape([rows, cols])
+
+        rows = lulc_array.shape[1]
+        cols = lulc_array.shape[2]
+        lulc_array = lulc_array.reshape([rows, cols])
+
+        mask = ~geometry_mask([aoi], (rows, cols), transform=transform, invert=True)
+        lulc_array = np.ma.masked_array(lulc_array, mask)
 
         meta = {
             'driver': 'GTiff',
@@ -283,7 +301,9 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
             'crs': crs,
         }
 
-        return lulc_array, meta, transform, crs, colormap
+        lulc_output = LULCObject(lulc_array, meta, transform, crs, colormap)
+
+        return lulc_output
 
 
 async def start_plugin() -> None:

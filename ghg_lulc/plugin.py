@@ -183,7 +183,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         lulc_array1 = lulc_output1.lulc_array[np.newaxis, :, :]
         lulc_array2 = lulc_output2.lulc_array[np.newaxis, :, :]
         changes = changes[np.newaxis, :, :]
-
+        out_df.set_index('LULC change type', inplace=True)
         area_plot = Image.open(areas_chart_file)
         emission_plot = Image.open(emission_chart_file)
 

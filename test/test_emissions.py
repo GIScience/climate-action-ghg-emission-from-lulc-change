@@ -46,7 +46,7 @@ def test_allocate_emissions(computation_resources):
     changes = gpd.GeoDataFrame(changes)
 
     expected_df = {'change_id': [1, 2, 3, 4, 5, 11, 0, 0, 12, 8, 0, 10, 0, 7, 13, 14, 9, 0, 15, 0, 1, 2, 3, 4, 5],
-                   'emissions_per_ha': [0, 0, 0, 0, 0, 156, 0, 0, -156, 36.5, 0, 121, 0, 35, -121, -119.5, 119.5, 0,
+                   'emissions per ha': [0, 0, 0, 0, 0, 156, 0, 0, -156, 36.5, 0, 121, 0, 35, -121, -119.5, 119.5, 0,
                                         -36.5, 0, 0, 0, 0, 0, 0]}
     expected_df = gpd.GeoDataFrame(expected_df)
     calculator = EmissionCalculator(computation_resources.computation_dir)
@@ -65,7 +65,7 @@ def test_calculate_total_change_area():
     ]
     emissions_per_ha = [0, -1.5, 35, -36.5, 119.5]
     emission_factor_df = gpd.GeoDataFrame(geometry=polygons, crs='EPSG:25832')
-    emission_factor_df['emissions_per_ha'] = emissions_per_ha
+    emission_factor_df['emissions per ha'] = emissions_per_ha
     expected_area = 4
     actual_area = EmissionCalculator.calculate_total_change_area(emission_factor_df)
     assert actual_area == expected_area
@@ -82,13 +82,13 @@ def test_calculate_area_by_change_type():
     ]
     emissions_per_ha = [0, 0, 35, 35, 119.5]
     emission_factor_df = gpd.GeoDataFrame(geometry=polygons, crs='EPSG:25832')
-    emission_factor_df['emissions_per_ha'] = emissions_per_ha
+    emission_factor_df['emissions per ha'] = emissions_per_ha
 
     area = [1, 1, 1, 1, 1]
     expected_ef_df = emission_factor_df
     expected_ef_df['area'] = area
 
-    d = {'emissions_per_ha': [0, 35, 119.5], 'area_change_type': [2.0, 2.0, 1.0]}
+    d = {'emissions per ha': [0, 35, 119.5], 'LULC change type area': [2.0, 2.0, 1.0]}
     expected_a_df = pd.DataFrame(data=d)
 
     emission_factor_df, area_df = EmissionCalculator.calculate_area_by_change_type(emission_factor_df)
@@ -108,7 +108,7 @@ def test_calculate_absolute_emissions_per_poly():
     emissions_per_ha = [0, -1.5, 35, -36.5, 119.5]
     area = [1, 5, 4, 3, 2]
     emission_factor_df = gpd.GeoDataFrame(geometry=polygons, crs='EPSG:25832')
-    emission_factor_df['emissions_per_ha'] = emissions_per_ha
+    emission_factor_df['emissions per ha'] = emissions_per_ha
     emission_factor_df['area'] = area
 
     emissions = [0, -7.5, 140, -109.5, 239]
@@ -161,10 +161,10 @@ def test_calculate_emissions_by_change_type():
     emissions_per_ha = [0, -36.5, 119.5, -36.5, 119.5]
     emissions = [0, -7.5, 140, -109.5, 239]
     emission_factor_df = gpd.GeoDataFrame(geometry=polygons, crs='EPSG:25832')
-    emission_factor_df['emissions_per_ha'] = emissions_per_ha
+    emission_factor_df['emissions per ha'] = emissions_per_ha
     emission_factor_df['emissions'] = emissions
 
-    d = {'emissions_per_ha': [-36.5, 0.0, 119.5], 'emissions_change_type': [-117.0, 0.0, 379.0]}
+    d = {'emissions per ha': [-36.5, 0.0, 119.5], 'LULC change type emissions': [-117.0, 0.0, 379.0]}
     expected_e_df = pd.DataFrame(data=d)
 
     emission_sum_df = EmissionCalculator.calculate_emissions_by_change_type(emission_factor_df)
@@ -173,15 +173,16 @@ def test_calculate_emissions_by_change_type():
 
 def test_change_type_stats(computation_resources):
     """tests whether dataframes have been merged correctly and csv file has been exported"""
-    d = {'emissions_per_ha': [0.0, 35.0, 119.5], 'area_change_type': [2.0, 2.0, 1.0]}
+    d = {'emissions per ha': [0.0, 35.0, 119.5], 'LULC change type area': [2.0, 2.0, 1.0]}
     area_df = pd.DataFrame(data=d)
 
-    d = {'emissions_per_ha': [35.0, 0.0, 119.5], 'emissions_change_type': [117.0, 0.0, 379.0]}
+    d = {'emissions per ha': [35.0, 0.0, 119.5], 'LULC change type emissions': [117.0, 0.0, 379.0]}
     emission_sum_df = pd.DataFrame(data=d)
 
-    d = {'emissions_per_ha': [0.0, 35.0, 119.5], 'area_change_type': [2.0, 2.0, 1.0],
-         'emissions_change_type': [0.0, 117.0, 379.0], 'change_type': ['no LULC change', 'farmland to settlement',
-                                                                       'forest to meadow']}
+    d = {'emissions per ha': [0.0, 35.0, 119.5], 'LULC change type area': [2.0, 2.0, 1.0],
+         'LULC change type emissions': [0.0, 117.0, 379.0], 'LULC change type': ['no LULC change',
+                                                                                 'farmland to settlement',
+                                                                                 'forest to meadow']}
     expected_out_df = pd.DataFrame(data=d)
 
     emissions_calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
@@ -196,25 +197,29 @@ def test_summary_stats(computation_resources):
     total_gross_emissions = 1984.0
     total_sink = -1936.0
 
+    data = {'metric name': ['total change area [ha]', 'total net emissions [t]', 'total gross emissions [t]',
+                            'total sink [t]'],
+            'value': [348.0, 48.0, 1984.0, -1936.0]}
+    expected_summary = pd.DataFrame(data)
+    expected_summary.set_index('metric name', inplace=True)
+
     calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
     summary = calculator.summary_stats(total_area, total_net_emissions, total_gross_emissions, total_sink)
-    assert summary['total_change_area [ha]'][0] == 348.0
-    assert summary['total_net_emissions [t]'][0] == 48.0
-    assert summary['total_gross_emissions [t]'][0] == 1984.0
-    assert summary['total_sink [t]'][0] == -1936.0
+    assert summary.equals(expected_summary)
 
 
 def test_area_plot(computation_resources):
     """tests whether the Chart2dData object is generated correctly and the areas chart file is saved"""
-    d = {'area_change_type': [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
-         'change_type': ['settlement to forest', 'farmland to forest', 'meadow to forest', 'settlement to meadow',
-                         'settlement to farmland', 'farmland to meadow', 'meadow to farmland', 'farmland to settlement',
-                         'meadow to settlement', 'forest to meadow', 'forest to farmland', 'forest to settlement']}
+    d = {'LULC change type area': [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
+         'LULC change type': ['settlement to forest', 'farmland to forest', 'meadow to forest', 'settlement to meadow',
+                              'settlement to farmland', 'farmland to meadow', 'meadow to farmland',
+                              'farmland to settlement', 'meadow to settlement', 'forest to meadow',
+                              'forest to farmland', 'forest to settlement']}
     out_df = pd.DataFrame(data=d)
     shares = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.0, 0.0]
     calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
     area_chart_data, areas_chart_file = calculator.area_plot(out_df, PLOT_COLORS)
-    assert area_chart_data.x == d['change_type']
+    assert area_chart_data.x == d['LULC change type']
     assert area_chart_data.y == shares
     assert area_chart_data.color[0] == Color('midnightblue')
     assert os.path.exists(areas_chart_file) is True
@@ -222,15 +227,16 @@ def test_area_plot(computation_resources):
 
 def test_emission_plot(computation_resources):
     """tests whether the Chart2dData object is generated correctly and the emissions chart file is saved"""
-    d = {'emissions_change_type': [-23, -35, -25, -67, -10, -64, 12, 24, 35, 49, 67, 25],
-         'change_type': ['settlement to forest', 'farmland to forest', 'meadow to forest', 'settlement to meadow',
-                         'settlement to farmland', 'farmland to meadow', 'meadow to farmland', 'farmland to settlement',
-                         'meadow to settlement', 'forest to meadow', 'forest to farmland', 'forest to settlement']}
+    d = {'LULC change type emissions': [-23, -35, -25, -67, -10, -64, 12, 24, 35, 49, 67, 25],
+         'LULC change type': ['settlement to forest', 'farmland to forest', 'meadow to forest', 'settlement to meadow',
+                              'settlement to farmland', 'farmland to meadow', 'meadow to farmland',
+                              'farmland to settlement', 'meadow to settlement', 'forest to meadow',
+                              'forest to farmland', 'forest to settlement']}
     out_df = pd.DataFrame(data=d)
     y_pos = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75]
     calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
     emission_chart_data, emission_chart_file = calculator.emission_plot(out_df, PLOT_COLORS)
-    assert emission_chart_data.x == d['emissions_change_type']
-    assert emission_chart_data.y == y_pos
+    assert emission_chart_data.x == y_pos
+    assert emission_chart_data.y == d['LULC change type emissions']
     assert emission_chart_data.color[0] == Color('midnightblue')
     assert os.path.exists(emission_chart_file) is True

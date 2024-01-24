@@ -16,31 +16,31 @@ def convert_to_gdf(dataset):
 
 
 def apply_conditions(row):
-    if row['emissions_per_ha'] == -156.0:
+    if row['emissions per ha'] == -156.0:
         return 'settlement to forest'
-    elif row['emissions_per_ha'] == -121.0:
+    elif row['emissions per ha'] == -121.0:
         return 'farmland to forest'
-    elif row['emissions_per_ha'] == -119.5:
+    elif row['emissions per ha'] == -119.5:
         return 'meadow to forest'
-    elif row['emissions_per_ha'] == -36.5:
+    elif row['emissions per ha'] == -36.5:
         return 'settlement to meadow'
-    elif row['emissions_per_ha'] == -35.0:
+    elif row['emissions per ha'] == -35.0:
         return 'settlement to farmland'
-    elif row['emissions_per_ha'] == -1.5:
+    elif row['emissions per ha'] == -1.5:
         return 'farmland to meadow'
-    elif row['emissions_per_ha'] == 0.0:
+    elif row['emissions per ha'] == 0.0:
         return 'no LULC change'
-    elif row['emissions_per_ha'] == 1.5:
+    elif row['emissions per ha'] == 1.5:
         return 'meadow to farmland'
-    elif row['emissions_per_ha'] == 35.0:
+    elif row['emissions per ha'] == 35.0:
         return 'farmland to settlement'
-    elif row['emissions_per_ha'] == 36.5:
+    elif row['emissions per ha'] == 36.5:
         return 'meadow to settlement'
-    elif row['emissions_per_ha'] == 119.5:
+    elif row['emissions per ha'] == 119.5:
         return 'forest to meadow'
-    elif row['emissions_per_ha'] == 121.0:
+    elif row['emissions per ha'] == 121.0:
         return 'forest to farmland'
-    elif row['emissions_per_ha'] == 156.0:
+    elif row['emissions per ha'] == 156.0:
         return 'forest to settlement'
     else:
         return ''

@@ -154,8 +154,7 @@ class EmissionCalculator:
         log.info('allocating emission factors to the LULC change types')
 
         for i, v in emission_factors:
-            emission_factor_df.loc[emission_factor_df['change_id'] == i, 'emissions_per_ha'] = v
-        emission_factor_df = emission_factor_df.dropna(subset=['emissions_per_ha'])
+            emission_factor_df.loc[emission_factor_df['change_id'] == i, 'emissions per ha'] = v
 
         return emission_factor_df
 
@@ -168,7 +167,7 @@ class EmissionCalculator:
         :param emission_factor_df: geodataframe with LULC change polygons and their emissions in t/ha
         :return: total LULC change area [ha]
         """
-        subset = emission_factor_df[emission_factor_df['emissions_per_ha'] != 0]
+        subset = emission_factor_df[emission_factor_df['emissions per ha'] != 0]
         log.info('dividing area by 10000 to convert from m2 to ha')
         total_area = round(subset['geometry'].area.sum() / 10000, 2)
 
@@ -185,8 +184,8 @@ class EmissionCalculator:
 
         log.info('dividing area by 10000 to convert from m2 to ha')
         emission_factor_df['area'] = round(emission_factor_df['geometry'].area / 10000, 2)
-        area_df = emission_factor_df.groupby('emissions_per_ha')['area'].sum().reset_index()
-        area_df.rename(columns={'area': 'area_change_type'}, inplace=True)
+        area_df = emission_factor_df.groupby('emissions per ha')['area'].sum().reset_index()
+        area_df.rename(columns={'area': 'LULC change type area'}, inplace=True)
 
         return emission_factor_df, area_df
 
@@ -198,7 +197,7 @@ class EmissionCalculator:
         :param emission_factor_df: geodataframe with LULC change polygons, their area and their emissions in t/ha
         :return: emission_factor_df with additional absolute emissions column
         """
-        emission_factor_df['emissions'] = emission_factor_df['area'] * emission_factor_df['emissions_per_ha']
+        emission_factor_df['emissions'] = emission_factor_df['area'] * emission_factor_df['emissions per ha']
 
         return emission_factor_df
 
@@ -247,8 +246,8 @@ class EmissionCalculator:
         :return: dataframe with the total LULC change emissions by change type
         """
 
-        emission_sum_df = emission_factor_df.groupby('emissions_per_ha')['emissions'].sum().reset_index()
-        emission_sum_df.rename(columns={'emissions': 'emissions_change_type'}, inplace=True)
+        emission_sum_df = emission_factor_df.groupby('emissions per ha')['emissions'].sum().reset_index()
+        emission_sum_df.rename(columns={'emissions': 'LULC change type emissions'}, inplace=True)
 
         return emission_sum_df
 
@@ -260,8 +259,8 @@ class EmissionCalculator:
         :param emission_sum_df: dataframe with the total LULC change emissions by change type
         :return: out_df (dataframe with stats per change type)
         """
-        out_df = area_df.merge(emission_sum_df, on='emissions_per_ha')
-        out_df['change_type'] = out_df.apply(apply_conditions, axis=1)
+        out_df = area_df.merge(emission_sum_df, on='emissions per ha')
+        out_df['LULC change type'] = out_df.apply(apply_conditions, axis=1)
 
         return out_df
 
@@ -277,11 +276,11 @@ class EmissionCalculator:
         :param total_sink: total sink from all LULC changes
         """
 
-        summary = pd.DataFrame()
-        summary.loc[0, 'total_change_area [ha]'] = total_area
-        summary.loc[0, 'total_net_emissions [t]'] = total_net_emissions
-        summary.loc[0, 'total_gross_emissions [t]'] = total_gross_emissions
-        summary.loc[0, 'total_sink [t]'] = total_sink
+        data = {'metric name': ['total change area [ha]', 'total net emissions [t]', 'total gross emissions [t]',
+                                'total sink [t]'],
+                'value': [total_area, total_net_emissions, total_gross_emissions, total_sink]}
+        summary = pd.DataFrame(data)
+        summary.set_index('metric name', inplace=True)
 
         return summary
 
@@ -293,10 +292,10 @@ class EmissionCalculator:
         :return: Chart2dData object with change area by LULC change type
         :return: pie chart image with change area by LULC change type
         """
-        condition = out_df['change_type'] == 'no LULC change'
+        condition = out_df['LULC change type'] == 'no LULC change'
         out_df = out_df.loc[~condition]
-        labels = out_df['change_type']
-        sizes = out_df['area_change_type']
+        labels = out_df['LULC change type']
+        sizes = out_df['LULC change type area']
         fig, ax = plt.subplots()
         ax.pie(sizes,
                labels=labels,
@@ -323,10 +322,10 @@ class EmissionCalculator:
         :return: Chart2dData object with carbon emissions by LULC change type
         :return: horizontal bar chart image with carbon emissions by LULC change type
         """
-        condition = out_df['change_type'] == 'no LULC change'
+        condition = out_df['LULC change type'] == 'no LULC change'
         out_df = out_df.loc[~condition]
-        categories = out_df['change_type']
-        values = round(out_df['emissions_change_type'], 0)
+        categories = out_df['LULC change type']
+        values = round(out_df['LULC change type emissions'], 0)
         y_pos = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75]
 
         fig, (ax) = plt.subplots(figsize=(8, 4))
@@ -348,8 +347,8 @@ class EmissionCalculator:
         plt.savefig(emission_chart_file, dpi=300, bbox_inches='tight')
         plt.clf()
 
-        emission_chart_data = Chart2dData(x=values.to_list(),
-                                          y=y_pos,
+        emission_chart_data = Chart2dData(x=y_pos,
+                                          y=values.to_list(),
                                           color=[Color(color) for color in plot_colors],
                                           chart_type=ChartType.BAR)
 

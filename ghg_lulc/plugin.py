@@ -117,7 +117,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         :return: Info object with name, image, version, purpose, methodology, and literature sources.
         """
 
-        return Info(name='LULCChangeEmissionEstimation',
+        return Info(name='LULC Change Emission Estimation',
                     icon=PROJECT_DIR / 'resources/icon.jpeg',
                     version=Version(major=0,
                                     minor=0,

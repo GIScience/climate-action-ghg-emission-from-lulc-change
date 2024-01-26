@@ -60,7 +60,7 @@ def test_fetch_lulc(lulc_utility_mock):
 
 def test_plugin_info(lulc_utility_mock):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
-    assert operator.info().name == 'LULCChangeEmissionEstimation'
+    assert operator.info().name == 'LULC Change Emission Estimation'
 
 
 def test_plugin_compute(lulc_utility_mock):

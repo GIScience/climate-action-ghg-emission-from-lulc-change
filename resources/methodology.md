@@ -29,28 +29,28 @@ might be more suitable.
 
 LULC change emissions are estimated assuming pre- and post-change carbon stocks reach equilibrium, ignoring temporal
 delays (Hansis et al., 2015). Emissions (in t/ha) are calculated by subtracting the final from the initial assigned
-carbon stocks. The resulting LULC change emission map categorizes each change type with a unique ID, as detailed in
-Table 1. Negative emission values indicate carbon sequestration resulting from the LULC change. It is assumed that each
-location experiences a maximum of one LULC change during the observation period.
+carbon stocks. The resulting emission values of the different LULC change types are shown in Table 1. Negative emission
+values indicate carbon sequestration resulting from the LULC change. It is assumed that each location experiences a
+maximum of one LULC change during the observation period.
 
-### Table 1. Change ID, carbon emissions in t/ha and corresponding LULC change type
+### Table 1. Carbon emissions of the LULC change types in t/ha
 
-| Change ID | Carbon emissions [t/ha] | LULC change type                         |
-|-----------|-------------------------|------------------------------------------|
-| -11       | -156                    | settlement to forest                     |
-| -10       | -121                    | farmland to forest                       |
-| -9        | -119.5                  | meadow to forest                         |
-| -8        | -36.5                   | settlement to meadow                     |
-| -7        | -35                     | settlement to farmland                   |
-| -6        | -1.5                    | farmland to meadow                       |
-| 0         | unknown                 | default value or change from or to water |
-| 1-5       | 0                       | no change                                |
-| 6         | 1.5                     | meadow to farmland                       |
-| 7         | 35                      | agriculture to settlement                |
-| 8         | 36.5                    | meadow to settlement                     |
-| 9         | 119.5                   | forest to meadow                         |
-| 10        | 121                     | forest to farmland                       |
-| 11        | 156                     | forest to settlement                     |
+| LULC change type                         | Carbon emissions [t/ha] |
+|------------------------------------------|-------------------------|
+| settlement to forest                     | -156                    |
+| farmland to forest                       | -121                    |
+| meadow to forest                         | -119.5                  |
+| settlement to meadow                     | -36.5                   |
+| settlement to farmland                   | -35                     |
+| farmland to meadow                       | -1.5                    |
+| default value or change from or to water | unknown                 |
+| no change                                | 0                       |
+| meadow to farmland                       | 1.5                     |
+| farmland to settlement                   | 35                      |
+| meadow to settlement                     | 36.5                    |
+| forest to meadow                         | 119.5                   |
+| forest to farmland                       | 121                     |
+| forest to settlement                     | 156                     |
 
 Besides the carbon emissions in t/ha, the total change area by LULC change type, the total change emissions by LULC
 change type, and the total change area, as well as the total net emissions, gross emissions, and carbon sink, are

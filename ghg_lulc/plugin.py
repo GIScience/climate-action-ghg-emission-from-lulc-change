@@ -86,11 +86,11 @@ class ComputeInput(BaseModel):
     date_1: condate(ge=date(2017, 1, 1),
                     le=date.today()) = Field(title='Period Start',
                                              description='First timestamp of the period of analysis',
-                                             examples=[date(2018, 5, 1)])
+                                             examples=[date(2022, 5, 17)])
     date_2: condate(ge=date(2017, 1, 1),
                     le=date.today()) = Field(title='Period End',
                                              description='Last timestamp of the period of analysis',
-                                             examples=[date(2020, 5, 1)])
+                                             examples=[date(2023, 5, 31)])
 
     @field_validator('date_1', 'date_2')
     @classmethod

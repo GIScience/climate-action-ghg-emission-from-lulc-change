@@ -26,7 +26,7 @@ def lulc_utility_mock():
 def test_fetch_lulc(lulc_utility_mock):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
     lulc_area = LULCWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
-                             end_date='2018-05-01',
+                             end_date='2022-05-17',
                              threshold=0)
     aoi = Polygon([(0, 0), (3, 0), (3, -3), (0, -3)])
     expected_array = np.array([[0, 1, 2],
@@ -83,11 +83,11 @@ def test_plugin_compute(lulc_utility_mock):
                                            ]
                                        }
                                        },
-                                  date_1='2018-05-01',
-                                  date_2='2023-06-01')
+                                  date_1='2022-05-17',
+                                  date_2='2023-05-31')
 
     lulc_area = LULCWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
-                             end_date='2018-05-01',
+                             end_date='2022-05-17',
                              threshold=0)
     aoi = Polygon([(0, 0), (3, 0), (3, -3), (0, -3)])
     operator.fetch_lulc(lulc_area, aoi)

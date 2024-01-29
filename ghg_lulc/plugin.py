@@ -1,5 +1,18 @@
-from affine import Affine
 import asyncio
+import logging.config
+import os
+from dataclasses import dataclass
+from datetime import date
+from numbers import Number
+from pathlib import Path
+from typing import List, Optional, Dict, Tuple
+
+import geojson_pydantic
+import numpy as np
+import shapely
+import yaml
+from PIL import Image
+from affine import Affine
 from climatoology.app.plugin import PlatformPlugin
 from climatoology.base.artifact import create_geotiff_artifact, create_geojson_artifact, \
     create_table_artifact, create_image_artifact, create_chart_artifact
@@ -7,25 +20,14 @@ from climatoology.base.operator import Operator, Info, Artifact, Concern, Comput
 from climatoology.broker.message_broker import AsyncRabbitMQ
 from climatoology.store.object_store import MinioStorage
 from climatoology.utility.api import LULCWorkUnit, LulcUtilityUtility
-from dataclasses import dataclass
-from datetime import date
-import geojson_pydantic
-from ghg_lulc.emissions import EmissionCalculator
-import logging.config
-import numpy as np
 from numpy.typing import ArrayLike
-from numbers import Number
-import os
-from pathlib import Path
-from PIL import Image
-from pydantic import condate
+from pydantic import condate, confloat
 from pydantic import field_validator, model_validator, BaseModel, Field
 from rasterio import CRS
 from rasterio.features import geometry_mask
 from semver import Version
-import shapely
-from typing import List, Optional, Dict, Tuple
-import yaml
+
+from ghg_lulc.emissions import EmissionCalculator
 
 log_level = os.getenv('LOG_LEVEL', 'INFO')
 log_config = 'conf/logging.yaml'
@@ -79,14 +81,6 @@ class ComputeInput(BaseModel):
                       ]
                   }
               }])
-
-    def get_geom(self) -> shapely.MultiPolygon:
-        """Convert the input geojson geometry to a shapely geometry.
-
-        :return: A shapely.MultiPolygon representing the area of interest defined by the user.
-        """
-        return shapely.geometry.shape(self.aoi.geometry)
-
     date_1: condate(ge=date(2017, 1, 1),
                     le=date.today()) = Field(title='Period Start',
                                              description='First timestamp of the period of analysis',
@@ -95,9 +89,28 @@ class ComputeInput(BaseModel):
                     le=date.today()) = Field(title='Period End',
                                              description='Last timestamp of the period of analysis',
                                              examples=[date(2023, 5, 31)])
+    classification_threshold: Optional[confloat(ge=0,
+                                                le=100)] = Field(title='Minimum required classification confidence [%]',
+                                                                 description='The LULC classification by a ML model '
+                                                                             'has inherent uncertainties. This number '
+                                                                             'defines the minimum level of confidence '
+                                                                             'required by the user. Any prediction '
+                                                                             "where the model's confidence lies above "
+                                                                             'this threshold will be assumed to be '
+                                                                             '"true", all classification exhibiting '
+                                                                             'lower confidence will be classified as '
+                                                                             '"unknown".',
+                                                                 examples=[75],
+                                                                 default=75)
+
+    def get_geom(self) -> shapely.MultiPolygon:
+        """Convert the input geojson geometry to a shapely geometry.
+
+        :return: A shapely.MultiPolygon representing the area of interest defined by the user.
+        """
+        return shapely.geometry.shape(self.aoi.geometry)
 
     @field_validator('date_1', 'date_2')
-    @classmethod
     def check_month_year(cls, value):
         if not 5 <= value.month <= 9:
             raise ValueError('Dates must be within the months May to September.')
@@ -155,16 +168,17 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
 
         area1 = LULCWorkUnit(area_coords=aoi_box,
                              end_date=params.date_1.isoformat(),
-                             threshold=0)
+                             threshold=params.classification_threshold / 100)
 
         area2 = LULCWorkUnit(area_coords=aoi_box,
                              end_date=params.date_2.isoformat(),
-                             threshold=0)
+                             threshold=params.classification_threshold / 100)
 
         lulc_output1 = self.fetch_lulc(area1, aoi)
         lulc_output2 = self.fetch_lulc(area2, aoi)
 
-        changes, change_colormap = emissions_calculator.derive_lulc_changes(lulc_output1.lulc_array, lulc_output2.lulc_array)
+        changes, change_colormap = emissions_calculator.derive_lulc_changes(lulc_output1.lulc_array,
+                                                                            lulc_output2.lulc_array)
         emissions_calculator.export_raster(changes, lulc_output1.meta)
         emission_factor_df = emissions_calculator.convert_raster()
         emission_factor_df = emissions_calculator.allocate_emissions(emission_factor_df, EMISSION_FACTORS)

@@ -233,10 +233,9 @@ def test_emission_plot(computation_resources):
                               'farmland to settlement', 'meadow to settlement', 'forest to meadow',
                               'forest to farmland', 'forest to settlement']}
     out_df = pd.DataFrame(data=d)
-    y_pos = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75]
     calculator = EmissionCalculator(compute_dir=computation_resources.computation_dir)
     emission_chart_data, emission_chart_file = calculator.emission_plot(out_df, PLOT_COLORS)
-    assert emission_chart_data.x == y_pos
+    assert emission_chart_data.x == d['LULC change type']
     assert emission_chart_data.y == d['LULC change type emissions']
     assert emission_chart_data.color[0] == Color('midnightblue')
     assert os.path.exists(emission_chart_file) is True

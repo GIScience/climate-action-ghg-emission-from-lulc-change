@@ -35,8 +35,12 @@ PROJECT_DIR = Path(__file__).parent.parent
 
 EMISSION_FACTORS = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 1.5), (7, 35), (8, 36.5), (9, 119.5), (10, 121),
                     (11, 156), (12, -156), (13, -121), (14, -119.5), (15, -36.5), (16, -35), (17, -1.5)]
-PLOT_COLORS = ['midnightblue', 'mediumblue', 'blue', 'royalblue', 'cornflowerblue', 'lightsteelblue', 'mistyrose',
-               'pink', 'lightcoral', 'indianred', 'firebrick', 'darkred']
+PLOT_COLORS = {'settlement to forest': 'midnightblue', 'farmland to forest': 'mediumblue',
+               'meadow to forest': 'blue', 'settlement to meadow': 'royalblue',
+               'settlement to farmland': 'cornflowerblue', 'farmland to meadow': 'lightsteelblue',
+               'meadow to farmland': 'mistyrose', 'farmland to settlement': 'pink',
+               'meadow to settlement': 'lightcoral', 'forest to meadow': 'indianred',
+               'forest to farmland': 'firebrick', 'forest to settlement': 'darkred'}
 
 
 @dataclass
@@ -65,11 +69,11 @@ class ComputeInput(BaseModel):
                       'coordinates': [
                           [
                               [
-                                  [12.3, 48.22],
-                                  [12.3, 48.34],
-                                  [12.48, 48.34],
-                                  [12.48, 48.22],
-                                  [12.3, 48.22]
+                                  [8.59, 49.36],
+                                  [8.78, 49.36],
+                                  [8.78, 49.44],
+                                  [8.59, 49.44],
+                                  [8.59, 49.36]
                               ]
                           ]
                       ]

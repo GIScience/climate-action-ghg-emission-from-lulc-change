@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -284,7 +284,7 @@ class EmissionCalculator:
 
         return summary
 
-    def area_plot(self, out_df: pd.DataFrame, plot_colors: List[str]) -> Tuple[Chart2dData, Path]:
+    def area_plot(self, out_df: pd.DataFrame, plot_colors: dict) -> Tuple[Chart2dData, Path]:
         """
 
         :param out_df: dataframe with stats per change type
@@ -296,6 +296,7 @@ class EmissionCalculator:
         out_df = out_df.loc[~condition]
         labels = out_df['LULC change type']
         sizes = out_df['LULC change type area']
+        plot_colors = [value for key, value in plot_colors.items() if key in out_df['LULC change type'].tolist()]
         fig, ax = plt.subplots()
         ax.pie(sizes,
                labels=labels,
@@ -314,7 +315,7 @@ class EmissionCalculator:
 
         return area_chart_data, areas_chart_file
 
-    def emission_plot(self, out_df: pd.DataFrame, plot_colors: List[str]) -> Tuple[Chart2dData, Path]:
+    def emission_plot(self, out_df: pd.DataFrame, plot_colors: dict) -> Tuple[Chart2dData, Path]:
         """
 
         :param out_df: dataframe with stats per change type
@@ -326,7 +327,8 @@ class EmissionCalculator:
         out_df = out_df.loc[~condition]
         categories = out_df['LULC change type']
         values = round(out_df['LULC change type emissions'], 0)
-        y_pos = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75]
+        y_pos = [i * 0.25 for i in range(len(values))]
+        plot_colors = [value for key, value in plot_colors.items() if key in out_df['LULC change type'].tolist()]
 
         fig, (ax) = plt.subplots(figsize=(8, 4))
         bars = ax.barh(y_pos, values, height=0.2, color=plot_colors)
@@ -347,7 +349,7 @@ class EmissionCalculator:
         plt.savefig(emission_chart_file, dpi=300, bbox_inches='tight')
         plt.clf()
 
-        emission_chart_data = Chart2dData(x=y_pos,
+        emission_chart_data = Chart2dData(x=categories.to_list(),
                                           y=values.to_list(),
                                           color=[Color(color) for color in plot_colors],
                                           chart_type=ChartType.BAR)

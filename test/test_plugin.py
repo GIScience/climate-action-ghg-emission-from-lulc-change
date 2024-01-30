@@ -9,13 +9,13 @@ import pytest
 import rasterio
 from shapely.geometry import Polygon
 from climatoology.base.computation import ComputationScope
-from climatoology.utility.api import LULCWorkUnit
+from climatoology.utility.api import LulcWorkUnit
 from ghg_lulc.plugin import GHGEmissionFromLULC, ComputeInput
 
 
 @pytest.fixture
 def lulc_utility_mock():
-    with patch('climatoology.utility.api.LulcUtilityUtility') as lulc_utility:
+    with patch('climatoology.utility.api.LulcUtility') as lulc_utility:
         lulc_utility.compute_raster.side_effect = [rasterio.open(f'{os.path.dirname(__file__)}/test_0.tif'),
                                                    rasterio.open(f'{os.path.dirname(__file__)}/test_1.tif'),
                                                    rasterio.open(f'{os.path.dirname(__file__)}/test_2.tif')]
@@ -25,7 +25,7 @@ def lulc_utility_mock():
 
 def test_fetch_lulc(lulc_utility_mock):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
-    lulc_area = LULCWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
+    lulc_area = LulcWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
                              end_date='2022-05-17',
                              threshold=0)
     aoi = Polygon([(0, 0), (3, 0), (3, -3), (0, -3)])
@@ -33,27 +33,18 @@ def test_fetch_lulc(lulc_utility_mock):
                                [3, 4, 5],
                                [0, 1, 2]])
 
-    expected_meta = {
-                'driver': 'GTiff',
-                'dtype': np.int8,
-                'count': 1,
-                'width': 3,
-                'height': 3,
-                'transform': Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0),
-                'crs': CRS.from_epsg(4326)
-    }
     expected_transform = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
     expected_crs = CRS.from_epsg(4326)
-    expected_colors = {i: (255, 0, 0, 255) if i == 1
-                       else (0, 255, 0, 255) if i == 2
-                       else (0, 0, 255, 255) if i == 3
-                       else (130, 130, 0, 255) if i == 4
-                       else (130, 0, 130, 255) if i == 5
-                       else (0, 0, 0, 255) for i in range(256)}
+    expected_colors = {i: [255, 0, 0, 255] if i == 1
+                       else [0, 255, 0, 255] if i == 2
+                       else [0, 0, 255, 255] if i == 3
+                       else [130, 130, 0, 255] if i == 4
+                       else [130, 0, 130, 255] if i == 5
+                       else [0, 0, 0, 255] for i in range(256)}
     lulc_output = operator.fetch_lulc(lulc_area, aoi)
-    assert np.array_equal(expected_array, lulc_output.lulc_array)
-    assert lulc_output.meta == expected_meta
-    assert lulc_output.transform == expected_transform
+
+    assert np.array_equal(lulc_output.data, expected_array)
+    assert lulc_output.transformation == expected_transform
     assert lulc_output.crs == expected_crs
     assert lulc_output.colormap == expected_colors
 
@@ -85,7 +76,7 @@ def test_plugin_compute(lulc_utility_mock):
                                   date_1='2022-05-17',
                                   date_2='2023-05-31')
 
-    lulc_area = LULCWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
+    lulc_area = LulcWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
                              end_date='2022-05-17',
                              threshold=0)
     aoi = Polygon([(0, 0), (3, 0), (3, -3), (0, -3)])

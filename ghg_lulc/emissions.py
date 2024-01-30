@@ -6,11 +6,10 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import rasterio
-from climatoology.base.artifact import Chart2dData, ChartType
-from rasterio.features import shapes
+from climatoology.base.artifact import Chart2dData, ChartType, RasterInfo
 from matplotlib.colors import TwoSlopeNorm, to_hex
 from pydantic_extra_types.color import Color
+from rasterio.features import shapes
 
 from ghg_lulc.utils import apply_conditions
 
@@ -88,40 +87,26 @@ class EmissionCalculator:
 
         return changes, change_colormap
 
-    def export_raster(self, changes: np.ndarray, meta: dict):
-        """
-
-        :param changes: ndarray with LULC changes between first and second time period
-        :param meta: parameters for generation of geotiff
-        """
-        change_file = self.compute_dir / 'LULC_change.tif'
-
-        with rasterio.open(change_file, 'w', **meta) as dst:
-            dst.write(changes, 1)
-
-    def convert_raster(self) -> gpd.GeoDataFrame:
+    @staticmethod
+    def convert_raster(change_raster: RasterInfo) -> gpd.GeoDataFrame:
         """
 
         Converts the LULC change raster to a geodataframe. Then, it reprojects the geodataframe to the projected
         coordinate system (EPSG:25832), so we can perform area-based calculations on it. For study areas outside UTM
         zone 32N, the coordinate system must be adapted!
 
+        :param change_raster: The LULC change raster data
         :return: geodataframe with LULC change polygons
         """
+        log.info('converting raster to vector')
+        results = (
+            {'properties': {'change_id': v}, 'geometry': s}
+            for i, (s, v) in enumerate(shapes(change_raster.data, mask=None, transform=change_raster.transformation))
+        )
 
-        with rasterio.open(self.compute_dir / 'LULC_change.tif') as src:
-            image = src.read(1).astype(np.int16)
-            crs = src.crs
+        org_df = gpd.GeoDataFrame.from_features(results, crs=change_raster.crs)
 
-            log.info('converting raster to vector')
-            results = (
-                {'properties': {'change_id': v}, 'geometry': s}
-                for i, (s, v) in enumerate(shapes(image, mask=None, transform=src.transform))
-            )
-
-            org_df = gpd.GeoDataFrame.from_features(results, crs=crs)
-
-        log.info('reprojecting geodataframe from %s to EPSG:25832' % crs)
+        log.info('reprojecting geodataframe from %s to EPSG:25832' % change_raster.crs)
         emission_factor_df = org_df.to_crs('EPSG:25832')
 
         return emission_factor_df

@@ -1,13 +1,7 @@
-# Carbon emissions from LULC change
 
-## Purpose
+# <img src="resources/icon.jpeg" width="5%"> Carbon emissions from LULC change
 
-The purpose of this plugin is to calculate carbon emissions from land use and land cover (LULC) change, given an area of
-interest and a specific observation period. The plugin provides a GeoTIFF of the LULC classification at the beginning
-and at the end of the observation period, a GeoTIFF showing the LULC change carbon emissions in t/ha, and two CSV files
-with statistics such as LULC change area by change type, emissions by change type, total net emissions, total gross
-emissions, total carbon sink, and total change area. It also provides a Geopackage file with the emissions per hectare
-and the absolute emissions of each LULC change.
+This plugin calculates the GHG emissions emitted through LULC changes between two timestamps. For more documentation see the [climate action website](https://climate-action.heigit.org/) or the [purpose](resources/purpose.md), [methodology](resources/methodology.md) and [sources](resources/sources.bib) files in the [resources directory](resources).
 
 ## Installation
 

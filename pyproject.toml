@@ -2,12 +2,12 @@
 name = "ghg_lulc"
 version = "0.0.1"
 description = "This plugin compuses green house gas emissions from land use and land cover changes between two timestamps."
-authors = ["Veit Ulrich <veit.ulrich@uni-heidelberg.de>"]
+authors = ["Veit Ulrich <veit.ulrich@uni-heidelberg.de>", "Moritz Schott <moritz.schott@heigit.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.11.5"
-climatoology = {git = "ssh://git@gitlab.gistools.geog.uni-heidelberg.de:2022/climate-action/climatoology.git", rev = "3.0.3"}
+climatoology = {git = "ssh://git@gitlab.gistools.geog.uni-heidelberg.de:2022/climate-action/climatoology.git", rev = "3.1.0"}
 pydantic = "^2.5.3"
 pydantic-settings = "^2.1.0"
 geojson-pydantic = "^1.0.1"
@@ -15,6 +15,8 @@ shapely = "^2.0.2"
 pyyaml = "^6.0.1"
 matplotlib = "^3.8.2"
 geopandas = "^0.14.2"
+pyproj = "^3.6.1"
+pydantic-extra-types = "^2.5.0"
 
 
 [tool.poetry.group.test.dependencies]

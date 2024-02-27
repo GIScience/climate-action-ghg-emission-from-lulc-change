@@ -1,52 +1,10 @@
 import os
-import uuid
-from unittest.mock import patch
 
-from affine import Affine
-import numpy as np
-from pyproj import CRS
+import pandas as pd
 import pytest
 import rasterio
-from shapely.geometry import Polygon
-from climatoology.base.computation import ComputationScope
-from climatoology.utility.api import LulcWorkUnit
-from ghg_lulc.plugin import GHGEmissionFromLULC, ComputeInput
 
-
-@pytest.fixture
-def lulc_utility_mock():
-    with patch('climatoology.utility.api.LulcUtility') as lulc_utility:
-        lulc_utility.compute_raster.side_effect = [rasterio.open(f'{os.path.dirname(__file__)}/test_0.tif'),
-                                                   rasterio.open(f'{os.path.dirname(__file__)}/test_1.tif'),
-                                                   rasterio.open(f'{os.path.dirname(__file__)}/test_2.tif')]
-
-        yield lulc_utility
-
-
-def test_fetch_lulc(lulc_utility_mock):
-    operator = GHGEmissionFromLULC(lulc_utility_mock)
-    lulc_area = LulcWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
-                             end_date='2022-05-17',
-                             threshold=0)
-    aoi = Polygon([(0, 0), (3, 0), (3, -3), (0, -3)])
-    expected_array = np.array([[0, 1, 2],
-                               [3, 4, 5],
-                               [0, 1, 2]])
-
-    expected_transform = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
-    expected_crs = CRS.from_epsg(4326)
-    expected_colors = {i: [255, 0, 0, 255] if i == 1
-                       else [0, 255, 0, 255] if i == 2
-                       else [0, 0, 255, 255] if i == 3
-                       else [130, 130, 0, 255] if i == 4
-                       else [130, 0, 130, 255] if i == 5
-                       else [0, 0, 0, 255] for i in range(256)}
-    lulc_output = operator.fetch_lulc(lulc_area, aoi)
-
-    assert np.array_equal(lulc_output.data, expected_array)
-    assert lulc_output.transformation == expected_transform
-    assert lulc_output.crs == expected_crs
-    assert lulc_output.colormap == expected_colors
+from ghg_lulc.operator_worker import GHGEmissionFromLULC
 
 
 def test_plugin_info(lulc_utility_mock):
@@ -54,39 +12,42 @@ def test_plugin_info(lulc_utility_mock):
     assert operator.info().name == 'LULC Change Emission Estimation'
 
 
-def test_plugin_compute(lulc_utility_mock):
+def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resources):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
-    operator_input = ComputeInput(aoi={'type': 'Feature',
-                                       'properties': {},
-                                       'geometry': {
-                                           'type': 'MultiPolygon',
-                                           'coordinates': [
-                                               [
-                                                   [
-                                                       [8.59, 49.36],
-                                                       [8.78, 49.36],
-                                                       [8.78, 49.44],
-                                                       [8.59, 49.44],
-                                                       [8.59, 49.36]
-                                                   ]
-                                               ]
-                                           ]
-                                       }
-                                       },
-                                  date_1='2022-05-17',
-                                  date_2='2023-05-31')
 
-    lulc_area = LulcWorkUnit(area_coords=(12.3, 48.22, 12.48, 48.34),
-                             end_date='2022-05-17',
-                             threshold=0)
-    aoi = Polygon([(0, 0), (3, 0), (3, -3), (0, -3)])
-    operator.fetch_lulc(lulc_area, aoi)
+    artifacts = operator.compute(compute_resources, expected_compute_input)
 
-    with ComputationScope(uuid.uuid4()) as resources:
-        artifacts = operator.compute(resources, operator_input)
+    assert {a.name for a in artifacts} == {'Carbon stock values per class',
+                                           'Carbon emissions by LULC change type [t]',
+                                           'Change areas and emissions by LULC change type',
+                                           'Change areas by LULC change type [ha]',
+                                           'Classification for first timestamp',
+                                           'Classification for second timestamp',
+                                           'LULC Change',
+                                           'LULC Change (patched)',
+                                           'LULC Emissions',
+                                           'Localised Emissions',
+                                           'Localised Emissions (patched)',
+                                           'Total net emissions, gross emissions, and carbon sink in the observation '
+                                           'period'}
 
-        assert {a.name for a in artifacts} == {'Classification 1', 'Classification 2', 'LULC Change',
-                                               'LULC Emissions', 'Change areas and emissions by LULC change type',
-                                               'Total net emissions, gross emissions, and carbon sink in the '
-                                               'observation period', 'Change areas by LULC change type [ha]',
-                                               'Carbon emissions by LULC change type [t]'}
+    for artifact in artifacts:
+        match artifact.name:
+            case 'Change areas and emissions by LULC change type':
+                expected_change_type_table = pd.DataFrame(
+                    {'Change': ['farmland to built-up', 'grass to farmland', 'forest to grass'],
+                     'Area [ha]': [0.01, 0.01, 0.01],
+                     'Total emissions [t]': [0.37, 0.54, 0.92]})
+                exported_df = pd.read_csv(artifact.file_path)
+                pd.testing.assert_frame_equal(exported_df, expected_change_type_table)
+
+
+def test_no_change_case(lulc_utility_mock, expected_compute_input, compute_resources):
+    lulc_utility_mock.compute_raster.side_effect = [
+        rasterio.open(f'{os.path.dirname(__file__)}/resources/minimal_first_ts.tiff'),
+        rasterio.open(f'{os.path.dirname(__file__)}/resources/minimal_first_ts.tiff')]
+    operator = GHGEmissionFromLULC(lulc_utility_mock)
+
+    with pytest.raises(ValueError,
+                       match='No LULC changes have between detected between the two timestamps.'):
+        _ = operator.compute(compute_resources, expected_compute_input)

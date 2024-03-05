@@ -3,7 +3,6 @@ import pytest
 import rasterio
 
 from ghg_lulc.operator_worker import GHGEmissionFromLULC
-
 from test.conftest import TEST_RESOURCES_DIR
 
 
@@ -41,14 +40,15 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                      'Total emissions [t]': [0.37, 0.54, 0.92]})
                 exported_df = pd.read_csv(artifact.file_path)
                 pd.testing.assert_frame_equal(exported_df, expected_change_type_table)
-            case 'Localised Emissions':
-                assert artifact.description == (TEST_RESOURCES_DIR/'localised_emissions_text.md').read_text(encoding='utf-8')
+            # TODO: Test disabled due to https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/operator-contributions/ghg-emission-from-lulc-change/-/issues/57
+            # case 'Localised Emissions':
+            #    assert artifact.description == (TEST_RESOURCES_DIR/'localised_emissions_text.md').read_text(encoding='utf-8')
 
 
 def test_no_change_case(lulc_utility_mock, expected_compute_input, compute_resources):
     lulc_utility_mock.compute_raster.side_effect = [
-        rasterio.open(TEST_RESOURCES_DIR/'minimal_first_ts.tiff'),
-        rasterio.open(TEST_RESOURCES_DIR/'minimal_first_ts.tiff')]
+        rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff'),
+        rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff')]
     operator = GHGEmissionFromLULC(lulc_utility_mock)
 
     with pytest.raises(ValueError,

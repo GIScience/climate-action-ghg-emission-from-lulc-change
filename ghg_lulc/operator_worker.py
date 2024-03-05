@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import List, Tuple
 
 import geopandas as gpd
@@ -11,14 +10,14 @@ from semver import Version
 
 from ghg_lulc.artifact import ComputationResources, create_classification_artifacts, create_change_artifacts, \
     create_emissions_artifact, create_stock_artifact, create_summary_artifact, create_change_type_artifact, create_area_plot_artifacts, \
-    create_emission_plot_artifacts
+    create_emission_plot_artifacts, create_artifact_description_artifact
 from ghg_lulc.emissions import EmissionCalculator
 from ghg_lulc.input import ComputeInput
-from ghg_lulc.utils import fetch_lulc, get_ghg_stock, calc_emission_factors
+from ghg_lulc.utils import fetch_lulc, get_ghg_stock, calc_emission_factors, PROJECT_DIR
 
 log = logging.getLogger(__name__)
 
-PROJECT_DIR = Path(__file__).parent.parent
+
 
 
 class GHGEmissionFromLULC(Operator[ComputeInput]):
@@ -73,8 +72,11 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         chart_artifacts = create_chart_artifacts(emissions_df,
                                                  emission_calculator,
                                                  resources)
+        formatted_text = self.create_markdown(params)
+        artifact_description_artifact = create_artifact_description_artifact(formatted_text, resources)
 
-        return change_artifacts + [emissions_artifact] + table_artifacts + chart_artifacts
+        return change_artifacts + [emissions_artifact] + table_artifacts + chart_artifacts + \
+            [artifact_description_artifact]
 
     def get_changes(self,
                     emission_calculator: EmissionCalculator,
@@ -90,6 +92,8 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                                                                                          lulc_after)
         change_artifacts = create_change_artifacts(change_raster,
                                                    change_emissions_raster,
+                                                   self.ghg_stock[params.ghg_stock_source],
+                                                   self.emission_factors[params.ghg_stock_source],
                                                    resources)
 
         change_df = emission_calculator.convert_change_raster(change_raster)
@@ -111,6 +115,33 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         lulc_after = fetch_lulc(self.lulc_utility, area_after, aoi)
 
         return lulc_before, lulc_after
+
+    def create_markdown(self, params: ComputeInput) -> str:
+        directory = PROJECT_DIR / 'resources/artifact_descriptions'
+        content = [file.read_text(encoding='utf-8') for file in sorted(directory.glob('*.md'))]
+        content = '\n\n'.join(content)
+        carbon_stocks = self.ghg_stock[params.ghg_stock_source][['utility_class_name', 'ghg_stock']].to_markdown(
+            index=False,
+            headers=[
+                'LULC Class',
+                'Carbon stock [t/ha]'],
+            floatfmt='#.1f')
+        emission_factors = self.emission_factors[params.ghg_stock_source][['utility_class_name_before',
+                                                                           'utility_class_name_after',
+                                                                           'emission_factor']].to_markdown(
+            index=False,
+            headers=[
+                'From Class',
+                'To Class',
+                'Factor [t/ha]'],
+            floatfmt='#.1f')
+        formatted_text = content.format(date_before=params.date_before,
+                                        date_after=params.date_after,
+                                        classification_threshold=params.classification_threshold * 100,
+                                        carbon_stocks=carbon_stocks,
+                                        emission_factors=emission_factors)
+
+        return formatted_text
 
 
 def create_table_artifacts(emission_calculator: EmissionCalculator,

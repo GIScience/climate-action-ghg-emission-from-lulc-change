@@ -7,10 +7,9 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from climatoology.base.artifact import _Artifact, RasterInfo, create_geotiff_artifact, create_geojson_artifact, \
-    create_table_artifact, Chart2dData, create_chart_artifact, create_image_artifact
+    create_table_artifact, Chart2dData, create_chart_artifact, create_image_artifact, create_markdown_artifact
 from climatoology.base.computation import ComputationResources
-
-from ghg_lulc.utils import get_colors, GhgStockSource
+from ghg_lulc.utils import get_colors, GhgStockSource, PROJECT_DIR
 
 
 def create_classification_artifacts(lulc_before: RasterInfo,
@@ -26,9 +25,7 @@ def create_classification_artifacts(lulc_before: RasterInfo,
                                nodata=no_data_value),
         layer_name='Classification for first timestamp',
         caption='LULC classification at beginning of observation period',
-        description='LULC classification at beginning of observation period. The '
-                    'classes are forest, agriculture, and settlement. The '
-                    'classification is created using a deep learning model.',
+        description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='lulc_classification_before')
 
@@ -40,9 +37,7 @@ def create_classification_artifacts(lulc_before: RasterInfo,
                                nodata=no_data_value),
         layer_name='Classification for second timestamp',
         caption='LULC classification at end of observation period',
-        description='LULC classification at end of observation period. The '
-                    'classes are forest, agriculture, and settlement. The '
-                    'classification is created using a deep learning model.',
+        description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='lulc_classification_after')
 
@@ -51,6 +46,8 @@ def create_classification_artifacts(lulc_before: RasterInfo,
 
 def create_change_artifacts(change: RasterInfo,
                             change_emissions: RasterInfo,
+                            ghg_stock: pd.DataFrame,
+                            emission_factors: pd.DataFrame,
                             resources: ComputationResources) -> Tuple[_Artifact, _Artifact, _Artifact, _Artifact]:
     no_data_value = -1
     filled_change_data = change.data.filled(fill_value=no_data_value)
@@ -63,7 +60,7 @@ def create_change_artifacts(change: RasterInfo,
         raster_info=filled_change,
         layer_name='LULC Change',
         caption='LULC changes within the observation period',
-        description='LULC changes within the observation period.',
+        description=(PROJECT_DIR / 'resources/artifact_descriptions/03_LULC_change.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='LULC_change')
 
@@ -77,7 +74,7 @@ def create_change_artifacts(change: RasterInfo,
         raster_info=patched_change,
         layer_name='LULC Change (patched)',
         caption='LULC changes within the observation period',
-        description='LULC changes within the observation period.',
+        description=(PROJECT_DIR / 'resources/artifact_descriptions/03_LULC_change.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='LULC_change_patched')
 
@@ -88,12 +85,28 @@ def create_change_artifacts(change: RasterInfo,
                                          transformation=change.transformation,
                                          colormap=change_emissions.colormap,
                                          nodata=no_data_value)
+    change_emission_description = (PROJECT_DIR / 'resources/artifact_descriptions/04_Localized_emissions.md').read_text(
+        encoding='utf-8')
+    change_emission_description=change_emission_description.format(carbon_stocks=ghg_stock[['utility_class_name', 'ghg_stock']].to_markdown(
+            index=False,
+            headers=[
+                'LULC Class',
+                'Carbon stock [t/ha]'],
+            floatfmt='#.1f'),
+        emission_factors=emission_factors[['utility_class_name_before',
+                                                                           'utility_class_name_after',
+                                                                           'emission_factor']].to_markdown(
+            index=False,
+            headers=[
+                'From Class',
+                'To Class',
+                'Factor [t/ha]'],
+            floatfmt='#.1f'))
     localised_emission_artifact = create_geotiff_artifact(
         raster_info=filled_change_emissions,
         layer_name='Localised Emissions',
         caption='GHG emissions per pixel due to LULC change',
-        description='Absolute GHG emissions per pixel [t] due to LULC change within the'
-                    'observation period. A pixel size of 10 m is assumed.',
+        description=change_emission_description,
         resources=resources,
         filename='LULC_change_emissions')
 
@@ -109,8 +122,7 @@ def create_change_artifacts(change: RasterInfo,
         raster_info=patched_change_emissions,
         layer_name='Localised Emissions (patched)',
         caption='GHG emissions per pixel due to LULC change',
-        description='Absolute GHG emissions per pixel [t] due to LULC change within the'
-                    'observation period. A pixel size of 10 m is assumed.',
+        description=change_emission_description,
         resources=resources,
         filename='LULC_change_emissions_patched')
 
@@ -135,10 +147,7 @@ def create_emissions_artifact(emissions_df: gpd.GeoDataFrame, resources: Computa
                                                  caption='Absolute carbon emissions of LULC changes within the observation '
                                                          'period per change type [t]',
                                                  resources=resources,
-                                                 description='LULC change emissions within the observation period. The polygons '
-                                                             'are colored by their absolute carbon emissions or sinks during '
-                                                             'the observation period. Each polygon represents one type of change '
-                                                             '(e.g. grass to farmland) and is aggregated over the whole area of interst.',
+                                                 description=(PROJECT_DIR / 'resources/artifact_descriptions/05_LULC_emissions.md').read_text(encoding='utf-8'),
                                                  color=colors,
                                                  filename='LULC_emissions')
     return emissions_artifact
@@ -150,10 +159,7 @@ def create_summary_artifact(summary_df: gpd, resources: ComputationResources) ->
                                                    'period',
                                              caption='The table contains the total net emissions, gross emissions, and carbon '
                                                      'sink in the observation period.',
-                                             description='Net emissions are the combination of emissions and carbon sinks, '
-                                                         'gross emissions are the total LULC change emissions of carbon to the'
-                                                         'atmosphere, and carbon sink means the total sequestration of carbon'
-                                                         'as a result of LULC change.',
+                                             description=(PROJECT_DIR / 'resources/artifact_descriptions/10_summary.md').read_text(encoding='utf-8'),
                                              resources=resources,
                                              filename='summary')
     return summary_artifact
@@ -164,8 +170,8 @@ def create_stock_artifact(stock_df: pd.DataFrame,
                           resources: ComputationResources) -> _Artifact:
     stock_artifact = create_table_artifact(data=stock_df,
                                            title='Carbon stock values per class',
-                                           caption=f'The table contains the carbon stock values for each class according to the selected {stock_source.value}.',
-                                           description='The table contains three columns: The class name, the class definition and the GHG stock value for the respective class.',
+                                           caption=f'The table contains the carbon stock values for each class according to the selected GHG stock source: {stock_source.value}.',
+                                           description=(PROJECT_DIR / 'resources/artifact_descriptions/08_ghg_stocks.md').read_text(encoding='utf-8'),
                                            resources=resources,
                                            filename='stock')
     return stock_artifact
@@ -176,7 +182,7 @@ def create_change_type_artifact(change_type_table: pd.DataFrame, resources: Comp
                                                        title='Change areas and emissions by LULC change type',
                                                        caption='The table contains the total change area by LULC change type and the '
                                                                'total change emissions by LULC change type.',
-                                                       description='description',
+                                                       description=(PROJECT_DIR / 'resources/artifact_descriptions/09_stats_change_type.md').read_text(encoding='utf-8'),
                                                        resources=resources,
                                                        filename='stats_change_type')
     return change_type_table_artifact
@@ -190,14 +196,14 @@ def create_area_plot_artifacts(area_data: Chart2dData,
                                                caption='This pie chart shows the change areas by LULC change type [ha] in the '
                                                        'observation period.',
                                                resources=resources,
-                                               description='description',
+                                               description=(PROJECT_DIR / 'resources/artifact_descriptions/07_area_plot.md').read_text(encoding='utf-8'),
                                                filename='area_plot')
     area_image_artifact = create_image_artifact(image=Image.open(area_file),
                                                 title='Change areas by LULC change type [ha]',
                                                 caption='This pie chart shows the change areas by LULC change type [ha] in the '
                                                         'observation period.',
                                                 resources=resources,
-                                                description='description',
+                                                description=(PROJECT_DIR / 'resources/artifact_descriptions/07_area_plot.md').read_text(encoding='utf-8'),
                                                 filename='area_plot')
     return area_data_artifact, area_image_artifact
 
@@ -210,13 +216,24 @@ def create_emission_plot_artifacts(emission_data: Chart2dData,
                                                    caption='This bar chart shows the carbon emissions by LULC change'
                                                            'type [t] in the observation period.',
                                                    resources=resources,
-                                                   description='description',
+                                                   description=(PROJECT_DIR / 'resources/artifact_descriptions/06_emission_plot.md').read_text(encoding='utf-8'),
                                                    filename='emission_plot')
     emission_image_artifact = create_image_artifact(image=Image.open(emission_file),
                                                     title='Carbon emissions by LULC change type [t]',
                                                     caption='This bar chart shows the carbon emissions by LULC change'
                                                             'type [t] in the observation period.',
                                                     resources=resources,
-                                                    description='description',
+                                                    description=(PROJECT_DIR / 'resources/artifact_descriptions/06_emission_plot.md').read_text(encoding='utf-8'),
                                                     filename='emission_plot')
     return emission_data_artifact, emission_image_artifact
+
+
+def create_artifact_description_artifact(formatted_text: str,
+                                         resources: ComputationResources) -> _Artifact:
+    artifact_description_artifact = create_markdown_artifact(text=formatted_text,
+                                                             name='Description of the artifacts',
+                                                             tl_dr='This contains the information you need to '
+                                                                   'understand the artifacts.',
+                                                             resources=resources,
+                                                             filename='artifact_description')
+    return artifact_description_artifact

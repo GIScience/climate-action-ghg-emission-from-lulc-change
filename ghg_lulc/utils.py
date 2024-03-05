@@ -16,6 +16,8 @@ from rasterio.features import geometry_mask
 
 log = logging.getLogger(__name__)
 
+PROJECT_DIR = Path(__file__).parent.parent
+
 PIXEL_AREA = 10 * 10
 STOCK_TARGET_AREA = 100 * 100
 SQM_TO_HA = 1 / STOCK_TARGET_AREA

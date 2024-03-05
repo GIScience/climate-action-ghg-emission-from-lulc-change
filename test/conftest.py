@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 import uuid
 from unittest.mock import patch
 
@@ -8,6 +8,8 @@ from climatoology.base.computation import ComputationScope
 from climatoology.utility.api import LabelDescriptor
 
 from ghg_lulc.input import ComputeInput
+
+TEST_RESOURCES_DIR = Path(__file__).parent / 'resources'
 
 
 @pytest.fixture
@@ -43,8 +45,8 @@ def compute_resources():
 def lulc_utility_mock():
     with patch('climatoology.utility.api.LulcUtility') as lulc_utility:
         lulc_utility.compute_raster.side_effect = [
-            rasterio.open(f'{os.path.dirname(__file__)}/resources/minimal_first_ts.tiff'),
-            rasterio.open(f'{os.path.dirname(__file__)}/resources/minimal_second_ts.tiff')]
+            rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff'),
+            rasterio.open(TEST_RESOURCES_DIR / 'minimal_second_ts.tiff')]
 
         lulc_utility.get_class_legend.return_value = {'unknown': LabelDescriptor(name='unknown',
                                                                                  description='unknown',

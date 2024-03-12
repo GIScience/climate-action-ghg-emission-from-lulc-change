@@ -5,7 +5,7 @@ from numpy import ma
 from pydantic_extra_types.color import Color
 from shapely import Polygon
 
-from ghg_lulc.utils import mask_raster, get_colors, get_ghg_stock, GhgStockSource, calc_emission_factors
+from ghg_lulc.utils import GhgStockSource, calc_emission_factors, get_colors, get_ghg_stock, mask_raster
 
 
 def test_get_ghg_stock(lulc_utility_mock):
@@ -22,19 +22,27 @@ def test_calc_emission_factors(lulc_utility_mock):
 
 def test_mask_raster():
     input_array = np.ones((1, 3, 3), dtype=np.uint8)
-    input_geom = Polygon([[8.5901, 49.43],
-                          [8.5904, 49.43],
-                          [8.5904, 49.44],
-                          [8.5901, 49.44],
-                          [8.5901, 49.43]])
+    input_geom = Polygon(
+        [
+            [8.5901, 49.43],
+            [8.5904, 49.43],
+            [8.5904, 49.44],
+            [8.5901, 49.44],
+            [8.5901, 49.43],
+        ]
+    )
     input_transform = rasterio.transform.Affine(0.00013748191027496346, 0.0, 8.59, 0.0, -9.049773755655916e-05, 49.44)
 
-    expected_array = ma.masked_array([[[1, 1, 1],
-                                       [1, 1, 1],
-                                       [1, 1, 1]]],
-                                     mask=[[[1, 0, 0],
-                                            [1, 0, 0],
-                                            [1, 0, 0]]])
+    expected_array = ma.masked_array(
+        [[[1, 1, 1], [1, 1, 1], [1, 1, 1]]],
+        mask=[
+            [
+                [1, 0, 0],
+                [1, 0, 0],
+                [1, 0, 0],
+            ]
+        ],
+    )
 
     lulc_output = mask_raster(input_array, input_geom, input_transform)
 

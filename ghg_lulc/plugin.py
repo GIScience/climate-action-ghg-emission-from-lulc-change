@@ -40,29 +40,33 @@ class Settings(BaseSettings):
 
 
 async def start_plugin(settings: Settings) -> None:
-    lulc_utility = LulcUtility(host=settings.lulc_host,
-                               port=settings.lulc_port,
-                               path=settings.lulc_path)
+    lulc_utility = LulcUtility(
+        host=settings.lulc_host,
+        port=settings.lulc_port,
+        path=settings.lulc_path,
+    )
     operator = GHGEmissionFromLULC(lulc_utility)
     log.info(f'Configuring plugin: {operator.info().name}')
 
-    storage = MinioStorage(host=settings.minio_host,
-                           port=settings.minio_port,
-                           access_key=settings.minio_access_key,
-                           secret_key=settings.minio_secret_key,
-                           bucket=settings.minio_bucket,
-                           secure=settings.minio_secure)
-    broker = AsyncRabbitMQ(host=settings.rabbitmq_host,
-                           port=settings.rabbitmq_port,
-                           user=settings.rabbitmq_user,
-                           password=settings.rabbitmq_password)
+    storage = MinioStorage(
+        host=settings.minio_host,
+        port=settings.minio_port,
+        access_key=settings.minio_access_key,
+        secret_key=settings.minio_secret_key,
+        bucket=settings.minio_bucket,
+        secure=settings.minio_secure,
+    )
+    broker = AsyncRabbitMQ(
+        host=settings.rabbitmq_host,
+        port=settings.rabbitmq_port,
+        user=settings.rabbitmq_user,
+        password=settings.rabbitmq_password,
+    )
 
     await broker.async_init()
     log.debug(f'Configured broker: {settings.rabbitmq_host} and storage: {settings.minio_host}')
 
-    plugin = PlatformPlugin(operator=operator,
-                            storage=storage,
-                            broker=broker)
+    plugin = PlatformPlugin(operator=operator, storage=storage, broker=broker)
     log.info(f'Running plugin: {operator.info().name}')
     await plugin.run()
 

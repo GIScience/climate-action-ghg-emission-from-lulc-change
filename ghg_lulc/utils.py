@@ -8,7 +8,7 @@ import pandas as pd
 import shapely
 from affine import Affine
 from climatoology.base.artifact import RasterInfo
-from climatoology.utility.api import LulcWorkUnit, LulcUtility, LabelDescriptor
+from climatoology.utility.api import LabelDescriptor, LulcUtility, LulcWorkUnit
 from matplotlib import pyplot as plt
 from matplotlib.colors import TwoSlopeNorm, to_hex
 from pydantic_extra_types.color import Color
@@ -44,10 +44,14 @@ def read_stock_source(source_file: Path, utility_labels: Dict[str, LabelDescript
         utility_label_descriptors = ghg_stock.apply(
             lambda row: utility_labels.get(row.utility_class_name).model_dump(exclude={'name'}),
             axis='columns',
-            result_type='expand')
+            result_type='expand',
+        )
     except AttributeError as e:
-        log.error('One of the expected utility class names defined in the ghg stock source is unknown to the lulc '
-                  'utility.', exc_info=e)
+        log.error(
+            'One of the expected utility class names defined in the ghg stock source is unknown to the lulc '
+            'utility.',
+            exc_info=e,
+        )
         raise e
     return pd.concat([ghg_stock, utility_label_descriptors], axis='columns')
 
@@ -59,13 +63,17 @@ def calc_emission_factors(ghg_stock: Dict[GhgStockSource, pd.DataFrame]) -> Dict
         emission_factor['change_id'] = pd.RangeIndex(start=1, stop=len(emission_factor) + 1)
         emission_factor['emission_factor'] = emission_factor['ghg_stock_before'] - emission_factor['ghg_stock_after']
         emission_factor['color'] = get_colors(emission_factor['emission_factor'])
-        emission_factors[source] = emission_factor[['change_id',
-                                                    'utility_class_name_before',
-                                                    'raster_value_before',
-                                                    'utility_class_name_after',
-                                                    'raster_value_after',
-                                                    'emission_factor',
-                                                    'color']]
+        emission_factors[source] = emission_factor[
+            [
+                'change_id',
+                'utility_class_name_before',
+                'raster_value_before',
+                'utility_class_name_after',
+                'raster_value_after',
+                'emission_factor',
+                'color',
+            ]
+        ]
     return emission_factors
 
 
@@ -79,15 +87,19 @@ def fetch_lulc(lulc_utility: LulcUtility, lulc_area: LulcWorkUnit, aoi: shapely.
 
     masked_lulc = mask_raster(lulc_array, aoi, transform)
 
-    return RasterInfo(data=masked_lulc,
-                      crs=crs,
-                      transformation=transform,
-                      colormap=colormap)
+    return RasterInfo(
+        data=masked_lulc,
+        crs=crs,
+        transformation=transform,
+        colormap=colormap,
+    )
 
 
-def mask_raster(lulc_array: np.array,
-                aoi: shapely.MultiPolygon,
-                transform: Affine, ) -> np.array:
+def mask_raster(
+    lulc_array: np.array,
+    aoi: shapely.MultiPolygon,
+    transform: Affine,
+) -> np.array:
     rows = lulc_array.shape[-2]
     cols = lulc_array.shape[-1]
     mask = ~geometry_mask([aoi], (rows, cols), transform=transform, invert=True)

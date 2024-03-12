@@ -15,20 +15,21 @@ from pydantic_extra_types.color import Color
 from rasterio.features import shapes
 from shapely.ops import transform
 
-from ghg_lulc.utils import SQM_TO_HA, STOCK_TARGET_AREA, pyplot_to_pydantic_color, PIXEL_AREA
+from ghg_lulc.utils import PIXEL_AREA, SQM_TO_HA, STOCK_TARGET_AREA, pyplot_to_pydantic_color
 
 log = logging.getLogger(__name__)
 
 
 class EmissionCalculator:
-
     def __init__(self, emission_factors: pd.DataFrame, resources: ComputationResources):
         self.emission_factors = emission_factors
         self.resources = resources
 
-    def derive_lulc_changes(self,
-                            lulc_before: RasterInfo,
-                            lulc_after: RasterInfo) -> Tuple[RasterInfo, RasterInfo]:
+    def derive_lulc_changes(
+        self,
+        lulc_before: RasterInfo,
+        lulc_after: RasterInfo,
+    ) -> Tuple[RasterInfo, RasterInfo]:
         """
         Check if there is a LULC change in each cell and what kind of LULC change. Then it assigns a specific integer
         for each LULC change type to the cell and returns a ndarray.
@@ -46,13 +47,19 @@ class EmissionCalculator:
 
         return changes_info, change_emissions_info
 
-    def get_change_info(self, lulc_before: RasterInfo, lulc_after: RasterInfo,
-                        unknown_change_value: int = -1, no_change_value: int = 0) -> RasterInfo:
+    def get_change_info(
+        self,
+        lulc_before: RasterInfo,
+        lulc_after: RasterInfo,
+        unknown_change_value: int = -1,
+        no_change_value: int = 0,
+    ) -> RasterInfo:
         changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.int16)
 
         for row in self.emission_factors.itertuples():
-            changes[(lulc_before.data == row.raster_value_before) &
-                    (lulc_after.data == row.raster_value_after)] = row.change_id
+            changes[
+                (lulc_before.data == row.raster_value_before) & (lulc_after.data == row.raster_value_after)
+            ] = row.change_id
 
         changes[lulc_before.data == lulc_after.data] = no_change_value
 
@@ -66,11 +73,13 @@ class EmissionCalculator:
         changes_colormap[no_change_value] = Color('gray').as_rgb_tuple()
         changes_colormap[unknown_change_value] = Color('black').as_rgb_tuple()
 
-        return RasterInfo(data=changes,
-                          crs=lulc_before.crs,
-                          transformation=lulc_before.transformation,
-                          colormap=changes_colormap,
-                          nodata=unknown_change_value)
+        return RasterInfo(
+            data=changes,
+            crs=lulc_before.crs,
+            transformation=lulc_before.transformation,
+            colormap=changes_colormap,
+            nodata=unknown_change_value,
+        )
 
     def get_change_emissions_info(self, changes: RasterInfo, unknown_emissions_value: float = -999.999) -> RasterInfo:
         emission_per_pixel_factor = PIXEL_AREA / STOCK_TARGET_AREA
@@ -87,11 +96,13 @@ class EmissionCalculator:
 
         emissions_colormap[unknown_emissions_value] = Color('black').as_rgb_tuple()
 
-        return RasterInfo(data=change_emissions,
-                          crs=changes.crs,
-                          transformation=changes.transformation,
-                          colormap=emissions_colormap,
-                          nodata=unknown_emissions_value)
+        return RasterInfo(
+            data=change_emissions,
+            crs=changes.crs,
+            transformation=changes.transformation,
+            colormap=emissions_colormap,
+            nodata=unknown_emissions_value,
+        )
 
     def convert_change_raster(self, change_raster: RasterInfo) -> gpd.GeoDataFrame:
         """
@@ -101,8 +112,10 @@ class EmissionCalculator:
         :param change_raster: The LULC change raster data
         :return: geodataframe with LULC change polygons and emission factors
         """
-        log.debug(f'Converting change raster of shape {change_raster.data.shape} with dtype '
-                  f'{change_raster.data.dtype} to vector')
+        log.debug(
+            f'Converting change raster of shape {change_raster.data.shape} with dtype '
+            f'{change_raster.data.dtype} to vector'
+        )
 
         results = (
             {'properties': {'change_id': int(value)}, 'geometry': geometry}
@@ -161,15 +174,17 @@ class EmissionCalculator:
 
         relative_change_area = round(emissions_df.area.sum() / utm_aoi.area * 100, 2)
 
-        data = [['Area of interest [ha]', aoi_area],
-                ['Change share [%]', relative_change_area],
-                ['Emitting area [ha]', total_emission_change_area],
-                ['Emitting area share [%]', emitting_change_area_percent],
-                ['Sink area [ha]', total_sink_change_area],
-                ['Sink area share [%]', sink_change_area_percent],
-                ['Total gross emissions [t]', total_gross_emissions],
-                ['Total sink [t]', total_gross_sink],
-                ['Net emissions [t]', total_net_emissions]]
+        data = [
+            ['Area of interest [ha]', aoi_area],
+            ['Change share [%]', relative_change_area],
+            ['Emitting area [ha]', total_emission_change_area],
+            ['Emitting area share [%]', emitting_change_area_percent],
+            ['Sink area [ha]', total_sink_change_area],
+            ['Sink area share [%]', sink_change_area_percent],
+            ['Total gross emissions [t]', total_gross_emissions],
+            ['Total sink [t]', total_gross_sink],
+            ['Net emissions [t]', total_net_emissions],
+        ]
 
         summary = pd.DataFrame(data, columns=['Metric name', 'Value'])
         summary.set_index('Metric name', inplace=True)
@@ -180,8 +195,8 @@ class EmissionCalculator:
         change_type_df = emissions_df.copy()
 
         change_type_df['Change'] = change_type_df.apply(
-            lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}',
-            axis=1)
+            lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}', axis=1
+        )
         change_type_df['Area [ha]'] = round(change_type_df.area * SQM_TO_HA, 2)
         change_type_df['Total emissions [t]'] = round(change_type_df.emissions, 2)
 
@@ -202,8 +217,8 @@ class EmissionCalculator:
 
         areas = emissions_df.area * SQM_TO_HA
         labels = emissions_df.apply(
-            lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}',
-            axis=1)
+            lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}', axis=1
+        )
         colors = emissions_df.color
 
         area_chart_data = self.get_area_chart2ddata(areas, labels, colors)
@@ -213,17 +228,18 @@ class EmissionCalculator:
         return area_chart_data, area_chart_file
 
     def get_area_chart2ddata(self, sizes: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
-        area_chart_data = Chart2dData(x=labels.to_list(),
-                                      y=sizes.to_list(),
-                                      color=colors.to_list(),
-                                      chart_type=ChartType.PIE)
+        area_chart_data = Chart2dData(
+            x=labels.to_list(), y=sizes.to_list(), color=colors.to_list(), chart_type=ChartType.PIE
+        )
         return area_chart_data
 
     def get_area_pyplot(self, sizes: pd.Series, labels: pd.Series, colors: pd.Series) -> Path:
         fig, ax = plt.subplots()
-        ax.pie(sizes,
-               labels=labels,
-               colors=colors.apply(lambda val: val.as_hex()).to_list())
+        ax.pie(
+            sizes,
+            labels=labels,
+            colors=colors.apply(lambda val: val.as_hex()).to_list(),
+        )
         areas_chart_file = self.resources.computation_dir / 'areas.png'
         plt.title('Change area by LULC change type [ha]')
         plt.savefig(areas_chart_file, dpi=300, bbox_inches='tight')
@@ -242,7 +258,8 @@ class EmissionCalculator:
         emissions = emissions_df['emissions']
         labels = emissions_df.apply(
             lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}',
-            axis=1)
+            axis=1,
+        )
         colors = emissions_df['color']
 
         emission_chart_data = self.get_emission_chart2ddata(emissions, labels, colors)
@@ -252,10 +269,12 @@ class EmissionCalculator:
         return emission_chart_data, emission_chart_file
 
     def get_emission_chart2ddata(self, emissions: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
-        emission_chart_data = Chart2dData(x=labels.to_list(),
-                                          y=emissions.to_list(),
-                                          color=colors.to_list(),
-                                          chart_type=ChartType.BAR)
+        emission_chart_data = Chart2dData(
+            x=labels.to_list(),
+            y=emissions.to_list(),
+            color=colors.to_list(),
+            chart_type=ChartType.BAR,
+        )
         return emission_chart_data
 
     def get_emission_pyplot(self, emissions: pd.Series, labels: pd.Series, colors: pd.Series) -> Path:
@@ -283,8 +302,12 @@ class EmissionCalculator:
         ghg_stock = ghg_stock.copy()
         ghg_stock = ghg_stock.sort_values('ghg_stock')
         ghg_stock = ghg_stock[['utility_class_name', 'description', 'ghg_stock']]
-        ghg_stock = ghg_stock.rename(columns={'utility_class_name': 'Class',
-                                              'description': 'Definition',
-                                              'ghg_stock': 'GHG stock value [t/ha]'})
+        ghg_stock = ghg_stock.rename(
+            columns={
+                'utility_class_name': 'Class',
+                'description': 'Definition',
+                'ghg_stock': 'GHG stock value [t/ha]',
+            }
+        )
         ghg_stock.set_index('Class', inplace=True)
         return ghg_stock

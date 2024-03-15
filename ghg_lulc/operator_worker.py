@@ -35,7 +35,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
 
     def info(self) -> Info:
         """
-        :return: Info object with name, image, version, purpose, methodology, and literature sources.
+        :return: Info object with information about the plugin.
         """
         return Info(
             name='LULC Change Emission Estimation',
@@ -43,8 +43,8 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
             authors=[
                 PluginAuthor(
                     name='Veit Ulrich',
-                    affiliation='GIScience Research Group at the Institute of Geography, Heidelberg University',
-                    website='https://www.geog.uni-heidelberg.de/gis/ulrich.html',
+                    affiliation='HeiGIT gGmbH',
+                    website='https://heigit.org/heigit-team',
                 ),
                 PluginAuthor(
                     name='Moritz Schott',
@@ -61,8 +61,10 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
 
     def compute(self, resources: ComputationResources, params: ComputeInput) -> List[_Artifact]:
         """
-        :param resources: ephemeral computation resources
-        :param params: operator input
+        Main method of the operator.
+
+        :param resources: Ephemeral computation resources
+        :param params: Operator input
         :return: List of produced artifacts
         """
         emission_calculator = EmissionCalculator(
@@ -104,6 +106,16 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         params: ComputeInput,
         resources: ComputationResources,
     ) -> Tuple[gpd.GeoDataFrame, List[_Artifact]]:
+        """
+        Get LULC classifications and LULC changes.
+
+        :param emission_calculator: Class containing the emission estimation methods
+        :param params: Operator input
+        :param resources: Ephemeral computation resources
+        :return: Geodataframe with LULC change polygons dissolved by change type and emission factors
+        :return: LULC classification artifacts at first and second timestamp
+        :return: Artifacts containing a raster with LULC changes and a raster with pixel-wise emissions
+        """
         lulc_before, lulc_after = self.get_classifications(params)
 
         classification_artifacts = create_classification_artifacts(
@@ -126,6 +138,12 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         return change_df, [*classification_artifacts, *change_artifacts]
 
     def get_classifications(self, params: ComputeInput) -> Tuple[RasterInfo, RasterInfo]:
+        """
+        Get LULC classifications in the AOI at first and second timestamp.
+
+        :param params: Operator input
+        :return: RasterInfo objects with LULC classifications at first and second timestamp
+        """
         aoi_box = params.get_geom().bounds
         aoi = params.get_geom()
 
@@ -146,6 +164,12 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         return lulc_before, lulc_after
 
     def create_markdown(self, params: ComputeInput) -> str:
+        """
+        Create a formatted description of all artifacts using the selected GHG stocks and emission factors.
+
+        :param params: Operator input
+        :return: Formatted string for artifact description artifact
+        """
         directory = PROJECT_DIR / 'resources/artifact_descriptions'
         content = [file.read_text(encoding='utf-8') for file in sorted(directory.glob('*.md'))]
         content = '\n\n'.join(content)
@@ -185,6 +209,16 @@ def create_table_artifacts(
     params: ComputeInput,
     resources: ComputationResources,
 ) -> List[_Artifact]:
+    """
+    Contains the methods to create the table artifacts.
+
+    :param emission_calculator: Class containing the emission estimation methods
+    :param emissions_df: Geodataframe with LULC change polygons and emissions [t] for each change type
+    :param ghg_stock: Dataframe with LULC classes, their GHG stocks and additional info
+    :param params: Operator input
+    :param resources: Ephemeral computation resources
+    :return: List of the table artifacts
+    """
     ghg_stock_df = EmissionCalculator.filter_ghg_stock(ghg_stock)
     stock_artifact = create_stock_artifact(ghg_stock_df, params.ghg_stock_source, resources)
 
@@ -202,6 +236,14 @@ def create_chart_artifacts(
     emissions_calculator: EmissionCalculator,
     resources: ComputationResources,
 ) -> List[_Artifact]:
+    """
+    Contains the methods to create the chart artifacts.
+
+    :param emissions_df: Geodataframe with LULC change polygons and emissions [t] for each change type
+    :param emissions_calculator: Class containing the emission estimation methods
+    :param resources: Ephemeral computation resources
+    :return: List of the chart artifacts
+    """
     area_chart_data, areas_chart_file = emissions_calculator.area_plot(emissions_df)
     area_plot_artifacts = create_area_plot_artifacts(area_chart_data, areas_chart_file, resources)
 

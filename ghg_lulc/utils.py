@@ -30,6 +30,13 @@ class GhgStockSource(Enum):
 
 
 def get_ghg_stock(utility_labels: Dict[str, LabelDescriptor]) -> Dict[GhgStockSource, pd.DataFrame]:
+    """
+    Get GHG stocks from each GHG stock source.
+
+    :param utility_labels: Dict containing the LULC labels from the LULC utility and their label descriptors
+    :return: Dict containing a DataFrame of each GHG stock source with information about the LULC classes such as class
+    name, class description, and GHG stock
+    """
     ghg_stock = {}
     source_base_path = Path('resources/ghg_stock_sources')
     for source in GhgStockSource:
@@ -39,6 +46,13 @@ def get_ghg_stock(utility_labels: Dict[str, LabelDescriptor]) -> Dict[GhgStockSo
 
 
 def read_stock_source(source_file: Path, utility_labels: Dict[str, LabelDescriptor]) -> pd.DataFrame:
+    """
+    Get GHG stocks from the source file.
+
+    :param source_file: Path of the GHG stock source file
+    :param utility_labels: Dict containing the LULC labels from the LULC utility and their label descriptors
+    :return: DataFrame with information about the LULC classes such as class name, class description, and GHG stock
+    """
     ghg_stock = pd.read_csv(source_file)
     try:
         utility_label_descriptors = ghg_stock.apply(
@@ -57,6 +71,13 @@ def read_stock_source(source_file: Path, utility_labels: Dict[str, LabelDescript
 
 
 def calc_emission_factors(ghg_stock: Dict[GhgStockSource, pd.DataFrame]) -> Dict[GhgStockSource, pd.DataFrame]:
+    """
+    Derive emission factors [t/ha] for each GHG stock source.
+
+    :param ghg_stock: Dict containing a DataFrame of each GHG stock source with information about the LULC classes
+    such as class name, class description, and GHG stock
+    :return: Dict containing a DataFrame of each GHG stock source with emission factor [t/ha] for each LULC change type
+    """
     emission_factors = {}
     for source, stock in ghg_stock.items():
         emission_factor = stock.merge(stock, how='cross', suffixes=('_before', '_after'))
@@ -78,6 +99,16 @@ def calc_emission_factors(ghg_stock: Dict[GhgStockSource, pd.DataFrame]) -> Dict
 
 
 def fetch_lulc(lulc_utility: LulcUtility, lulc_area: LulcWorkUnit, aoi: shapely.MultiPolygon) -> RasterInfo:
+    """
+    Get LULC classification for a certain timestamp.
+
+    :param lulc_utility: A wrapper class around the LULC Utility API
+    :param lulc_area: LulcWorkUnit containing AOI coordinates, dates of first and second timestamp, fusion mode, and
+    LULC classification accuracy threshold
+    :param aoi: Multipolygon of the AOI
+    :return: RasterInfo object containing an array of the LULC in the AOI and the meta information needed to create
+    the LULC raster
+    """
     log.debug('Fetching classification.')
     with lulc_utility.compute_raster([lulc_area]) as lulc_classification:
         lulc_array = lulc_classification.read()
@@ -100,6 +131,15 @@ def mask_raster(
     aoi: shapely.MultiPolygon,
     transform: Affine,
 ) -> np.array:
+    """
+    Mask LULC raster to the AOI.
+
+    :param lulc_array: Array with the LULC values for bounding box of the AOI, as returned by the LULCUtility
+    :param aoi: Multipolygon of the AOI
+    :param transform: Information needed to transform coordinates from image pixel (row, col) to and from
+    geographic/projected (x, y) coordinates
+    :return: Array of the LULC in the AOI
+    """
     rows = lulc_array.shape[-2]
     cols = lulc_array.shape[-1]
     mask = ~geometry_mask([aoi], (rows, cols), transform=transform, invert=True)
@@ -110,9 +150,10 @@ def mask_raster(
 
 def get_colors(values: pd.Series) -> pd.Series:
     """
+    Convert a Series of numeric values to colors taken from a scaled bi-directional colormap with center point 0.
 
-    :param values: values to convert to colors
-    :return: column of colors
+    :param values: Values to convert to colors
+    :return: Column of colors
     """
     cmap = plt.get_cmap('seismic')
     min_val = values.min()

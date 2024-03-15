@@ -197,9 +197,12 @@ def create_emissions_artifact(emissions_df: gpd.GeoDataFrame, resources: Computa
 def create_summary_artifact(summary_df: gpd, resources: ComputationResources) -> _Artifact:
     summary_artifact = create_table_artifact(
         data=summary_df,
-        title='Total net emissions, gross emissions, and carbon sink in the observation period',
-        caption='The table contains the total net emissions, gross emissions, and carbon '
-        'sink in the observation period.',
+        title='Total change areas and emissions in the observation period',
+        caption='This table shows the size of the area of interest [ha], the share of change areas of the area of '
+        'interest [%], the area of emitting changes [ha], the share of emitting change area of the total '
+        'change area [%], the area of changes representing carbon sinks [ha], the share of carbon sink change '
+        'area of the total change area [%],  total gross emissions, sinks, and net emissions [t] in the '
+        'observation period.',
         description='-',
         # (PROJECT_DIR / 'resources/artifact_descriptions/10_summary.md').read_text(encoding='utf-8'),
         resources=resources,
@@ -227,8 +230,8 @@ def create_change_type_artifact(change_type_table: pd.DataFrame, resources: Comp
     change_type_table_artifact = create_table_artifact(
         data=change_type_table,
         title='Change areas and emissions by LULC change type',
-        caption='The table contains the total change area by LULC change type and the '
-        'total change emissions by LULC change type.',
+        caption='This table shows the total change area by LULC change type [ha] and the total change emissions by '
+        'LULC change type [t] in the observation period.',
         description='-',
         # (PROJECT_DIR / 'resources/artifact_descriptions/09_stats_change_type.md').read_text(encoding='utf-8'),
         resources=resources,

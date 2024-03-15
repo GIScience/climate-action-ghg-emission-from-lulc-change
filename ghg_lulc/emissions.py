@@ -31,12 +31,9 @@ class EmissionCalculator:
         lulc_after: RasterInfo,
     ) -> Tuple[RasterInfo, RasterInfo]:
         """
-        Check if there is a LULC change in each cell and what kind of LULC change. Then it assigns a specific integer
-        for each LULC change type to the cell and returns a ndarray.
-
         :param lulc_before: LULC classification of first time stamp
         :param lulc_after: LULC classification of second time stamp
-        :return: a raster with LULC changes and a raster with pixel wise emissions
+        :return: a raster with LULC changes and a raster with pixel-wise emissions
         between first and second time stamp
         """
         log.debug('Deriving LULC changes')
@@ -54,6 +51,18 @@ class EmissionCalculator:
         unknown_change_value: int = -1,
         no_change_value: int = 0,
     ) -> RasterInfo:
+        """
+        Get LULC changes between first and second time stamp.
+
+        This will return a RasterInfo object with all information necessary to create a geotiff artifact showing LULC
+        changes (including color map).
+
+        :param lulc_before: LULC classification of first time stamp
+        :param lulc_after: LULC classification of second time stamp
+        :param unknown_change_value: Integer to indicate pixels with unknown changes
+        :param no_change_value: Integer to indicate no change pixels
+        :return: a raster with LULC changes between first and second time stamp
+        """
         changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.int16)
 
         for row in self.emission_factors.itertuples():
@@ -82,6 +91,16 @@ class EmissionCalculator:
         )
 
     def get_change_emissions_info(self, changes: RasterInfo, unknown_emissions_value: float = -999.999) -> RasterInfo:
+        """
+        Get pixel-wise LULC change emissions between first and second time stamp.
+
+        This will return a RasterInfo object with all information necessary to create a geotiff artifact showing
+        pixel-wise LULC change emissions (including color map).
+
+        :param changes: a raster with LULC changes between first and second time stamp
+        :param unknown_emissions_value: a float value to indicate pixels with unknown emissions
+        :return: a raster with pixel-wise emissions between first and second time stamp
+        """
         emission_per_pixel_factor = PIXEL_AREA / STOCK_TARGET_AREA
 
         change_emissions = np.full_like(changes.data, fill_value=unknown_emissions_value, dtype=np.floating)
@@ -106,11 +125,11 @@ class EmissionCalculator:
 
     def convert_change_raster(self, change_raster: RasterInfo) -> gpd.GeoDataFrame:
         """
-        Converts the LULC change raster to a geodataframe. Then, it reprojects the geodataframe to a projected
+        Convert the LULC change raster to a geodataframe and reproject it to the local UTM
         coordinate system, so we can perform area-based calculations on it.
 
-        :param change_raster: The LULC change raster data
-        :return: geodataframe with LULC change polygons and emission factors
+        :param change_raster: a raster with LULC changes between first and second time stamp
+        :return: geodataframe with LULC change polygons dissolved by change type and emission factors
         """
         log.debug(
             f'Converting change raster of shape {change_raster.data.shape} with dtype '
@@ -138,10 +157,10 @@ class EmissionCalculator:
     @staticmethod
     def calculate_absolute_emissions_per_poly(change_df: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         """
+        Calculate absolute LULC change emissions per LULC change type [t].
 
-        calculate absolute LULC change emissions per polygon by multiplying emission factor with area
-        :param change_df: geodataframe with LULC change polygons, their area and their emissions in t/ha
-        :return: emission_factor_df with additional absolute emissions column
+        :param change_df: geodataframe with LULC change polygon and emission factor [t/ha] for each change type
+        :return: geodataframe with additional absolute emissions column
         """
         change_df = change_df.copy()
         change_df['emissions'] = change_df.area * SQM_TO_HA * change_df['emission_factor']
@@ -151,7 +170,11 @@ class EmissionCalculator:
     @staticmethod
     def summary_stats(emissions_df: gpd.GeoDataFrame, aoi: shapely.MultiPolygon) -> pd.DataFrame:
         """
-        Create summary data frame.
+        Calculate statistics about total change areas and emissions in the observation period.
+
+        :param emissions_df: geodataframe with LULC change polygons and emissions [t] for each change type
+        :param aoi: multipolygon of the area of interest
+        :return: dataframe with statistics about total change areas and emissions in the observation period
         """
         emissions_df = emissions_df.copy()
         subset_pos = emissions_df[emissions_df['emissions'] > 0]
@@ -192,6 +215,13 @@ class EmissionCalculator:
         return summary
 
     def get_change_type_table(self, emissions_df: gpd.GeoDataFrame) -> pd.DataFrame:
+        """
+        Creates a table showing total LULC change area [ha] and total LULC change emissions [t] per change type.
+
+        :param emissions_df: geodataframe with LULC class names at time stamps 1 and 2 as well as LULC change polygons
+        and emissions [t] per change type
+        :return: dataframe with total LULC change area [ha] and total LULC change emissions [t] per change type
+        """
         change_type_df = emissions_df.copy()
 
         change_type_df['Change'] = change_type_df.apply(
@@ -208,8 +238,9 @@ class EmissionCalculator:
 
     def area_plot(self, emissions_df: gpd.GeoDataFrame) -> Tuple[Chart2dData, Path]:
         """
+        Creates pie chart showing change area by LULC change type as Chart2dData object and .png file.
 
-        :param emissions_df: dataframe with stats per change type
+        :param emissions_df: geodataframe with change area by LULC change type
         :return: Chart2dData object with change area by LULC change type
         :return: pie chart image with change area by LULC change type
         """
@@ -228,12 +259,24 @@ class EmissionCalculator:
         return area_chart_data, area_chart_file
 
     def get_area_chart2ddata(self, sizes: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
+        """
+        :param sizes: pd.Series with change areas by LULC change type
+        :param labels: pd.Series with LULC change type labels
+        :param colors: pd.Series with plot color for each LULC change type
+        :return: Chart2dData object for pie chart showing change areas by LULC change type
+        """
         area_chart_data = Chart2dData(
             x=labels.to_list(), y=sizes.to_list(), color=colors.to_list(), chart_type=ChartType.PIE
         )
         return area_chart_data
 
     def get_area_pyplot(self, sizes: pd.Series, labels: pd.Series, colors: pd.Series) -> Path:
+        """
+        :param sizes: pd.Series with change areas by LULC change type
+        :param labels: pd.Series with LULC change type labels
+        :param colors: pd.Series with plot color for each LULC change type
+        :return: .png file of pie chart showing change areas by LULC change type
+        """
         fig, ax = plt.subplots()
         ax.pie(
             sizes,
@@ -248,8 +291,9 @@ class EmissionCalculator:
 
     def emission_plot(self, emissions_df: gpd.GeoDataFrame) -> Tuple[Chart2dData, Path]:
         """
+        Creates horizontal bar chart showing carbon emissions by LULC change type as Chart2dData object and .png file.
 
-        :param emissions_df: dataframe with stats per change type
+        :param emissions_df: geodataframe with carbon emissions by LULC change type
         :return: Chart2dData object with carbon emissions by LULC change type
         :return: horizontal bar chart image with carbon emissions by LULC change type
         """
@@ -269,6 +313,12 @@ class EmissionCalculator:
         return emission_chart_data, emission_chart_file
 
     def get_emission_chart2ddata(self, emissions: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
+        """
+        :param emissions: pd.Series with emissions by LULC change type
+        :param labels: pd.Series with LULC change type labels
+        :param colors: pd.Series with plot color for each LULC change type
+        :return: Chart2dData object for bar chart showing emissions by LULC change type
+        """
         emission_chart_data = Chart2dData(
             x=labels.to_list(),
             y=emissions.to_list(),
@@ -278,6 +328,12 @@ class EmissionCalculator:
         return emission_chart_data
 
     def get_emission_pyplot(self, emissions: pd.Series, labels: pd.Series, colors: pd.Series) -> Path:
+        """
+        :param emissions: pd.Series with emissions by LULC change type
+        :param labels: labels: pd.Series with LULC change type labels
+        :param colors: pd.Series with plot color for each LULC change type
+        :return: .png file of horizontal bar chart showing emissions by LULC change type
+        """
         fig, (ax) = plt.subplots(figsize=(8, 4))
 
         bars = ax.barh(width=emissions, y=labels, color=colors.apply(lambda val: val.as_hex()).to_list())
@@ -299,6 +355,13 @@ class EmissionCalculator:
 
     @staticmethod
     def filter_ghg_stock(ghg_stock: pd.DataFrame) -> pd.DataFrame:
+        """
+        Filters GHG stock dataframe and renames columns.
+
+        :param ghg_stock: dataframe with original class names and definitions, utility class name, GHG stock,
+        description, OSM filter, raster value, and color
+        :return: dataframe with class name and description (from utility) and GHG stock value
+        """
         ghg_stock = ghg_stock.copy()
         ghg_stock = ghg_stock.sort_values('ghg_stock')
         ghg_stock = ghg_stock[['utility_class_name', 'description', 'ghg_stock']]

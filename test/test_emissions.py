@@ -33,7 +33,6 @@ def default_calculator(lulc_utility_mock, computation_resources):
 
 
 def test_get_change_info(default_calculator):
-    """test whether LULC changes are derived correctly"""
     lulc_before = RasterInfo(
         data=ma.masked_array(
             [
@@ -246,7 +245,6 @@ def test_convert_masked_change_raster(default_calculator):
 
 
 def test_calculate_absolute_emissions_per_poly():
-    """tests whether absolute emissions per polygon are calculated correctly"""
     polygons = [
         Polygon([(0, 0), (0, 100), (100, 100), (100, 0), (0, 0)]),
         Polygon([(0, 0), (0, 100), (100, 100), (100, 0), (0, 0)]),
@@ -265,7 +263,6 @@ def test_calculate_absolute_emissions_per_poly():
 
 
 def test_summary_stats(default_calculator):
-    """tests if the summary stats are correctly calculated"""
     proj_aoi = MultiPolygon([[((0, 0), (0, 100), (10, 100), (10, 0), (0, 0))]])
     wgs84 = pyproj.CRS('EPSG:4326')
     target_proj = pyproj.CRS('EPSG:32632')
@@ -326,7 +323,6 @@ def test_get_change_type_table(default_calculator):
 
 
 def test_area_plot(default_calculator):
-    """tests whether the Chart2dData object is generated correctly and the areas chart file is saved"""
     polygons = [
         Polygon([(0, 0), (0, 10), (10, 10), (10, 0), (0, 0)]),
         Polygon([(10, 100), (10, 90), (0, 90), (0, 100), (10, 100)]),
@@ -350,7 +346,6 @@ def test_area_plot(default_calculator):
 
 
 def test_emission_plot(default_calculator):
-    """tests whether the Chart2dData object is generated correctly and the emissions chart file is saved"""
     polygons = [
         Polygon([(0, 0), (0, 10), (10, 10), (10, 0), (0, 0)]),
         Polygon([(10, 100), (10, 90), (0, 90), (0, 100), (10, 100)]),

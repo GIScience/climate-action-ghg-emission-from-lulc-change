@@ -29,7 +29,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
         'LULC Emissions',
         'Localised Emissions',
         'Localised Emissions (patched)',
-        'Total net emissions, gross emissions, and carbon sink in the observation period',
+        'Total change areas and emissions in the observation period',
         'Description of the artifacts',
     }
 

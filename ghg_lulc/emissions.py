@@ -70,7 +70,9 @@ class EmissionCalculator:
                 (lulc_before.data == row.raster_value_before) & (lulc_after.data == row.raster_value_after)
             ] = row.change_id
 
-        changes[lulc_before.data == lulc_after.data] = no_change_value
+        changes[
+            np.logical_and(lulc_before.data == lulc_after.data, lulc_before.data != no_change_value)
+        ] = no_change_value
 
         cmap = plt.get_cmap('tab20b')
         changes_colormap = {}

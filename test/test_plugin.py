@@ -54,22 +54,22 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
             case 'LULC Change':
-                expected_array = np.array([[[0, -1, -1], [-1, 0, 4], [-1, 13, 0]]])
+                expected_array = np.array([[[-1, -1, -1], [-1, 0, 4], [-1, 13, 0]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
             case 'LULC Change (patched)':
-                expected_array = np.array([[[1, 0, 0], [0, 1, 2], [0, 3, 1]]])
+                expected_array = np.array([[[0, 0, 0], [0, 1, 2], [0, 3, 1]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
             case 'Localised Emissions':
-                expected_array = np.array([[[0, -999.999, -999.999], [-999.999, 0, 1.82], [-999.999, -1.82, 0]]])
+                expected_array = np.array([[[-999.999, -999.999, -999.999], [-999.999, 0, 1.82], [-999.999, -1.82, 0]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
             case 'Localised Emissions (patched)':
-                expected_array = np.array([[[2, 0, 0], [0, 2, 3], [0, 1, 2]]])
+                expected_array = np.array([[[0, 0, 0], [0, 2, 3], [0, 1, 2]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)

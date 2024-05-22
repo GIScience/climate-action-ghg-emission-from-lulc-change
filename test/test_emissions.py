@@ -335,7 +335,7 @@ def test_area_plot(default_calculator):
     }
     emissions_df = gpd.GeoDataFrame(data=data, geometry=polygons, crs=pyproj.CRS('EPSG:32632'))
 
-    shares = [0.5, 0.5]
+    shares = [0.01, 0.01]
 
     area_chart_data, areas_chart_file = default_calculator.area_plot(emissions_df)
 

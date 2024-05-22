@@ -1,18 +1,17 @@
-import geopandas
-from geopandas.testing import assert_geodataframe_equal
-from numpy.testing import assert_array_equal
-
-from test.conftest import TEST_RESOURCES_DIR
-
 import json
+
+import geopandas
 import numpy as np
 import pandas as pd
 import pytest
 import rasterio
+from climatoology.base.artifact import ArtifactModality
+from geopandas.testing import assert_geodataframe_equal
+from numpy.testing import assert_array_equal
 from shapely.geometry import Polygon
 
-from climatoology.base.artifact import ArtifactModality
 from ghg_lulc.operator_worker import GHGEmissionFromLULC
+from test.conftest import TEST_RESOURCES_DIR
 
 
 def test_plugin_info(lulc_utility_mock):
@@ -68,6 +67,9 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
+                assert artifact.description == (TEST_RESOURCES_DIR / 'localised_emissions_text.md').read_text(
+                    encoding='utf-8'
+                )
             case 'Localised Emissions (patched)':
                 expected_array = np.array([[[0, 0, 0], [0, 2, 3], [0, 1, 2]]])
                 with rasterio.open(artifact.file_path) as src:
@@ -78,6 +80,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                     {
                         'id': ['0', '1'],
                         'color': ['#800000', '#00004c'],
+                        'label': ['1.8250806041439154', '-1.8250839608794298'],
                         'geometry': [
                             Polygon(
                                 [
@@ -149,7 +152,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                 if artifact.modality == ArtifactModality.CHART:
                     expected_area_data = {
                         'x': ['built-up to forest', 'forest to built-up'],
-                        'y': [0.5000004598060519, 0.4999995401939482],
+                        'y': [0.010027933850985878, 0.01002791540738415],
                         'chart_type': 'PIE',
                         'color': ['#00004c', '#800000'],
                     }
@@ -169,10 +172,6 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                     assert exported_data == expected_emission_data
             case _:
                 assert False, 'An unexpected artifact was produced.'
-
-            # TODO: Test disabled due to https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/operator-contributions/ghg-emission-from-lulc-change/-/issues/57
-            # case 'Localised Emissions':
-            #   assert artifact.description == (TEST_RESOURCES_DIR/'localised_emissions_text.md').read_text(encoding='utf-8')
 
 
 def test_no_change_case(lulc_utility_mock, expected_compute_input, compute_resources):

@@ -24,9 +24,9 @@ SQM_TO_HA = 1 / STOCK_TARGET_AREA
 
 
 class GhgStockSource(Enum):
-    HANSIS = 'Hansis et al.'
-    HANSIS_HIGHER = 'Hansis et al. (higher)'
-    HOUGHTON = 'Houghton et al.'
+    HANSIS = 'Hansis et al. - Carbon stock values from the BLUE model'
+    HANSIS_HIGHER = 'Hansis et al. (higher) - Higher carbon stock values from Hansis et al. '
+    HOUGHTON = 'Houghton et al. - Carbon stock values from a database of the Carbon Dioxide Information Analysis Center'
 
 
 def get_ghg_stock(utility_labels: Dict[str, LabelDescriptor]) -> Dict[GhgStockSource, pd.DataFrame]:

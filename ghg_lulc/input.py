@@ -46,15 +46,13 @@ class ComputeInput(BaseModel):
     )
     classification_threshold: Optional[confloat(ge=0, le=100)] = Field(
         title='Minimum required classification confidence [%]',
-        description='The LULC classification by a ML model '
+        description='The LULC classification by an ML model '
         'has inherent uncertainties. This number '
-        'defines the minimum level of confidence '
-        'required by the user. Any prediction '
-        "where the model's confidence lies above "
-        'this threshold will be assumed to be '
-        '"true", all classification exhibiting '
-        'lower confidence will be classified as '
-        '"unknown".',
+        'defines the minimum confidence '
+        'required by the user. Any prediction with '
+        'confidence above this threshold will be '
+        'classified "true", while those below '
+        'will be classified as "unknown".',
         examples=[75],
         default=75,
     )
@@ -63,14 +61,10 @@ class ComputeInput(BaseModel):
         description='The set of GHG stock values used for the '
         'estimation of LULC change emissions. Three '
         'different sets of GHG stock values are available: '
-        '(1) Carbon stock values from the BLUE model '
-        '(Hansis et al., 2015), (2) higher carbon stock '
-        'values from Hansis et al. (2015) based on Reick et '
-        'al. (2010), and (3) carbon stock values from a '
-        'database of the Carbon Dioxide Information '
-        'Analysis Center (Houghton & Hackler, 2001). For '
-        'more information on the GHG stock sources, please '
-        'refer to the documentation.',
+        'Hansis et al. (2015), Reick et al. (2010), '
+        'and Houghton & Hackler (2001). For '
+        'more information on the GHG stock sources, '
+        'please refer to the documentation.',
         examples=[GhgStockSource.HANSIS],
         default=GhgStockSource.HANSIS,
     )

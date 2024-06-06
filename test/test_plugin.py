@@ -129,7 +129,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                         'x': ['built-up to forest', 'forest to built-up'],
                         'y': [-1.8250839608794298, 1.8250806041439154],
                         'chart_type': 'BAR',
-                        'color': ['#00004c', '#800000'],
+                        'color': ['#808080', '#808080'],
                     }
                     with open(artifact.file_path) as file:
                         exported_data = json.load(file)

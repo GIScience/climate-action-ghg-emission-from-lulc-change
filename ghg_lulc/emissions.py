@@ -284,6 +284,7 @@ class EmissionCalculator:
             axis=1,
         )
         colors = emissions_df['color']
+        colors[:] = Color('gray')
 
         emission_chart_data = self.get_emission_chart2ddata(emissions, labels, colors)
 

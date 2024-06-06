@@ -360,7 +360,7 @@ def test_emission_plot(default_calculator):
 
     assert emission_chart_data.x == ['built-up to forest', 'forest to built-up']
     assert emission_chart_data.y == [-1, 1]
-    assert emission_chart_data.color[0] == Color('red')
+    assert emission_chart_data.color[0] == Color('grey')
 
 
 def test_filter_ghg_stock(lulc_utility_mock):

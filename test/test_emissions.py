@@ -1,4 +1,3 @@
-import os
 import uuid
 
 import geopandas as gpd
@@ -337,12 +336,11 @@ def test_area_plot(default_calculator):
 
     shares = [0.01, 0.01]
 
-    area_chart_data, areas_chart_file = default_calculator.area_plot(emissions_df)
+    area_chart_data = default_calculator.area_plot(emissions_df)
 
     assert area_chart_data.x == ['built-up to forest', 'forest to built-up']
     assert area_chart_data.y == shares
     assert area_chart_data.color[0] == Color('red')
-    assert os.path.exists(areas_chart_file) is True
 
 
 def test_emission_plot(default_calculator):
@@ -358,12 +356,11 @@ def test_emission_plot(default_calculator):
     }
     emissions_df = gpd.GeoDataFrame(data=data, geometry=polygons, crs=pyproj.CRS('EPSG:32632'))
 
-    emission_chart_data, emission_chart_file = default_calculator.emission_plot(emissions_df)
+    emission_chart_data = default_calculator.emission_plot(emissions_df)
 
     assert emission_chart_data.x == ['built-up to forest', 'forest to built-up']
     assert emission_chart_data.y == [-1, 1]
     assert emission_chart_data.color[0] == Color('red')
-    assert os.path.exists(emission_chart_file) is True
 
 
 def test_filter_ghg_stock(lulc_utility_mock):

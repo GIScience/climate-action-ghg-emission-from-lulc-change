@@ -79,11 +79,6 @@ The carbon stock value for settlement is a combination of the soil carbon value 
 | built-up     | farmland   |           -37.0 |
 | built-up     | built-up   |             0.0 |
 
-## Map: LULC change emissions per LULC change type (t)
-
-The total LULC change emissions per LULC change type (t) during the observation period are shown in this map.
-The LULC change areas in this map are colored according to the total change emissions of the respective LULC change class in the area of interest.
-
 ## Bar chart: Carbon emissions by LULC change type [t]
 
 This bar chart shows the total carbon emissions by LULC change type [t] in the observation period.

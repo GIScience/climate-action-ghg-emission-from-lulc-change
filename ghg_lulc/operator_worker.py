@@ -10,13 +10,12 @@ from semver import Version
 
 from ghg_lulc.artifact import (
     ComputationResources,
-    create_area_plot_artifacts,
+    create_area_plot_artifact,
     create_artifact_description_artifact,
     create_change_artifacts,
     create_change_type_artifact,
     create_classification_artifacts,
-    create_emission_plot_artifacts,
-    create_emissions_artifact,
+    create_emission_plot_artifact,
     create_stock_artifact,
     create_summary_artifact,
 )
@@ -74,7 +73,6 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         change_df, change_artifacts = self.get_changes(emission_calculator, params, resources)
 
         emissions_df = emission_calculator.calculate_absolute_emissions_per_poly(change_df)
-        emissions_artifact = create_emissions_artifact(emissions_df, resources)
 
         table_artifacts = create_table_artifacts(
             emission_calculator,
@@ -92,13 +90,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         formatted_text = self.create_markdown(params)
         artifact_description_artifact = create_artifact_description_artifact(formatted_text, resources)
 
-        return (
-            change_artifacts
-            + [emissions_artifact]
-            + table_artifacts
-            + chart_artifacts
-            + [artifact_description_artifact]
-        )
+        return change_artifacts + table_artifacts + chart_artifacts + [artifact_description_artifact]
 
     def get_changes(
         self,
@@ -244,10 +236,10 @@ def create_chart_artifacts(
     :param resources: Ephemeral computation resources
     :return: List of the chart artifacts
     """
-    area_chart_data, areas_chart_file = emissions_calculator.area_plot(emissions_df)
-    area_plot_artifacts = create_area_plot_artifacts(area_chart_data, areas_chart_file, resources)
+    area_chart_data = emissions_calculator.area_plot(emissions_df)
+    area_plot_artifact = create_area_plot_artifact(area_chart_data, resources)
 
-    emission_chart_data, emission_chart_file = emissions_calculator.emission_plot(emissions_df)
-    emission_plot_artifacts = create_emission_plot_artifacts(emission_chart_data, emission_chart_file, resources)
+    emission_chart_data = emissions_calculator.emission_plot(emissions_df)
+    emission_plot_artifact = create_emission_plot_artifact(emission_chart_data, resources)
 
-    return [*area_plot_artifacts, *emission_plot_artifacts]
+    return [area_plot_artifact, emission_plot_artifact]

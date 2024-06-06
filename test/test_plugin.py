@@ -1,14 +1,11 @@
 import json
 
-import geopandas
 import numpy as np
 import pandas as pd
 import pytest
 import rasterio
 from climatoology.base.artifact import ArtifactModality
-from geopandas.testing import assert_geodataframe_equal
 from numpy.testing import assert_array_equal
-from shapely.geometry import Polygon
 
 from ghg_lulc.operator_worker import GHGEmissionFromLULC
 from test.conftest import TEST_RESOURCES_DIR
@@ -33,7 +30,6 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
         'Classification for second timestamp',
         'LULC Change',
         'LULC Change (patched)',
-        'LULC Emissions',
         'Localised Emissions',
         'Localised Emissions (patched)',
         'Total change areas and emissions in the observation period',
@@ -75,38 +71,6 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
-            case 'LULC Emissions':
-                expected_data = geopandas.GeoDataFrame(
-                    {
-                        'id': ['0', '1'],
-                        'color': ['#800000', '#00004c'],
-                        'label': ['1.8250806041439154', '-1.8250839608794298'],
-                        'geometry': [
-                            Polygon(
-                                [
-                                    (8.59027496382055, 49.43990950226244),
-                                    (8.59027496382055, 49.439819004524885),
-                                    (8.590412445730827, 49.439819004524885),
-                                    (8.590412445730827, 49.43990950226244),
-                                    (8.59027496382055, 49.43990950226244),
-                                ]
-                            ),
-                            Polygon(
-                                [
-                                    (8.590137481910276, 49.439819004524885),
-                                    (8.590137481910276, 49.439728506787326),
-                                    (8.59027496382055, 49.439728506787326),
-                                    (8.59027496382055, 49.439819004524885),
-                                    (8.590137481910276, 49.439819004524885),
-                                ]
-                            ),
-                        ],
-                    },
-                    crs='EPSG:4326',
-                )
-                exported_data = geopandas.read_file(artifact.file_path)
-                assert_geodataframe_equal(exported_data, expected_data, check_less_precise=True)
-
             case 'Carbon stock values per class':
                 expected_stock_table = pd.DataFrame(
                     {

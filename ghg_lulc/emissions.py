@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import Tuple
 
 import geopandas as gpd
@@ -238,13 +237,12 @@ class EmissionCalculator:
 
         return change_type_df[['Area [ha]', 'Total emissions [t]']]
 
-    def area_plot(self, emissions_df: gpd.GeoDataFrame) -> Tuple[Chart2dData, Path]:
+    def area_plot(self, emissions_df: gpd.GeoDataFrame) -> Chart2dData:
         """
         Creates pie chart showing change area by LULC change type as Chart2dData object and .png file.
 
         :param emissions_df: geodataframe with change area by LULC change type
         :return: Chart2dData object with change area by LULC change type
-        :return: pie chart image with change area by LULC change type
         """
         emissions_df = emissions_df.sort_values(by='emissions')
 
@@ -256,9 +254,7 @@ class EmissionCalculator:
 
         area_chart_data = self.get_area_chart2ddata(areas, labels, colors)
 
-        area_chart_file = self.get_area_pyplot(areas, labels, colors)
-
-        return area_chart_data, area_chart_file
+        return area_chart_data
 
     def get_area_chart2ddata(self, sizes: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
         """
@@ -272,26 +268,7 @@ class EmissionCalculator:
         )
         return area_chart_data
 
-    def get_area_pyplot(self, sizes: pd.Series, labels: pd.Series, colors: pd.Series) -> Path:
-        """
-        :param sizes: pd.Series with change areas by LULC change type
-        :param labels: pd.Series with LULC change type labels
-        :param colors: pd.Series with plot color for each LULC change type
-        :return: .png file of pie chart showing change areas by LULC change type
-        """
-        fig, ax = plt.subplots()
-        ax.pie(
-            sizes,
-            labels=labels,
-            colors=colors.apply(lambda val: val.as_hex()).to_list(),
-        )
-        areas_chart_file = self.resources.computation_dir / 'areas.png'
-        plt.title('Change area by LULC change type [ha]')
-        plt.savefig(areas_chart_file, dpi=300, bbox_inches='tight')
-        plt.close()
-        return areas_chart_file
-
-    def emission_plot(self, emissions_df: gpd.GeoDataFrame) -> Tuple[Chart2dData, Path]:
+    def emission_plot(self, emissions_df: gpd.GeoDataFrame) -> Chart2dData:
         """
         Creates horizontal bar chart showing carbon emissions by LULC change type as Chart2dData object and .png file.
 
@@ -310,9 +287,7 @@ class EmissionCalculator:
 
         emission_chart_data = self.get_emission_chart2ddata(emissions, labels, colors)
 
-        emission_chart_file = self.get_emission_pyplot(emissions, labels, colors)
-
-        return emission_chart_data, emission_chart_file
+        return emission_chart_data
 
     def get_emission_chart2ddata(self, emissions: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
         """
@@ -328,32 +303,6 @@ class EmissionCalculator:
             chart_type=ChartType.BAR,
         )
         return emission_chart_data
-
-    def get_emission_pyplot(self, emissions: pd.Series, labels: pd.Series, colors: pd.Series) -> Path:
-        """
-        :param emissions: pd.Series with emissions by LULC change type
-        :param labels: labels: pd.Series with LULC change type labels
-        :param colors: pd.Series with plot color for each LULC change type
-        :return: .png file of horizontal bar chart showing emissions by LULC change type
-        """
-        fig, (ax) = plt.subplots(figsize=(8, 4))
-
-        bars = ax.barh(width=emissions, y=labels, color=colors.apply(lambda val: val.as_hex()).to_list())
-
-        ax.bar_label(bars, padding=2, fmt='%.2f')
-        ax.set_xlabel('carbon emissions [t]')
-        ax.set_title('Carbon emissions by LULC change type [t]')
-
-        # we add a small padding to the chart to prevent bar labels from overlapping the axis
-        x_min = min(emissions.min() + emissions.min() / 3, 0)
-        x_max = max(emissions.max() + emissions.max() / 3, 0)
-        ax.set_xlim(x_min, x_max)
-
-        fig.tight_layout()
-        emission_chart_file = self.resources.computation_dir / 'emissions.png'
-        plt.savefig(emission_chart_file, dpi=300, bbox_inches='tight')
-        plt.close()
-        return emission_chart_file
 
     @staticmethod
     def filter_ghg_stock(ghg_stock: pd.DataFrame) -> pd.DataFrame:

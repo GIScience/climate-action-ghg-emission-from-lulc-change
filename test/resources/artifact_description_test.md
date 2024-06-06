@@ -38,7 +38,7 @@ The carbon stocks of the selected source are shown in Table 1.
 These carbon stocks encompass soil and vegetation carbon, providing an average measure of carbon stored per hectare.
 Our method compares LULC and its associated carbon stock at time stamp 1 with LULC and its associated carbon stock at time stamp 2, i. e. we subtract the associated carbon stock of time stamp 2 from the carbon stock of time stamp 1.
 The resulting emission factors are shown in Table 2.
-Negative emission values indicate carbon sequestration resulting from the LULC change.
+Positive emission values indicate carbon emissions, negative emission values indicate a carbon sink resulting from the LULC change.
 
 It is assumed that each location experiences maximally one LULC change during the observation period.
 Emission factors are only available for the LULC change types given in Table 2.
@@ -87,6 +87,9 @@ This bar chart shows the total carbon emissions by LULC change type [t] in the o
 
 This pie chart shows the total change areas by LULC change type [% of total change area] in the observation period.
 The total change area is the total area of all LULC changes for which an emission factor is available.
+The slices of the bar chart are colored according to the emissions per pixel of the respective LULC change type.
+Since it has the highest carbon emissions per pixel, the LULC change type "forest to built-up" is colored in the darkest red.
+Accordingly, the LULC change type "built-up to forest" is colored in the darkest blue, because it has the highest carbon sink per pixel.
 
 ## Table: Carbon stock values per class
 

@@ -57,14 +57,10 @@ class ComputeInput(BaseModel):
         default=75,
     )
     ghg_stock_source: Optional[GhgStockSource] = Field(
-        title='Literature Source for LULC GHG stock values',
-        description='The set of GHG stock values used for the '
-        'estimation of LULC change emissions. Three '
-        'different sets of GHG stock values are available: '
-        'Hansis et al. (2015), Reick et al. (2010), '
-        'and Houghton & Hackler (2001). For '
-        'more information on the GHG stock sources, '
-        'please refer to the documentation.',
+        title='Scientific source for LULC GHG stock values',
+        description='Please select a scientific source for the GHG stock values used in estimating LULC change '
+        'emissions.'
+        'For more information on the GHG stock sources, please refer to the documentation',
         examples=[GhgStockSource.HANSIS],
         default=GhgStockSource.HANSIS,
     )

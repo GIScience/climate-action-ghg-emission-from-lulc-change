@@ -36,12 +36,14 @@ class ComputeInput(BaseModel):
     )
     date_before: condate(ge=date(2017, 1, 1), le=date.today()) = Field(
         title='Period Start',
-        description='First timestamp of the period of analysis',
+        description='First timestamp of the period of analysis. Currently, only months from May to September are '
+        'possible.',
         examples=[date(2022, 5, 17)],
     )
     date_after: condate(ge=date(2017, 1, 1), le=date.today()) = Field(
         title='Period End',
-        description='Last timestamp of the period of analysis',
+        description='Last timestamp of the period of analysis. Currently, only months from May to September are '
+        'possible.',
         examples=[date(2023, 5, 31)],
     )
     classification_threshold: Optional[confloat(ge=0, le=100)] = Field(

@@ -29,7 +29,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
         'Classification for first timestamp',
         'Classification for second timestamp',
         'LULC Change',
-        'Localised Emissions',
+        'Localised Emissions [t per 100m²]',
         'Summary of results',
         'Description of the artifacts',
         'Information on the area of interest',
@@ -52,7 +52,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
-            case 'Localised Emissions':
+            case 'Localised Emissions [t per 100m²]':
                 expected_array = np.array([[[0, 0, 0], [0, 2, 3], [0, 1, 2]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()

@@ -98,7 +98,9 @@ def create_change_artifacts(
     change_artifact = create_geotiff_artifact(
         raster_info=filled_change,
         layer_name='LULC Change',
-        caption='LULC changes within the observation period',
+        caption='LULC changes within the observation period. Note: Transparent pixels within the area of interest'
+        'represent areas where the LULC change cannot be derived because the LULC of this pixel cannot be '
+        'derived with sufficient confidence in one or both timestamps of the period of analysis.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/03_LULC_change.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='LULC_change',
@@ -138,8 +140,11 @@ def create_change_artifacts(
 
     patched_localised_emission_artifact = create_geotiff_artifact(
         raster_info=patched_change_emissions,
-        layer_name='Localised Emissions',
-        caption='GHG emissions per pixel due to LULC change',
+        layer_name='Localised Emissions [t per 100m²]',
+        caption='GHG emissions per pixel due to LULC change. Note: Transparent pixels within the area of interest'
+        'represent areas where no LULC change emission estimate can be given. The reason for this is either'
+        'that the LULC of this pixel cannot be derived with sufficient confidence or that no GHG stock value is'
+        'available for the LULC class of this pixel in one or both timestamps of the period of analysis.',
         description=change_emission_description,
         resources=resources,
         filename='LULC_change_emissions_patched',

@@ -51,6 +51,21 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                     affiliation='HeiGIT gGmbH',
                     website='https://heigit.org/heigit-team',
                 ),
+                PluginAuthor(
+                    name='Maciej Adamiak',
+                    affiliation='HeiGIT gGmbH',
+                    website='https://heigit.org/heigit-team',
+                ),
+                PluginAuthor(
+                    name='Maria Martin',
+                    affiliation='HeiGIT gGmbH',
+                    website='https://heigit.org/heigit-team',
+                ),
+                PluginAuthor(
+                    name='Sven Lautenbach',
+                    affiliation='HeiGIT gGmbH',
+                    website='https://heigit.org/heigit-team',
+                ),
             ],
             version=str(Version(major=1, minor=0, patch=0)),
             purpose=(PROJECT_DIR / 'resources/purpose.md').read_text(),

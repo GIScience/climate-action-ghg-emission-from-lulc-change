@@ -64,15 +64,14 @@ def test_get_change_info(default_calculator):
     expected_output_array = ma.masked_array(
         [
             [0, 0, 0, 0, 0],
-            [2, 7, 12, -1, -1],
-            [3, 8, -1, 13, -1],
-            [4, -1, 9, 14, -1],
-            [0, 0, 0, -1, -1],
+            [2, 7, 12, 65535, 65535],
+            [3, 8, 65535, 13, 65535],
+            [4, 65535, 9, 14, 65535],
+            [0, 0, 0, 65535, 65535],
         ],
         mask=np.zeros(shape=(5, 5)),
     )
     expected_output_colormap = {
-        -1: [0, 0, 0],
         0: [128, 128, 128],
         2: [107, 110, 207],
         3: [99, 121, 57],
@@ -110,7 +109,6 @@ def test_masked_change_info(default_calculator):
         dtype=np.int16,
     )
     expected_output_colormap = {
-        -1: [0, 0, 0],
         0: [128, 128, 128],
         2: [222, 158, 214],
     }
@@ -134,7 +132,6 @@ def test_get_change_emissions_info(default_calculator):
         mask=[[0, 0, 0]],
     )
     expected_output_colormap = {
-        -999.999: [0, 0, 0],
         -1.82: [0, 0, 76],
         -1.45: [0, 0, 149],
         -0.915: [0, 0, 253],
@@ -166,7 +163,6 @@ def test_get_masked_change_emissions_info(default_calculator):
 
     expected_output_array = ma.masked_array([[0, 0.915, -999.999]], mask=[[0, 1, 0]])
     expected_output_colormap = {
-        -999.999: [0, 0, 0],
         -1.82: [0, 0, 76],
         -1.45: [0, 0, 149],
         -0.915: [0, 0, 253],

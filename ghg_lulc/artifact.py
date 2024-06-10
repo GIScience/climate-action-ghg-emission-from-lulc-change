@@ -11,32 +11,42 @@ from climatoology.base.artifact import (
     create_geotiff_artifact,
     create_markdown_artifact,
     create_table_artifact,
+    ContinuousLegendData,
 )
 from climatoology.base.computation import ComputationResources
+from climatoology.utility.api import LabelDescriptor
+from pydantic_extra_types.color import Color
 
-from ghg_lulc.utils import PROJECT_DIR, GhgStockSource
+from ghg_lulc.utils import PROJECT_DIR, GhgStockSource, RASTER_NO_DATA_VALUE, EMISSION_PER_PIXEL_FACTOR
 
 
 def create_classification_artifacts(
     lulc_before: RasterInfo,
     lulc_after: RasterInfo,
+    labels: Dict[str, LabelDescriptor],
     resources: ComputationResources,
 ) -> Tuple[_Artifact, _Artifact]:
-    no_data_value = 0
+    # Hack due to https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/web-app/-/issues/114
+    unknown_color = Color('gray')
+    colormap = lulc_before.colormap
+    colormap[0] = unknown_color.as_rgb_tuple()
+    legend = {v.name: Color(v.color) for _, v in labels.items()}
+    legend['unknown'] = unknown_color
 
     lulc_before_artifact = create_geotiff_artifact(
         raster_info=RasterInfo(
-            data=lulc_before.data.filled(fill_value=no_data_value),
+            data=lulc_before.data.filled(fill_value=RASTER_NO_DATA_VALUE),
             crs=lulc_before.crs,
             transformation=lulc_before.transformation,
-            colormap=lulc_before.colormap,
-            nodata=no_data_value,
+            colormap=colormap,
+            nodata=RASTER_NO_DATA_VALUE,
         ),
         layer_name='Classification for first timestamp',
         caption='LULC classification at beginning of observation period',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(
             encoding='utf-8'
         ),
+        legend_data=legend,
         resources=resources,
         filename='lulc_classification_before',
         primary=False,
@@ -44,17 +54,18 @@ def create_classification_artifacts(
 
     lulc_after_artifact = create_geotiff_artifact(
         raster_info=RasterInfo(
-            data=lulc_after.data.filled(fill_value=no_data_value),
+            data=lulc_after.data.filled(fill_value=RASTER_NO_DATA_VALUE),
             crs=lulc_after.crs,
             transformation=lulc_after.transformation,
-            colormap=lulc_after.colormap,
-            nodata=no_data_value,
+            colormap=colormap,
+            nodata=RASTER_NO_DATA_VALUE,
         ),
         layer_name='Classification for second timestamp',
         caption='LULC classification at end of observation period',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(
             encoding='utf-8'
         ),
+        legend_data=legend,
         resources=resources,
         filename='lulc_classification_after',
         primary=False,
@@ -69,16 +80,21 @@ def create_change_artifacts(
     ghg_stock: pd.DataFrame,
     emission_factors: pd.DataFrame,
     resources: ComputationResources,
-) -> Tuple[_Artifact, _Artifact, _Artifact, _Artifact]:
-    no_data_value = -1
-    filled_change_data = change.data.filled(fill_value=no_data_value)
+) -> Tuple[_Artifact, _Artifact]:
+    filled_change_data = change.data.filled(fill_value=RASTER_NO_DATA_VALUE)
     filled_change = RasterInfo(
         data=filled_change_data,
         crs=change.crs,
         transformation=change.transformation,
         colormap=change.colormap,
-        nodata=no_data_value,
+        nodata=RASTER_NO_DATA_VALUE,
     )
+    emission_factors['change'] = emission_factors.apply(
+        lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}', axis=1
+    )
+    lookup = emission_factors.set_index('change_id')['change'].to_dict()
+    lookup[0] = 'No Change'
+
     change_artifact = create_geotiff_artifact(
         raster_info=filled_change,
         layer_name='LULC Change',
@@ -86,36 +102,11 @@ def create_change_artifacts(
         description=(PROJECT_DIR / 'resources/artifact_descriptions/03_LULC_change.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='LULC_change',
+        legend_data={lookup[change_id]: Color(color) for change_id, color in change.colormap.items()},
         primary=False,
     )
 
-    patched_change_data, patched_colormap = patch_change_data(filled_change_data, change.colormap)
-    patched_change = RasterInfo(
-        data=patched_change_data,
-        crs=change.crs,
-        transformation=change.transformation,
-        colormap=patched_colormap,
-    )
-
-    patched_change_artifact = create_geotiff_artifact(
-        raster_info=patched_change,
-        layer_name='LULC Change (patched)',
-        caption='LULC changes within the observation period',
-        description=(PROJECT_DIR / 'resources/artifact_descriptions/03_LULC_change.md').read_text(encoding='utf-8'),
-        resources=resources,
-        filename='LULC_change_patched',
-        primary=False,
-    )
-
-    no_data_value = -999.999
-    filled_change_emissions_data = change_emissions.data.filled(fill_value=no_data_value)
-    filled_change_emissions = RasterInfo(
-        data=filled_change_emissions_data,
-        crs=change.crs,
-        transformation=change.transformation,
-        colormap=change_emissions.colormap,
-        nodata=no_data_value,
-    )
+    filled_change_emissions_data = change_emissions.data.filled(fill_value=RASTER_NO_DATA_VALUE)
     change_emission_description = (PROJECT_DIR / 'resources/artifact_descriptions/04_Localized_emissions.md').read_text(
         encoding='utf-8'
     )
@@ -133,15 +124,6 @@ def create_change_artifacts(
             floatfmt='#.1f',
         ),
     )
-    localised_emission_artifact = create_geotiff_artifact(
-        raster_info=filled_change_emissions,
-        layer_name='Localised Emissions',
-        caption='GHG emissions per pixel due to LULC change',
-        description=change_emission_description,
-        resources=resources,
-        filename='LULC_change_emissions',
-        primary=False,
-    )
 
     patched_change_emissions_data, patched_emissions_colormap = patch_change_data(
         filled_change_emissions_data, change_emissions.colormap
@@ -156,15 +138,23 @@ def create_change_artifacts(
 
     patched_localised_emission_artifact = create_geotiff_artifact(
         raster_info=patched_change_emissions,
-        layer_name='Localised Emissions (patched)',
+        layer_name='Localised Emissions',
         caption='GHG emissions per pixel due to LULC change',
         description=change_emission_description,
         resources=resources,
         filename='LULC_change_emissions_patched',
+        legend_data=ContinuousLegendData(
+            cmap_name='seismic_r',
+            ticks={
+                str(min(emission_factors.emission_factor) * EMISSION_PER_PIXEL_FACTOR): 1,
+                str(0): 0.5,
+                str(max(emission_factors.emission_factor) * EMISSION_PER_PIXEL_FACTOR): 0,
+            },
+        ),
         primary=True,
     )
 
-    return change_artifact, patched_change_artifact, localised_emission_artifact, patched_localised_emission_artifact
+    return change_artifact, patched_localised_emission_artifact
 
 
 def patch_change_data(change_data: np.ndarray, orig_colormap: Dict[Number, Tuple[int, int, int]]):
@@ -172,7 +162,7 @@ def patch_change_data(change_data: np.ndarray, orig_colormap: Dict[Number, Tuple
     patched_colormap = {}
     for key, value in enumerate(np.unique(change_data)):
         patched_data[change_data == value] = key
-        patched_colormap[key] = orig_colormap.get(value)
+        patched_colormap[key] = orig_colormap.get(value, Color('black').as_rgb_tuple())
 
     patched_data = patched_data.astype(np.uint16, copy=False)
     return patched_data, patched_colormap

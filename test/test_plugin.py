@@ -29,9 +29,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
         'Classification for first timestamp',
         'Classification for second timestamp',
         'LULC Change',
-        'LULC Change (patched)',
         'Localised Emissions',
-        'Localised Emissions (patched)',
         'Summary of results',
         'Description of the artifacts',
         'Information on the area of interest',
@@ -50,24 +48,11 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
             case 'LULC Change':
-                expected_array = np.array([[[-1, -1, -1], [-1, 0, 4], [-1, 13, 0]]])
-                with rasterio.open(artifact.file_path) as src:
-                    raster_array = src.read()
-                assert_array_equal(raster_array, expected_array)
-            case 'LULC Change (patched)':
-                expected_array = np.array([[[0, 0, 0], [0, 1, 2], [0, 3, 1]]])
+                expected_array = np.array([[[65535, 65535, 65535], [65535, 0, 4], [65535, 13, 0]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
             case 'Localised Emissions':
-                expected_array = np.array([[[-999.999, -999.999, -999.999], [-999.999, 0, 1.82], [-999.999, -1.82, 0]]])
-                with rasterio.open(artifact.file_path) as src:
-                    raster_array = src.read()
-                assert_array_equal(raster_array, expected_array)
-                assert artifact.description == (TEST_RESOURCES_DIR / 'localised_emissions_text.md').read_text(
-                    encoding='utf-8'
-                )
-            case 'Localised Emissions (patched)':
                 expected_array = np.array([[[0, 0, 0], [0, 2, 3], [0, 1, 2]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()

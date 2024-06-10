@@ -14,7 +14,7 @@ from pydantic_extra_types.color import Color
 from rasterio.features import shapes
 from shapely.ops import transform
 
-from ghg_lulc.utils import PIXEL_AREA, SQM_TO_HA, STOCK_TARGET_AREA, pyplot_to_pydantic_color
+from ghg_lulc.utils import SQM_TO_HA, pyplot_to_pydantic_color, EMISSION_PER_PIXEL_FACTOR, RASTER_NO_DATA_VALUE
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class EmissionCalculator:
         self,
         lulc_before: RasterInfo,
         lulc_after: RasterInfo,
-        unknown_change_value: int = -1,
+        unknown_change_value: int = RASTER_NO_DATA_VALUE,
         no_change_value: int = 0,
     ) -> RasterInfo:
         """
@@ -62,7 +62,7 @@ class EmissionCalculator:
         :param no_change_value: Integer to indicate no change pixels
         :return: a raster with LULC changes between first and second time stamp
         """
-        changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.int16)
+        changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.uint16)
 
         for row in self.emission_factors.itertuples():
             changes[
@@ -77,11 +77,12 @@ class EmissionCalculator:
         changes_colormap = {}
 
         change_classes = np.unique(ma.compressed(changes))
+        unknown_index = np.argwhere(change_classes == unknown_change_value)
+        change_classes = np.delete(change_classes, unknown_index)
         for change_class in change_classes:
             pyplot_color = cmap(change_class / max(change_classes))
             changes_colormap[change_class] = pyplot_to_pydantic_color(pyplot_color).as_rgb_tuple()
         changes_colormap[no_change_value] = Color('gray').as_rgb_tuple()
-        changes_colormap[unknown_change_value] = Color('black').as_rgb_tuple()
 
         return RasterInfo(
             data=changes,
@@ -102,19 +103,15 @@ class EmissionCalculator:
         :param unknown_emissions_value: a float value to indicate pixels with unknown emissions
         :return: a raster with pixel-wise emissions between first and second time stamp
         """
-        emission_per_pixel_factor = PIXEL_AREA / STOCK_TARGET_AREA
-
         change_emissions = np.full_like(changes.data, fill_value=unknown_emissions_value, dtype=np.floating)
 
         emissions_colormap = {}
         for row in self.emission_factors.itertuples():
-            pixel_emissions = row.emission_factor * emission_per_pixel_factor
+            pixel_emissions = row.emission_factor * EMISSION_PER_PIXEL_FACTOR
 
             change_emissions[changes.data == row.change_id] = pixel_emissions
             emissions_colormap[pixel_emissions] = row.color.as_rgb_tuple()
         change_emissions[changes.data == 0] = 0
-
-        emissions_colormap[unknown_emissions_value] = Color('black').as_rgb_tuple()
 
         return RasterInfo(
             data=change_emissions,
@@ -317,14 +314,12 @@ class EmissionCalculator:
             lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}',
             axis=1,
         )
-        colors = emissions_df['color']
-        colors[:] = Color('gray')
 
-        emission_chart_data = self.get_emission_chart2ddata(emissions, labels, colors)
+        emission_chart_data = self.get_emission_chart2ddata(emissions, labels)
 
         return emission_chart_data
 
-    def get_emission_chart2ddata(self, emissions: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
+    def get_emission_chart2ddata(self, emissions: pd.Series, labels: pd.Series) -> Chart2dData:
         """
         :param emissions: pd.Series with emissions by LULC change type
         :param labels: pd.Series with LULC change type labels
@@ -334,7 +329,7 @@ class EmissionCalculator:
         emission_chart_data = Chart2dData(
             x=labels.to_list(),
             y=emissions.to_list(),
-            color=colors.to_list(),
+            color=emissions.size * [Color('gray')],
             chart_type=ChartType.BAR,
         )
         return emission_chart_data

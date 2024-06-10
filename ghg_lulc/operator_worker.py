@@ -114,6 +114,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         classification_artifacts = create_classification_artifacts(
             lulc_before,
             lulc_after,
+            self.lulc_utility.get_class_legend(),
             resources,
         )
 

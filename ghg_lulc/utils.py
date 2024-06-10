@@ -22,6 +22,10 @@ PIXEL_AREA = 10 * 10
 STOCK_TARGET_AREA = 100 * 100
 SQM_TO_HA = 1 / STOCK_TARGET_AREA
 
+EMISSION_PER_PIXEL_FACTOR = PIXEL_AREA / STOCK_TARGET_AREA
+
+RASTER_NO_DATA_VALUE = 65535
+
 
 class GhgStockSource(Enum):
     HANSIS = 'Hansis et al. (2015): Carbon stock values from the BLUE model.'
@@ -112,7 +116,7 @@ def fetch_lulc(lulc_utility: LulcUtility, lulc_area: LulcWorkUnit, aoi: shapely.
     """
     log.debug('Fetching classification.')
     with lulc_utility.compute_raster([lulc_area]) as lulc_classification:
-        lulc_array = lulc_classification.read()
+        lulc_array = lulc_classification.read().astype(np.uint16)
         crs = lulc_classification.crs
         transform = lulc_classification.transform
         colormap = lulc_classification.colormap(1)
@@ -144,7 +148,7 @@ def mask_raster(
     rows = lulc_array.shape[-2]
     cols = lulc_array.shape[-1]
     mask = ~geometry_mask([aoi], (rows, cols), transform=transform, invert=True)
-    masked_lulc_array = np.ma.masked_array(lulc_array, mask, fill_value=0)
+    masked_lulc_array = np.ma.masked_array(lulc_array, mask, fill_value=RASTER_NO_DATA_VALUE)
 
     return masked_lulc_array
 

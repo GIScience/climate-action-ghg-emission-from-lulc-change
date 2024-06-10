@@ -18,6 +18,7 @@ from ghg_lulc.artifact import (
     create_emission_plot_artifact,
     create_stock_artifact,
     create_summary_artifact,
+    create_area_info_artifact,
 )
 from ghg_lulc.emissions import EmissionCalculator
 from ghg_lulc.input import ComputeInput
@@ -214,13 +215,14 @@ def create_table_artifacts(
     ghg_stock_df = EmissionCalculator.filter_ghg_stock(ghg_stock)
     stock_artifact = create_stock_artifact(ghg_stock_df, params.ghg_stock_source, resources)
 
-    summary_df = EmissionCalculator.summary_stats(emissions_df, params.get_geom())
-    summary_artifact = create_summary_artifact(summary_df, resources)
+    emission_info_df, area_info_df = emission_calculator.summary_stats(emissions_df, params.get_geom())
+    summary_artifact = create_summary_artifact(emission_info_df, resources)
+    area_info_artifact = create_area_info_artifact(area_info_df, resources)
 
     change_type_df = emission_calculator.get_change_type_table(emissions_df)
     change_type_artifact = create_change_type_artifact(change_type_df, resources)
 
-    return [stock_artifact, summary_artifact, change_type_artifact]
+    return [stock_artifact, summary_artifact, area_info_artifact, change_type_artifact]
 
 
 def create_chart_artifacts(

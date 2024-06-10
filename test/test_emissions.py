@@ -275,24 +275,31 @@ def test_summary_stats(default_calculator):
     emissions_df = gpd.GeoDataFrame(geometry=polygons, crs=target_proj)
     emissions_df['emissions'] = [-1, 1]
 
-    data = [
-        ['Area of interest [ha]', 0.1],
-        ['Change share [%]', 20],
-        ['Emitting area [ha]', 0.01],
-        ['Emitting area share [%]', 50],
-        ['Sink area [ha]', 0.01],
-        ['Sink area share [%]', 50],
-        ['Total gross emissions [t]', 1],
-        ['Total sink [t]', -1],
-        ['Net emissions [t]', 0],
+    data_summary = [
+        ['Gross Emissions', 1],
+        ['Gross Sink', -1],
+        ['Net Emissions/Sink', 0],
     ]
 
-    expected_summary = pd.DataFrame(data, columns=['Metric name', 'Value'])
-    expected_summary.set_index('Metric name', inplace=True)
+    data_area_info = [
+        ['Area of Interest (AOI)', 0.1, 100.0],
+        ['Change Area', 0.02, 20.0],
+        ['Emitting Area', 0.01, 10.0],
+        ['Sink Area', 0.01, 10.0],
+    ]
 
-    calculated_summary = default_calculator.summary_stats(emissions_df, aoi)
+    expected_summary = pd.DataFrame(data_summary, columns=['Metric Name', 'Value [t]'])
+    expected_summary.set_index('Metric Name', inplace=True)
 
-    pd.testing.assert_frame_equal(calculated_summary, expected_summary)
+    expected_area_info = pd.DataFrame(
+        data_area_info, columns=['Metric Name', 'Absolute Value [ha]', 'Proportion of AOI [%]']
+    )
+    expected_area_info.set_index('Metric Name', inplace=True)
+
+    calculated_emission_info, calculated_area_info = default_calculator.summary_stats(emissions_df, aoi)
+
+    pd.testing.assert_frame_equal(calculated_emission_info, expected_summary)
+    pd.testing.assert_frame_equal(calculated_area_info, expected_area_info)
 
 
 def test_get_change_type_table(default_calculator):

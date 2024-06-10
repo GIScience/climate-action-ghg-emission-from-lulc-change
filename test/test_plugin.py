@@ -32,8 +32,9 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
         'LULC Change (patched)',
         'Localised Emissions',
         'Localised Emissions (patched)',
-        'Total change areas and emissions in the observation period',
+        'Summary of results',
         'Description of the artifacts',
+        'Information on the area of interest',
     }
 
     for artifact in artifacts:
@@ -81,21 +82,29 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                 )
                 exported_df = pd.read_csv(artifact.file_path)
                 pd.testing.assert_frame_equal(exported_df, expected_stock_table)
-            case 'Total change areas and emissions in the observation period':
-                data = [
-                    ['Area of interest [ha]', 0.8],
-                    ['Change share [%]', 2.49],
-                    ['Emitting area [ha]', 0.01],
-                    ['Emitting area share [%]', 50],
-                    ['Sink area [ha]', 0.01],
-                    ['Sink area share [%]', 50],
-                    ['Total gross emissions [t]', 1.8],
-                    ['Total sink [t]', -1.8],
-                    ['Net emissions [t]', -0.0],
+            case 'Summary of results':
+                data_summary = [
+                    ['Gross Emissions', 1.83],
+                    ['Gross Sink', -1.83],
+                    ['Net Emissions/Sink', 0],
                 ]
-                expected_summary = pd.DataFrame(data, columns=['Metric name', 'Value'])
-                exported_df = pd.read_csv(artifact.file_path)
+                expected_summary = pd.DataFrame(data_summary, columns=['Metric Name', 'Value [t]'])
+                expected_summary.set_index('Metric Name', inplace=True)
+                exported_df = pd.read_csv(artifact.file_path, index_col=0)
                 pd.testing.assert_frame_equal(exported_df, expected_summary)
+            case 'Information on the area of interest':
+                data_area_info = [
+                    ['Area of Interest (AOI)', 0.81, 100.0],
+                    ['Change Area', 0.02, 2.49],
+                    ['Emitting Area', 0.01, 1.24],
+                    ['Sink Area', 0.01, 1.24],
+                ]
+                expected_area_info = pd.DataFrame(
+                    data_area_info, columns=['Metric Name', 'Absolute Value [ha]', 'Proportion of AOI [%]']
+                )
+                expected_area_info.set_index('Metric Name', inplace=True)
+                exported_df = pd.read_csv(artifact.file_path, index_col=0)
+                pd.testing.assert_frame_equal(exported_df, expected_area_info)
             case 'Change areas and emissions by LULC change type':
                 expected_change_type_table = pd.DataFrame(
                     {

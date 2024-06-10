@@ -1,4 +1,0 @@
-## Table: Total change areas and emissions in the observation period
-
-This table shows the size of the area of interest [ha], the share of change areas of the area of interest [%], the area of emitting changes [ha], the share of emitting change area of the total change area [%], the area of changes representing carbon sinks [ha], the share of carbon sink change area of the total change area [%],  total gross emissions, sinks, and net emissions [t] in the observation period.
-Net emissions are the combination of emissions and carbon sinks, gross emissions are the total LULC change emissions of carbon to the atmosphere, and the term carbon sink refers to the total carbon sequestration as a result of LULC change.

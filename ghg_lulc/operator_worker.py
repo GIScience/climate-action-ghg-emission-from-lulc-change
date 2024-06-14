@@ -153,8 +153,8 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         :param params: Operator input
         :return: RasterInfo objects with LULC classifications at first and second timestamp
         """
-        aoi_box = params.get_geom().bounds
-        aoi = params.get_geom()
+        aoi_box = params.get_aoi_geom().bounds
+        aoi = params.get_aoi_geom()
 
         area_before = LulcWorkUnit(
             area_coords=aoi_box,
@@ -231,7 +231,7 @@ def create_table_artifacts(
     ghg_stock_df = EmissionCalculator.filter_ghg_stock(ghg_stock)
     stock_artifact = create_stock_artifact(ghg_stock_df, params.ghg_stock_source, resources)
 
-    emission_info_df, area_info_df = emission_calculator.summary_stats(emissions_df, params.get_geom())
+    emission_info_df, area_info_df = emission_calculator.summary_stats(emissions_df, params.get_aoi_geom())
     summary_artifact = create_summary_artifact(emission_info_df, resources)
     area_info_artifact = create_area_info_artifact(area_info_df, resources)
 

@@ -17,7 +17,7 @@ def expected_compute_input() -> ComputeInput:
     return ComputeInput(
         aoi={
             'type': 'Feature',
-            'properties': {},
+            'properties': {'name': 'Heidelberg', 'id': 'Q12345'},
             'geometry': {
                 'type': 'MultiPolygon',
                 'coordinates': [

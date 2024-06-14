@@ -1,5 +1,6 @@
+import uuid
 from datetime import date
-from typing import Dict, Optional
+from typing import Optional
 
 import geojson_pydantic
 import shapely
@@ -8,15 +9,28 @@ from pydantic import BaseModel, Field, condate, confloat, field_validator, model
 from ghg_lulc.utils import GhgStockSource
 
 
+class AoiProperties(BaseModel):
+    name: str = Field(
+        title='Name',
+        description='The name of the area of interest i.e. a human readable description.',
+        examples=['Heidelberg'],
+    )
+    id: str = Field(
+        title='ID',
+        description='A unique identifier of the area of interest.',
+        examples=[uuid.uuid4()],
+    )
+
+
 class ComputeInput(BaseModel):
-    aoi: geojson_pydantic.Feature[geojson_pydantic.MultiPolygon, Optional[Dict]] = Field(
+    aoi: geojson_pydantic.Feature[geojson_pydantic.MultiPolygon, AoiProperties] = Field(
         title='Area of Interest',
         description='Area to calculate GHG emissions for.',
         validate_default=True,
         examples=[
             {
                 'type': 'Feature',
-                'properties': {},
+                'properties': {'name': 'Heidelberg', 'id': 'Q12345'},
                 'geometry': {
                     'type': 'MultiPolygon',
                     'coordinates': [
@@ -67,12 +81,24 @@ class ComputeInput(BaseModel):
         default=GhgStockSource.HANSIS,
     )
 
-    def get_geom(self) -> shapely.MultiPolygon:
+    @field_validator('aoi')
+    def assert_aoi_properties_not_null(cls, aoi: geojson_pydantic.Feature) -> geojson_pydantic.Feature:
+        assert aoi.properties, 'AOI properties are required.'
+        return aoi
+
+    def get_aoi_geom(self) -> shapely.MultiPolygon:
         """Convert the input geojson geometry to a shapely geometry.
 
         :return: A shapely.MultiPolygon representing the area of interest defined by the user.
         """
         return shapely.geometry.shape(self.aoi.geometry)
+
+    def get_aoi_properties(self) -> AoiProperties:
+        """Return the properties of the aoi.
+
+        :return:
+        """
+        return self.aoi.properties
 
     @field_validator('date_before', 'date_after')
     def check_month_year(cls, value):

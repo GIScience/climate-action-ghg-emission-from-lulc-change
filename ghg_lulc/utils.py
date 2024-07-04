@@ -26,6 +26,14 @@ EMISSION_PER_PIXEL_FACTOR = PIXEL_AREA / STOCK_TARGET_AREA
 
 RASTER_NO_DATA_VALUE = 65535
 
+UNKNOWN_CLASS_LABEL = LabelDescriptor(
+    name='unknown',
+    description='The class is unknown',
+    osm_filter=None,
+    raster_value=0,
+    color=(0, 0, 0),
+)
+
 
 class GhgStockSource(Enum):
     HANSIS = 'Hansis et al. (2015): Carbon stock values from the BLUE model.'
@@ -61,7 +69,9 @@ def read_stock_source(source_file: Path, utility_labels: Dict[str, LabelDescript
     ghg_stock = pd.read_csv(source_file)
     try:
         utility_label_descriptors = ghg_stock.apply(
-            lambda row: utility_labels.get(row.utility_class_name).model_dump(exclude={'name'}),
+            lambda row: utility_labels.get(row.utility_class_name, UNKNOWN_CLASS_LABEL).model_dump(
+                exclude={'name', 'osm_ref'}
+            ),
             axis='columns',
             result_type='expand',
         )

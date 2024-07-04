@@ -9,12 +9,12 @@ from ghg_lulc.utils import GhgStockSource, calc_emission_factors, get_colors, ge
 
 
 def test_get_ghg_stock(lulc_utility_mock):
-    calculated_value = get_ghg_stock(lulc_utility_mock.get_class_legend())
+    calculated_value = get_ghg_stock(lulc_utility_mock.get_class_legend().osm)
     assert calculated_value.get(GhgStockSource.HANSIS).size == 8 * 4
 
 
 def test_calc_emission_factors(lulc_utility_mock):
-    calculated_emission_factors = calc_emission_factors(get_ghg_stock(lulc_utility_mock.get_class_legend()))
+    calculated_emission_factors = calc_emission_factors(get_ghg_stock(lulc_utility_mock.get_class_legend().osm))
     assert calculated_emission_factors.get(GhgStockSource.HANSIS).size == 16 * 7
     assert calculated_emission_factors.get(GhgStockSource.HANSIS).emission_factor.sum() == 0
     assert 'color' in calculated_emission_factors.get(GhgStockSource.HANSIS).columns

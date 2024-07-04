@@ -27,7 +27,7 @@ def computation_resources():
 
 @pytest.fixture()
 def default_calculator(lulc_utility_mock, computation_resources):
-    emission_factors = calc_emission_factors(get_ghg_stock(lulc_utility_mock.get_class_legend()))
+    emission_factors = calc_emission_factors(get_ghg_stock(lulc_utility_mock.get_class_legend().osm))
     return EmissionCalculator(emission_factors[GhgStockSource.HANSIS], computation_resources)
 
 
@@ -367,7 +367,7 @@ def test_emission_plot(default_calculator):
 
 
 def test_filter_ghg_stock(lulc_utility_mock):
-    input = get_ghg_stock(lulc_utility_mock.get_class_legend())[GhgStockSource.HANSIS]
+    input = get_ghg_stock(lulc_utility_mock.get_class_legend().osm)[GhgStockSource.HANSIS]
 
     expected_output = pd.DataFrame(
         {

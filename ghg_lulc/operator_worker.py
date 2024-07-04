@@ -5,7 +5,7 @@ import geopandas as gpd
 import pandas as pd
 from climatoology.base.artifact import RasterInfo, _Artifact
 from climatoology.base.operator import Concern, Info, Operator, PluginAuthor
-from climatoology.utility.api import LulcUtility, LulcWorkUnit
+from climatoology.utility.api import LulcUtility, LulcWorkUnit, FusionMode
 from semver import Version
 
 from ghg_lulc.artifact import (
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 class GHGEmissionFromLULC(Operator[ComputeInput]):
     def __init__(self, lulc_utility: LulcUtility):
         self.lulc_utility = lulc_utility
-        self.ghg_stock = get_ghg_stock(self.lulc_utility.get_class_legend())
+        self.ghg_stock = get_ghg_stock(self.lulc_utility.get_class_legend().osm)
         self.emission_factors = calc_emission_factors(self.ghg_stock)
 
     def info(self) -> Info:
@@ -129,7 +129,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         classification_artifacts = create_classification_artifacts(
             lulc_before,
             lulc_after,
-            self.lulc_utility.get_class_legend(),
+            self.lulc_utility.get_class_legend().osm,
             resources,
         )
 
@@ -160,11 +160,13 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
             area_coords=aoi_box,
             end_date=params.date_before,
             threshold=params.classification_threshold,
+            fusion_mode=FusionMode.ONLY_MODEL,
         )
         area_after = LulcWorkUnit(
             area_coords=aoi_box,
             end_date=params.date_after,
             threshold=params.classification_threshold,
+            fusion_mode=FusionMode.ONLY_MODEL,
         )
 
         lulc_before = fetch_lulc(self.lulc_utility, area_before, aoi)

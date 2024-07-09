@@ -149,11 +149,11 @@ def create_change_artifacts(
         resources=resources,
         filename='LULC_change_emissions_patched',
         legend_data=ContinuousLegendData(
-            cmap_name='seismic_r',
+            cmap_name='seismic',
             ticks={
-                str(min(emission_factors.emission_factor) * EMISSION_PER_PIXEL_FACTOR): 1,
+                str(min(emission_factors.emission_factor) * EMISSION_PER_PIXEL_FACTOR): 0,
                 str(0): 0.5,
-                str(max(emission_factors.emission_factor) * EMISSION_PER_PIXEL_FACTOR): 0,
+                str(max(emission_factors.emission_factor) * EMISSION_PER_PIXEL_FACTOR): 1,
             },
         ),
         primary=True,

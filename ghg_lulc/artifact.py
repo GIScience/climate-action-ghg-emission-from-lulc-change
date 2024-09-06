@@ -169,7 +169,7 @@ def patch_change_data(change_data: np.ndarray, orig_colormap: Dict[Number, Tuple
         patched_data[change_data == value] = key
         patched_colormap[key] = orig_colormap.get(value, Color('black').as_rgb_tuple())
 
-    patched_data = patched_data.astype(np.uint16, copy=False)
+    patched_data = patched_data.astype(np.uint8, copy=False)
     return patched_data, patched_colormap
 
 

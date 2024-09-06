@@ -48,7 +48,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
             case 'LULC Change':
-                expected_array = np.array([[[65535, 65535, 65535], [65535, 0, 4], [65535, 13, 0]]])
+                expected_array = np.array([[[255, 255, 255], [255, 0, 4], [255, 13, 0]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)

@@ -24,7 +24,7 @@ SQM_TO_HA = 1 / STOCK_TARGET_AREA
 
 EMISSION_PER_PIXEL_FACTOR = PIXEL_AREA / STOCK_TARGET_AREA
 
-RASTER_NO_DATA_VALUE = 65535
+RASTER_NO_DATA_VALUE = np.iinfo(np.uint8).max
 
 UNKNOWN_CLASS_LABEL = LabelDescriptor(
     name='unknown',
@@ -126,7 +126,7 @@ def fetch_lulc(lulc_utility: LulcUtility, lulc_area: LulcWorkUnit, aoi: shapely.
     """
     log.debug('Fetching classification.')
     with lulc_utility.compute_raster([lulc_area]) as lulc_classification:
-        lulc_array = lulc_classification.read().astype(np.uint16)
+        lulc_array = lulc_classification.read().astype(np.uint8)
         crs = lulc_classification.crs
         transform = lulc_classification.transform
         colormap = lulc_classification.colormap(1)

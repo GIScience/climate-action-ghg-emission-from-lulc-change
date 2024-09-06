@@ -62,7 +62,7 @@ class EmissionCalculator:
         :param no_change_value: Integer to indicate no change pixels
         :return: a raster with LULC changes between first and second time stamp
         """
-        changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.uint16)
+        changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.uint8)
 
         for row in self.emission_factors.itertuples():
             changes[

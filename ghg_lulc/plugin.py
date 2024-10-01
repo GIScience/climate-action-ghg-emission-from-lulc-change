@@ -74,7 +74,8 @@ async def start_plugin(settings: Settings) -> None:
 if __name__ == '__main__':
     settings = Settings()
 
-    logging.basicConfig(level=settings.log_level.upper())
+    logging.basicConfig(level=settings.log_level.upper(), force=True)
+    # Forcing is required as long as this issue remains: https://github.com/GIScience/ohsome-py/pull/169
     with open(log_config) as file:
         logging.config.dictConfig(yaml.safe_load(file))
 

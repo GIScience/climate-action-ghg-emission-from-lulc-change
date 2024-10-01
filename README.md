@@ -18,7 +18,7 @@ We highly encourage you to create smaller intermediate MRs for review!
 
 We use [poetry](https://python-poetry.org/) as an environment management system.
 Make sure you have it installed.
-Apart from some base dependencies, there is only one fixed dependency for you, which is the [climatoology](https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/climatoology) package that holds all the infrastructure functionality.
+Apart from some base dependencies, there is only one fixed dependency for you, which is the [climatoology](https://gitlab.heigit.org/climate-action/climatoology) package that holds all the infrastructure functionality.
 Make sure you have read-access to the climatoology repository (i.e. you can clone it).
 
 Now run

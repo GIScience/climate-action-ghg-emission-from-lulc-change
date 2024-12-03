@@ -1,15 +1,18 @@
 import logging
 from typing import List, Tuple
+from pathlib import Path
 
+import shapely
 import geopandas as gpd
 import pandas as pd
-from climatoology.base.artifact import RasterInfo, _Artifact
-from climatoology.base.operator import Concern, Info, Operator, PluginAuthor
+from climatoology.base.artifact import RasterInfo
+from climatoology.base.computation import ComputationResources
+from climatoology.base.baseoperator import BaseOperator, _Artifact, AoiProperties
+from climatoology.base.info import generate_plugin_info, _Info, PluginAuthor, Concern
 from climatoology.utility.api import LulcUtility, LulcWorkUnit, FusionMode
 from semver import Version
 
 from ghg_lulc.artifact import (
-    ComputationResources,
     create_area_plot_artifact,
     create_artifact_description_artifact,
     create_change_artifacts,
@@ -27,17 +30,18 @@ from ghg_lulc.utils import PROJECT_DIR, calc_emission_factors, fetch_lulc, get_g
 log = logging.getLogger(__name__)
 
 
-class GHGEmissionFromLULC(Operator[ComputeInput]):
+class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
     def __init__(self, lulc_utility: LulcUtility):
+        super().__init__()
         self.lulc_utility = lulc_utility
         self.ghg_stock = get_ghg_stock(self.lulc_utility.get_class_legend().osm)
         self.emission_factors = calc_emission_factors(self.ghg_stock)
 
-    def info(self) -> Info:
+    def info(self) -> _Info:
         """
         :return: Info object with information about the plugin.
         """
-        return Info(
+        return generate_plugin_info(
             name='LULC Change Emission Estimation',
             icon=PROJECT_DIR / 'resources/icon.jpeg',
             authors=[
@@ -68,13 +72,19 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
                 ),
             ],
             version=str(Version(major=2, minor=0, patch=1)),
-            purpose=(PROJECT_DIR / 'resources/purpose.md').read_text(),
-            methodology=(PROJECT_DIR / 'resources/methodology.md').read_text(),
+            purpose=Path(PROJECT_DIR / 'resources/purpose.md'),
+            methodology=Path(PROJECT_DIR / 'resources/methodology.md'),
             sources=PROJECT_DIR / 'resources/sources.bib',
             concerns=[Concern.CLIMATE_ACTION__GHG_EMISSION],
         )
 
-    def compute(self, resources: ComputationResources, params: ComputeInput) -> List[_Artifact]:
+    def compute(
+        self,
+        resources: ComputationResources,
+        aoi: shapely.MultiPolygon,
+        aoi_properties: AoiProperties,
+        params: ComputeInput,
+    ) -> List[_Artifact]:
         """
         Main method of the operator.
 
@@ -86,7 +96,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
             emission_factors=self.emission_factors[params.ghg_stock_source], resources=resources
         )
 
-        change_df, change_artifacts = self.get_changes(emission_calculator, params, resources)
+        change_df, change_artifacts = self.get_changes(emission_calculator, aoi, params, resources)
 
         emissions_df = emission_calculator.calculate_absolute_emissions_per_poly(change_df)
 
@@ -94,6 +104,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
             emission_calculator,
             emissions_df,
             self.ghg_stock[params.ghg_stock_source],
+            aoi,
             params,
             resources,
         )
@@ -111,6 +122,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
     def get_changes(
         self,
         emission_calculator: EmissionCalculator,
+        aoi: shapely.MultiPolygon,
         params: ComputeInput,
         resources: ComputationResources,
     ) -> Tuple[gpd.GeoDataFrame, List[_Artifact]]:
@@ -124,7 +136,7 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
         :return: LULC classification artifacts at first and second timestamp
         :return: Artifacts containing a raster with LULC changes and a raster with pixel-wise emissions
         """
-        lulc_before, lulc_after = self.get_classifications(params)
+        lulc_before, lulc_after = self.get_classifications(aoi, params)
 
         classification_artifacts = create_classification_artifacts(
             lulc_before,
@@ -146,15 +158,14 @@ class GHGEmissionFromLULC(Operator[ComputeInput]):
 
         return change_df, [*classification_artifacts, *change_artifacts]
 
-    def get_classifications(self, params: ComputeInput) -> Tuple[RasterInfo, RasterInfo]:
+    def get_classifications(self, aoi: shapely.MultiPolygon, params: ComputeInput) -> Tuple[RasterInfo, RasterInfo]:
         """
         Get LULC classifications in the AOI at first and second timestamp.
 
         :param params: Operator input
         :return: RasterInfo objects with LULC classifications at first and second timestamp
         """
-        aoi_box = params.get_aoi_geom().bounds
-        aoi = params.get_aoi_geom()
+        aoi_box = aoi.bounds
 
         area_before = LulcWorkUnit(
             area_coords=aoi_box,
@@ -217,6 +228,7 @@ def create_table_artifacts(
     emission_calculator: EmissionCalculator,
     emissions_df: gpd.GeoDataFrame,
     ghg_stock: pd.DataFrame,
+    aoi: shapely.MultiPolygon,
     params: ComputeInput,
     resources: ComputationResources,
 ) -> List[_Artifact]:
@@ -233,7 +245,7 @@ def create_table_artifacts(
     ghg_stock_df = EmissionCalculator.filter_ghg_stock(ghg_stock)
     stock_artifact = create_stock_artifact(ghg_stock_df, params.ghg_stock_source, resources)
 
-    emission_info_df, area_info_df = emission_calculator.summary_stats(emissions_df, params.get_aoi_geom())
+    emission_info_df, area_info_df = emission_calculator.summary_stats(emissions_df, aoi)
     summary_artifact = create_summary_artifact(emission_info_df, resources)
     area_info_artifact = create_area_info_artifact(area_info_df, resources)
 

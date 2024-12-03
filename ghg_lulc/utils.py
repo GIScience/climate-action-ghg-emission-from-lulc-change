@@ -170,7 +170,7 @@ def get_colors(values: pd.Series) -> pd.Series:
     :param values: Values to convert to colors
     :return: Column of colors
     """
-    cmap = plt.get_cmap('seismic')
+    cmap = plt.get_cmap('plasma')
     min_val = values.min()
     max_val = values.max()
     abs_max_val = max(abs(min_val), abs(max_val))

@@ -1,53 +1,12 @@
-import uuid
 from datetime import date
 from typing import Optional
 
-import geojson_pydantic
-import shapely
 from pydantic import BaseModel, Field, condate, confloat, field_validator, model_validator
 
 from ghg_lulc.utils import GhgStockSource
 
 
-class AoiProperties(BaseModel):
-    name: str = Field(
-        title='Name',
-        description='The name of the area of interest i.e. a human readable description.',
-        examples=['Heidelberg'],
-    )
-    id: str = Field(
-        title='ID',
-        description='A unique identifier of the area of interest.',
-        examples=[uuid.uuid4()],
-    )
-
-
 class ComputeInput(BaseModel):
-    aoi: geojson_pydantic.Feature[geojson_pydantic.MultiPolygon, AoiProperties] = Field(
-        title='Area of Interest',
-        description='Area to calculate GHG emissions for.',
-        validate_default=True,
-        examples=[
-            {
-                'type': 'Feature',
-                'properties': {'name': 'Heidelberg', 'id': 'Q12345'},
-                'geometry': {
-                    'type': 'MultiPolygon',
-                    'coordinates': [
-                        [
-                            [
-                                [8.59, 49.36],
-                                [8.78, 49.36],
-                                [8.78, 49.44],
-                                [8.59, 49.44],
-                                [8.59, 49.36],
-                            ]
-                        ]
-                    ],
-                },
-            }
-        ],
-    )
     date_before: condate(ge=date(2017, 1, 1), le=date.today()) = Field(
         title='Period Start',
         description='First timestamp of the period of analysis. Currently, only months from May to September are '
@@ -80,25 +39,6 @@ class ComputeInput(BaseModel):
         examples=[GhgStockSource.HANSIS],
         default=GhgStockSource.HANSIS,
     )
-
-    @field_validator('aoi')
-    def assert_aoi_properties_not_null(cls, aoi: geojson_pydantic.Feature) -> geojson_pydantic.Feature:
-        assert aoi.properties, 'AOI properties are required.'
-        return aoi
-
-    def get_aoi_geom(self) -> shapely.MultiPolygon:
-        """Convert the input geojson geometry to a shapely geometry.
-
-        :return: A shapely.MultiPolygon representing the area of interest defined by the user.
-        """
-        return shapely.geometry.shape(self.aoi.geometry)
-
-    def get_aoi_properties(self) -> AoiProperties:
-        """Return the properties of the aoi.
-
-        :return:
-        """
-        return self.aoi.properties
 
     @field_validator('date_before', 'date_after')
     def check_month_year(cls, value):

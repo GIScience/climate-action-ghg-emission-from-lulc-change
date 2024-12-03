@@ -1,25 +1,70 @@
 import json
-
 import numpy as np
+from numpy.testing import assert_array_equal
 import pandas as pd
 import pytest
 import rasterio
-from climatoology.base.artifact import ArtifactModality
-from numpy.testing import assert_array_equal
+from climatoology.base.artifact import _Artifact, ArtifactModality
+from climatoology.base.info import _Info
 
 from ghg_lulc.operator_worker import GHGEmissionFromLULC
 from test.conftest import TEST_RESOURCES_DIR
 
 
-def test_plugin_info(lulc_utility_mock):
+def test_plugin_info_request(lulc_utility_mock):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
+    assert isinstance(operator.info(), _Info)
     assert operator.info().name == 'LULC Change Emission Estimation'
 
 
-def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resources):
+def test_plugin_compute_request(
+    lulc_utility_mock, default_aoi, default_aoi_properties, expected_compute_input, compute_resources
+):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
 
-    artifacts = operator.compute(compute_resources, expected_compute_input)
+    computed_artifacts = operator.compute(
+        resources=compute_resources,
+        aoi=default_aoi,
+        aoi_properties=default_aoi_properties,
+        params=expected_compute_input,
+    )
+
+    assert len(computed_artifacts) == 11
+    for artifact in computed_artifacts:
+        assert isinstance(artifact, _Artifact)
+
+
+def test_no_change_case(
+    lulc_utility_mock, default_aoi, default_aoi_properties, expected_compute_input, compute_resources
+):
+    lulc_utility_mock.compute_raster.side_effect = [
+        rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff'),
+        rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff'),
+    ]
+    operator = GHGEmissionFromLULC(lulc_utility_mock)
+
+    with pytest.raises(ValueError, match='No LULC changes have between detected between the two timestamps.'):
+        _ = operator.compute(compute_resources, default_aoi, default_aoi_properties, expected_compute_input)
+
+
+def test_create_markdown(lulc_utility_mock, expected_compute_input):
+    operator = GHGEmissionFromLULC(lulc_utility_mock)
+    expected_content = (TEST_RESOURCES_DIR / 'artifact_description_test.md').read_text(encoding='utf-8')
+    formatted_text = operator.create_markdown(expected_compute_input)
+    assert formatted_text == expected_content
+
+
+def test_plugin_compute_result(
+    lulc_utility_mock, expected_compute_input, default_aoi, default_aoi_properties, compute_resources
+):
+    operator = GHGEmissionFromLULC(lulc_utility_mock)
+
+    artifacts = operator.compute(
+        resources=compute_resources,
+        aoi=default_aoi,
+        aoi_properties=default_aoi_properties,
+        params=expected_compute_input,
+    )
 
     assert {a.name for a in artifacts} == {
         'Carbon stock values per class',
@@ -112,7 +157,7 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                         'x': ['built-up to forest', 'forest to built-up'],
                         'y': [0.010027933850985878, 0.01002791540738415],
                         'chart_type': 'PIE',
-                        'color': ['#00004c', '#800000'],
+                        'color': ['#0d0887', '#f0f921'],
                     }
                     with open(artifact.file_path) as file:
                         exported_data = json.load(file)
@@ -130,21 +175,3 @@ def test_plugin_compute(lulc_utility_mock, expected_compute_input, compute_resou
                     assert exported_data == expected_emission_data
             case _:
                 assert False, 'An unexpected artifact was produced.'
-
-
-def test_no_change_case(lulc_utility_mock, expected_compute_input, compute_resources):
-    lulc_utility_mock.compute_raster.side_effect = [
-        rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff'),
-        rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff'),
-    ]
-    operator = GHGEmissionFromLULC(lulc_utility_mock)
-
-    with pytest.raises(ValueError, match='No LULC changes have between detected between the two timestamps.'):
-        _ = operator.compute(compute_resources, expected_compute_input)
-
-
-def test_create_markdown(lulc_utility_mock, expected_compute_input):
-    operator = GHGEmissionFromLULC(lulc_utility_mock)
-    expected_content = (TEST_RESOURCES_DIR / 'artifact_description_test.md').read_text(encoding='utf-8')
-    formatted_text = operator.create_markdown(expected_compute_input)
-    assert formatted_text == expected_content

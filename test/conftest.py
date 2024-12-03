@@ -3,8 +3,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+import shapely
 import rasterio
 from climatoology.base.computation import ComputationScope
+from climatoology.base.baseoperator import AoiProperties
 from climatoology.utility.api import LabelDescriptor, LabelResponse
 
 from ghg_lulc.input import ComputeInput
@@ -15,27 +17,31 @@ TEST_RESOURCES_DIR = Path(__file__).parent / 'resources'
 @pytest.fixture
 def expected_compute_input() -> ComputeInput:
     return ComputeInput(
-        aoi={
-            'type': 'Feature',
-            'properties': {'name': 'Heidelberg', 'id': 'Q12345'},
-            'geometry': {
-                'type': 'MultiPolygon',
-                'coordinates': [
-                    [
-                        [
-                            [8.590, 49.439],
-                            [8.591, 49.439],
-                            [8.591, 49.440],
-                            [8.590, 49.440],
-                            [8.590, 49.439],
-                        ]
-                    ]
-                ],
-            },
-        },
         date_before='2022-05-17',
         date_after='2023-05-31',
     )
+
+
+@pytest.fixture
+def default_aoi() -> shapely.MultiPolygon:
+    return shapely.MultiPolygon(
+        polygons=[
+            [
+                [
+                    [8.590, 49.439],
+                    [8.591, 49.439],
+                    [8.591, 49.440],
+                    [8.590, 49.440],
+                    [8.590, 49.439],
+                ]
+            ]
+        ]
+    )
+
+
+@pytest.fixture
+def default_aoi_properties() -> AoiProperties:
+    return AoiProperties(name='Heidelberg', id='heidelberg')
 
 
 @pytest.fixture

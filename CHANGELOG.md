@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change)
+
+### Changed
+
+- modified plugin code for compatibility with `climatoology [version 6.0.2]`, now `climatoology` utilizes the Celery library as the core task manager. This also means that a postgres server, that serves as the result backend for Celery, is now required to run the plugin.
+- account for new explicit AOI input by moving it from the input parameters  of `ComputeInput`class
+- changed results colour scheme for compatibility with climatoology's accepted colour schemes
+
 ## [2.0.1](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.0.1)
 
 ### Changed

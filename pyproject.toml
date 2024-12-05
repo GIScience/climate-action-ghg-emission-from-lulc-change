@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ghg_lulc"
-version = "2.0.1"
+version = "2.1.0"
 description = "This plugin compuses green house gas emissions from land use and land cover changes between two timestamps."
 authors = ["Veit Ulrich <veit.ulrich@uni-heidelberg.de>", "Moritz Schott <moritz.schott@heigit.org>"]
 readme = "README.md"

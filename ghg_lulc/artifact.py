@@ -149,7 +149,7 @@ def create_change_artifacts(
         resources=resources,
         filename='LULC_change_emissions_patched',
         legend_data=ContinuousLegendData(
-            cmap_name='plasma',
+            cmap_name='coolwarm',
             ticks={
                 str(min(emission_factors.emission_factor) * EMISSION_PER_PIXEL_FACTOR): 0,
                 str(0): 0.5,

@@ -1,3 +1,4 @@
+import importlib.metadata
 import logging
 from typing import List, Tuple
 from pathlib import Path
@@ -71,11 +72,11 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
                     website='https://heigit.org/heigit-team',
                 ),
             ],
-            version=str(Version(major=2, minor=0, patch=1)),
+            version=Version.parse(importlib.metadata.version('ghg_lulc')),
             purpose=Path(PROJECT_DIR / 'resources/purpose.md'),
             methodology=Path(PROJECT_DIR / 'resources/methodology.md'),
             sources=PROJECT_DIR / 'resources/sources.bib',
-            concerns=[Concern.CLIMATE_ACTION__GHG_EMISSION],
+            concerns={Concern.CLIMATE_ACTION__GHG_EMISSION},
         )
 
     def compute(

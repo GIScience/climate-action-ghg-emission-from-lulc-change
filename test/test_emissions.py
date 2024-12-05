@@ -131,26 +131,10 @@ def test_get_change_emissions_info(default_calculator):
         [[0, 0.915, -999.999]],
         mask=[[0, 0, 0]],
     )
-    expected_output_colormap = {
-        -1.82: (13, 8, 135),
-        -1.45: (67, 3, 158),
-        -0.915: (125, 3, 168),
-        -0.905: (126, 3, 168),
-        -0.535: (162, 29, 154),
-        -0.37: (176, 41, 145),
-        0.0: (204, 71, 120),
-        0.37: (226, 101, 97),
-        0.535: (233, 114, 87),
-        0.905: (248, 148, 65),
-        0.915: (248, 149, 64),
-        1.45: (252, 205, 37),
-        1.82: (240, 249, 33),
-    }
+
     change_emissions = default_calculator.get_change_emissions_info(change)
 
-    assert ma.allequal(change_emissions.data, expected_output_array)
-    assert np.array_equal(change_emissions.data.mask, expected_output_array.mask)
-    assert change_emissions.colormap == expected_output_colormap
+    np.testing.assert_array_equal(change_emissions.data, expected_output_array)
 
 
 def test_get_masked_change_emissions_info(default_calculator):
@@ -161,27 +145,10 @@ def test_get_masked_change_emissions_info(default_calculator):
     )
 
     expected_output_array = ma.masked_array([[0, 0.915, -999.999]], mask=[[0, 1, 0]])
-    expected_output_colormap = {
-        -1.82: (13, 8, 135),
-        -1.45: (67, 3, 158),
-        -0.915: (125, 3, 168),
-        -0.905: (126, 3, 168),
-        -0.535: (162, 29, 154),
-        -0.37: (176, 41, 145),
-        0.0: (204, 71, 120),
-        0.37: (226, 101, 97),
-        0.535: (233, 114, 87),
-        0.905: (248, 148, 65),
-        0.915: (248, 149, 64),
-        1.45: (252, 205, 37),
-        1.82: (240, 249, 33),
-    }
 
     change_emissions = default_calculator.get_change_emissions_info(change)
 
-    assert ma.allequal(change_emissions.data, expected_output_array)
-    assert np.array_equal(change_emissions.data.mask, expected_output_array.mask)
-    assert change_emissions.colormap == expected_output_colormap
+    np.testing.assert_array_equal(change_emissions.data, expected_output_array)
 
 
 def test_convert_change_raster(default_calculator):

@@ -157,7 +157,7 @@ def test_plugin_compute_result(
                         'x': ['built-up to forest', 'forest to built-up'],
                         'y': [0.010027933850985878, 0.01002791540738415],
                         'chart_type': 'PIE',
-                        'color': ['#0d0887', '#f0f921'],
+                        'color': ['#3b4cc0', '#b40426'],
                     }
                     with open(artifact.file_path) as file:
                         exported_data = json.load(file)

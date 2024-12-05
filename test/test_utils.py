@@ -51,7 +51,7 @@ def test_mask_raster():
 
 
 def test_get_colors():
-    expected_output = pd.Series([Color('#f0f921'), Color('#f89540'), Color('#cc4778')])
+    expected_output = pd.Series([Color('#b40426'), Color('#f4987a'), Color('#dddcdc')])
 
     expected_input = pd.Series([1.0, 0.5, 0.0])
     computed_output = get_colors(expected_input)

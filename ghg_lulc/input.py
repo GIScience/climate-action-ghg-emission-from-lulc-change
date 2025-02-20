@@ -1,7 +1,6 @@
 from datetime import date
-from typing import Optional
 
-from pydantic import BaseModel, Field, condate, confloat, field_validator, model_validator
+from pydantic import BaseModel, Field, condate, field_validator, model_validator
 
 from ghg_lulc.utils import GhgStockSource
 
@@ -19,7 +18,7 @@ class ComputeInput(BaseModel):
         'possible.',
         examples=[date(2023, 5, 31)],
     )
-    classification_threshold: Optional[confloat(ge=0, le=100)] = Field(
+    classification_threshold: int = Field(
         title='Minimum required classification confidence [%]',
         description='The LULC classification by an ML model '
         'has inherent uncertainties. This number '
@@ -30,8 +29,10 @@ class ComputeInput(BaseModel):
         'will be classified as "unknown".',
         examples=[75],
         default=75,
+        ge=0,
+        le=100,
     )
-    ghg_stock_source: Optional[GhgStockSource] = Field(
+    ghg_stock_source: GhgStockSource = Field(
         title='Scientific source for LULC GHG stock values',
         description='Please select a scientific source for the GHG stock values used in estimating LULC change '
         'emissions.'

@@ -10,7 +10,7 @@ from climatoology.base.artifact import RasterInfo
 from climatoology.base.computation import ComputationResources
 from climatoology.base.baseoperator import BaseOperator, _Artifact, AoiProperties
 from climatoology.base.info import generate_plugin_info, _Info, PluginAuthor, Concern
-from climatoology.utility.api import LulcUtility, LulcWorkUnit, FusionMode
+from climatoology.utility.LULC import LulcUtility, LulcWorkUnit, FusionMode
 from semver import Version
 
 from ghg_lulc.artifact import (

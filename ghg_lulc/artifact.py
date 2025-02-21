@@ -14,7 +14,7 @@ from climatoology.base.artifact import (
     ContinuousLegendData,
 )
 from climatoology.base.computation import ComputationResources
-from climatoology.utility.api import LabelDescriptor
+from climatoology.utility.LULC import LabelDescriptor
 from pydantic_extra_types.color import Color
 
 from ghg_lulc.utils import PROJECT_DIR, GhgStockSource, RASTER_NO_DATA_VALUE, EMISSION_PER_PIXEL_FACTOR

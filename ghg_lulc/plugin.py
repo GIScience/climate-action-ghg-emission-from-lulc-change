@@ -2,7 +2,7 @@ import logging.config
 
 import matplotlib
 from climatoology.app.plugin import start_plugin
-from climatoology.utility.api import LulcUtility
+from climatoology.utility.LULC import LulcUtility
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ghg_lulc.operator_worker import GHGEmissionFromLULC

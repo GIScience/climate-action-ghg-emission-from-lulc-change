@@ -155,7 +155,9 @@ def test_plugin_compute_result(
                 if artifact.modality == ArtifactModality.CHART:
                     expected_area_data = {
                         'x': ['built-up to forest', 'forest to built-up'],
+                        'x_unit': None,
                         'y': [0.010027933850985878, 0.01002791540738415],
+                        'y_unit': None,
                         'chart_type': 'PIE',
                         'color': ['#3b4cc0', '#b40426'],
                     }
@@ -166,7 +168,9 @@ def test_plugin_compute_result(
                 if artifact.modality == ArtifactModality.CHART:
                     expected_emission_data = {
                         'x': ['built-up to forest', 'forest to built-up'],
+                        'x_unit': None,
                         'y': [-1.8250839608794298, 1.8250806041439154],
+                        'y_unit': None,
                         'chart_type': 'BAR',
                         'color': ['#808080', '#808080'],
                     }

@@ -7,6 +7,10 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 ## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change)
 
+### Added
+
+- Validation checks ensure the selected AOI stays within size limits (1000 sqkm) and overlaps with Germany's borders ([94](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/94) and [83](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/83))
+
 ## [2.1.0](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.1.0)
 
 ### Changed

@@ -5,6 +5,7 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
+import pyproj
 import shapely
 from affine import Affine
 from climatoology.base.artifact import RasterInfo
@@ -13,6 +14,8 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import TwoSlopeNorm, to_hex
 from pydantic_extra_types.color import Color
 from rasterio.features import geometry_mask
+from shapely import Polygon
+from shapely.ops import transform
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +35,17 @@ UNKNOWN_CLASS_LABEL = LabelDescriptor(
     osm_filter=None,
     raster_value=0,
     color=(0, 0, 0),
+)
+
+
+GERMANY_BBOX_4326 = Polygon(
+    [
+        (5.87, 47.27),
+        (15.04, 47.27),
+        (15.04, 55.10),
+        (5.87, 55.10),
+        (5.87, 47.27),
+    ]
 )
 
 
@@ -182,3 +196,18 @@ def get_colors(values: pd.Series) -> pd.Series:
 
 def pyplot_to_pydantic_color(pyplot_tuple: np.ndarray) -> Color:
     return Color(to_hex(pyplot_tuple))
+
+
+def reproject_aoi(aoi: shapely.MultiPolygon, source_crs='EPSG:4326', target_crs='EPSG:32632') -> shapely.MultiPolygon:
+    """
+    Reprojects an AOI from source CRS to target CRS.
+
+    :param aoi: Multipolygon for the area of interest selected by the user
+    :param source_crs: provided as string: defaults to EPSG:4326
+    :param target_crs: provided as string: defaults to EPSG:32632
+    """
+
+    project = pyproj.Transformer.from_crs(pyproj.CRS(source_crs), pyproj.CRS(target_crs), always_xy=True).transform
+
+    aoi_reprojected = transform(project, aoi)
+    return aoi_reprojected

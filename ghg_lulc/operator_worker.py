@@ -1,16 +1,17 @@
 import importlib.metadata
 import logging
-from typing import List, Tuple
 from pathlib import Path
+from typing import List, Tuple
 
-import shapely
 import geopandas as gpd
 import pandas as pd
+import shapely
 from climatoology.base.artifact import RasterInfo
-from climatoology.base.computation import ComputationResources
 from climatoology.base.baseoperator import BaseOperator, _Artifact, AoiProperties
+from climatoology.base.computation import ComputationResources
 from climatoology.base.info import generate_plugin_info, _Info, PluginAuthor, Concern
 from climatoology.utility.LULC import LulcUtility, LulcWorkUnit, FusionMode
+from climatoology.utility.exception import ClimatoologyUserError
 from semver import Version
 
 from ghg_lulc.artifact import (
@@ -26,7 +27,14 @@ from ghg_lulc.artifact import (
 )
 from ghg_lulc.emissions import EmissionCalculator
 from ghg_lulc.input import ComputeInput
-from ghg_lulc.utils import PROJECT_DIR, calc_emission_factors, fetch_lulc, get_ghg_stock
+from ghg_lulc.utils import (
+    PROJECT_DIR,
+    calc_emission_factors,
+    fetch_lulc,
+    get_ghg_stock,
+    reproject_aoi,
+    GERMANY_BBOX_4326,
+)
 
 log = logging.getLogger(__name__)
 
@@ -89,10 +97,28 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         """
         Main method of the operator.
 
+        :param aoi_properties: Name and ID of the AOI
+        :param aoi: Area of interest
         :param resources: Ephemeral computation resources
         :param params: Operator input
         :return: List of produced artifacts
         """
+
+        trained_region_bbox = GERMANY_BBOX_4326
+
+        if not aoi.intersects(trained_region_bbox):
+            raise ClimatoologyUserError(
+                'The selected area is too far from Germany. Please select an area within Germany'
+            )
+
+        aoi_utm32n = reproject_aoi(aoi)
+        aoi_utm32n_area_km2 = round(aoi_utm32n.area / 1000000, 2)
+
+        if aoi_utm32n_area_km2 > 1000:
+            raise ClimatoologyUserError(
+                f'The selected area is too large: {aoi_utm32n_area_km2} km². Currently, the maximum allowed area is 1000 km². Please select a smaller area or a sub-region of your selected area'
+            )
+
         emission_calculator = EmissionCalculator(
             emission_factors=self.emission_factors[params.ghg_stock_source], resources=resources
         )

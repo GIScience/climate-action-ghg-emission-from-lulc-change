@@ -9,6 +9,7 @@ import pyproj
 import shapely
 from climatoology.base.artifact import Chart2dData, ChartType, RasterInfo
 from climatoology.base.computation import ComputationResources
+from climatoology.utility.exception import ClimatoologyUserError
 from numpy import ma
 from pydantic_extra_types.color import Color
 from rasterio.features import shapes
@@ -144,7 +145,7 @@ class EmissionCalculator:
         org_df = pd.merge(left=org_df, right=self.emission_factors, on='change_id')
 
         if org_df.empty:
-            raise ValueError('No LULC changes have between detected between the two timestamps.')
+            raise ClimatoologyUserError('No land use/land cover changes were detected between the two selected dates')
 
         target_utm = org_df.estimate_utm_crs()
         log.debug(f'Reprojecting geodataframe from {change_raster.crs} to {target_utm.name}')

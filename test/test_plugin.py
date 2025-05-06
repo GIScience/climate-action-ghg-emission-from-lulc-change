@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from climatoology.utility.exception import ClimatoologyUserError
 from numpy.testing import assert_array_equal
 import pandas as pd
 import pytest
@@ -43,7 +44,9 @@ def test_no_change_case(
     ]
     operator = GHGEmissionFromLULC(lulc_utility_mock)
 
-    with pytest.raises(ValueError, match='No LULC changes have between detected between the two timestamps.'):
+    with pytest.raises(
+        ClimatoologyUserError, match='No land use/land cover changes were detected between the two selected dates'
+    ):
         _ = operator.compute(compute_resources, default_aoi, default_aoi_properties, expected_compute_input)
 
 

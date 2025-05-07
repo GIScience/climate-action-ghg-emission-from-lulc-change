@@ -34,6 +34,7 @@ from ghg_lulc.utils import (
     get_ghg_stock,
     reproject_aoi,
     GERMANY_BBOX_4326,
+    convert_threshold,
 )
 
 log = logging.getLogger(__name__)
@@ -85,6 +86,8 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             methodology=Path(PROJECT_DIR / 'resources/methodology.md'),
             sources=PROJECT_DIR / 'resources/sources.bib',
             concerns={Concern.CLIMATE_ACTION__GHG_EMISSION},
+            demo_input_parameters=ComputeInput(date_before='2017-06-01', date_after='2023-05-15'),
+            demo_aoi=Path(PROJECT_DIR / 'resources/gruenheide.geojson'),
         )
 
     def compute(
@@ -119,6 +122,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
                 f'The selected area is too large: {aoi_utm32n_area_km2} km². Currently, the maximum allowed area is 1000 km². Please select a smaller area or a sub-region of your selected area'
             )
 
+        params = convert_threshold(params)
         emission_calculator = EmissionCalculator(
             emission_factors=self.emission_factors[params.ghg_stock_source], resources=resources
         )

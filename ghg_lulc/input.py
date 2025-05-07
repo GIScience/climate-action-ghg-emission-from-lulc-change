@@ -52,8 +52,3 @@ class ComputeInput(BaseModel):
         if not self.date_after > self.date_before:
             raise ValueError('Period start must be before period end.')
         return self
-
-    @model_validator(mode='after')
-    def convert_threshold(self):
-        self.classification_threshold = self.classification_threshold / 100
-        return self

@@ -20,7 +20,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
   Celery, is now required to run the plugin.
 - account for new explicit AOI input by moving it from the input parameters of `ComputeInput`class
 - changed results color scheme to `coolwarm` for compatibility with climatoology's accepted color schemes
-- Update climatoology to 6.3.1
+- Update climatoology to 6.3.1: include `demo_input_parameters` in info
 
 ## [2.0.1](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.0.1)
 

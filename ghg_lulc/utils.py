@@ -211,3 +211,8 @@ def reproject_aoi(aoi: shapely.MultiPolygon, source_crs='EPSG:4326', target_crs=
 
     aoi_reprojected = transform(project, aoi)
     return aoi_reprojected
+
+
+def convert_threshold(params):
+    params.classification_threshold = params.classification_threshold / 100
+    return params

@@ -21,6 +21,8 @@ log = logging.getLogger(__name__)
 
 PROJECT_DIR = Path(__file__).parent.parent
 
+CLASSIFICATION_THRESHOLD = 0.75
+
 PIXEL_AREA = 10 * 10
 STOCK_TARGET_AREA = 100 * 100
 SQM_TO_HA = 1 / STOCK_TARGET_AREA
@@ -211,8 +213,3 @@ def reproject_aoi(aoi: shapely.MultiPolygon, source_crs='EPSG:4326', target_crs=
 
     aoi_reprojected = transform(project, aoi)
     return aoi_reprojected
-
-
-def convert_threshold(params):
-    params.classification_threshold = params.classification_threshold / 100
-    return params

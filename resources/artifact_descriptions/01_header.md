@@ -1,7 +1,7 @@
 # Description of the artifacts
 
-- **Period start:** {date_before}
+- **Period start:** {year_before}
 
-- **Period end:** {date_after}
+- **Period end:** {year_after}
 
 - **Minimum required classification confidence [%]:** {classification_threshold}

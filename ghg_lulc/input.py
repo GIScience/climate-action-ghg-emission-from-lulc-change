@@ -1,54 +1,33 @@
-from datetime import date
+from datetime import datetime
 
-from pydantic import BaseModel, Field, condate, field_validator, model_validator
+from pydantic import BaseModel, Field, conint, model_validator
 
 from ghg_lulc.utils import GhgStockSource
 
 
 class ComputeInput(BaseModel):
-    date_before: condate(ge=date(2017, 1, 1), le=date.today()) = Field(
-        title='Period Start',
-        description='First timestamp of the period of analysis. Currently, only months from May to September are '
-        'possible.',
-        examples=[date(2022, 5, 17)],
+    year_before: conint(ge=2017, le=datetime.now().year - 2) = Field(
+        title='Start',
+        description=f'First year of the period of analysis. Must be between 2017 and {datetime.now().year - 2}. '
+        f'Satellite images from the month July of the selected year are used for LULC classification.',
+        examples=[2017],
     )
-    date_after: condate(ge=date(2017, 1, 1), le=date.today()) = Field(
-        title='Period End',
-        description='Last timestamp of the period of analysis. Currently, only months from May to September are '
-        'possible.',
-        examples=[date(2023, 5, 31)],
-    )
-    classification_threshold: int = Field(
-        title='Minimum required classification confidence [%]',
-        description='The LULC classification by an ML model '
-        'has inherent uncertainties. This number '
-        'defines the minimum confidence '
-        'required by the user. Any prediction with '
-        'confidence above this threshold will be '
-        'classified "true", while those below '
-        'will be classified as "unknown".',
-        examples=[75],
-        default=75,
-        ge=0,
-        le=100,
+    year_after: conint(ge=2018, le=datetime.now().year - 1) = Field(
+        title='End',
+        description=f'Last year of the period of analysis. Must be between 2018 and {datetime.now().year - 1}. '
+        f'Satellite images from the month July of the selected year are used for LULC classification.',
+        examples=[2024],
     )
     ghg_stock_source: GhgStockSource = Field(
-        title='Scientific source for LULC GHG stock values',
-        description='Please select a scientific source for the GHG stock values used in estimating LULC change '
-        'emissions.'
-        'For more information on the GHG stock sources, please refer to the documentation',
+        title='Source of LULC carbon stock values',
+        description='Please select the source of the carbon stock values used in estimating LULC change emissions. '
+        'For more information on the carbon stock sources, please refer to the documentation.',
         examples=[GhgStockSource.HANSIS],
         default=GhgStockSource.HANSIS,
     )
 
-    @field_validator('date_before', 'date_after')
-    def check_month_year(cls, value):
-        if not 5 <= value.month <= 9:
-            raise ValueError('Dates must be within the months May to September.')
-        return value
-
     @model_validator(mode='after')
     def check_order(self):
-        if not self.date_after > self.date_before:
-            raise ValueError('Period start must be before period end.')
+        if not self.year_after > self.year_before:
+            raise ValueError('Period start must be before period end')
         return self

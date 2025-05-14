@@ -7,6 +7,16 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 ## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change)
 
+### Changed
+
+- Allow only selection of years for `Period start` and `Period end` inputs ([#97](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/97))
+- Make LULC utility use images from a two-month period instead of just one week for higher stability ([#97](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/97)
+- Renamed plugin to `LULC Change`
+
+### Removed
+
+- Input parameter `accuracy threshold` - It is set to 0.75 ([#97](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/97))
+
 ### Added
 
 - Validation checks ensure the selected AOI stays within size limits (1000 sqkm) and overlaps with Germany's borders ([94](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/94) and [83](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/83))

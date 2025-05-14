@@ -1,8 +1,8 @@
 # Description of the artifacts
 
-- **Period start:** 2022-05-17
+- **Period start:** 2022
 
-- **Period end:** 2023-05-31
+- **Period end:** 2023
 
 - **Minimum required classification confidence [%]:** 75.0
 

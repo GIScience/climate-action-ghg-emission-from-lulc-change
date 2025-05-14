@@ -9,14 +9,13 @@ from climatoology.base.artifact import _Artifact, ArtifactModality
 from climatoology.base.info import _Info
 
 from ghg_lulc.operator_worker import GHGEmissionFromLULC
-from ghg_lulc.utils import convert_threshold
 from test.conftest import TEST_RESOURCES_DIR
 
 
 def test_plugin_info_request(lulc_utility_mock):
     operator = GHGEmissionFromLULC(lulc_utility_mock)
     assert isinstance(operator.info(), _Info)
-    assert operator.info().name == 'LULC Change Emission Estimation'
+    assert operator.info().name == 'LULC Change'
 
 
 def test_plugin_compute_request(
@@ -52,7 +51,6 @@ def test_no_change_case(
 
 
 def test_create_markdown(lulc_utility_mock, expected_compute_input):
-    expected_compute_input = convert_threshold(expected_compute_input)
     operator = GHGEmissionFromLULC(lulc_utility_mock)
     expected_content = (TEST_RESOURCES_DIR / 'artifact_description_test.md').read_text(encoding='utf-8')
     formatted_text = operator.create_markdown(expected_compute_input)

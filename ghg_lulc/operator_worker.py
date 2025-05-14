@@ -1,5 +1,6 @@
 import importlib.metadata
 import logging
+from datetime import timedelta, datetime
 from pathlib import Path
 from typing import List, Tuple
 
@@ -34,7 +35,7 @@ from ghg_lulc.utils import (
     get_ghg_stock,
     reproject_aoi,
     GERMANY_BBOX_4326,
-    convert_threshold,
+    CLASSIFICATION_THRESHOLD,
 )
 
 log = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         :return: Info object with information about the plugin.
         """
         return generate_plugin_info(
-            name='LULC Change Emission Estimation',
+            name='LULC Change',
             icon=PROJECT_DIR / 'resources/icon.jpeg',
             authors=[
                 PluginAuthor(
@@ -86,8 +87,9 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             methodology=Path(PROJECT_DIR / 'resources/methodology.md'),
             sources=PROJECT_DIR / 'resources/sources.bib',
             concerns={Concern.CLIMATE_ACTION__GHG_EMISSION},
-            demo_input_parameters=ComputeInput(date_before='2017-06-01', date_after='2023-05-15'),
+            demo_input_parameters=ComputeInput(year_before='2017', year_after='2024'),
             demo_aoi=Path(PROJECT_DIR / 'resources/gruenheide.geojson'),
+            computation_shelf_life=timedelta(weeks=52),
         )
 
     def compute(
@@ -122,7 +124,6 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
                 f'The selected area is too large: {aoi_utm32n_area_km2} km². Currently, the maximum allowed area is 1000 km². Please select a smaller area or a sub-region of your selected area'
             )
 
-        params = convert_threshold(params)
         emission_calculator = EmissionCalculator(
             emission_factors=self.emission_factors[params.ghg_stock_source], resources=resources
         )
@@ -160,6 +161,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         """
         Get LULC classifications and LULC changes.
 
+        :param aoi: Area of interest
         :param emission_calculator: Class containing the emission estimation methods
         :param params: Operator input
         :param resources: Ephemeral computation resources
@@ -193,6 +195,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         """
         Get LULC classifications in the AOI at first and second timestamp.
 
+        :param aoi: Area of interest
         :param params: Operator input
         :return: RasterInfo objects with LULC classifications at first and second timestamp
         """
@@ -200,14 +203,16 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
 
         area_before = LulcWorkUnit(
             area_coords=aoi_box,
-            end_date=params.date_before,
-            threshold=params.classification_threshold,
+            start_date=datetime(params.year_before, 7, 1),
+            end_date=datetime(params.year_before, 7, 31),
+            threshold=CLASSIFICATION_THRESHOLD,
             fusion_mode=FusionMode.ONLY_MODEL,
         )
         area_after = LulcWorkUnit(
             area_coords=aoi_box,
-            end_date=params.date_after,
-            threshold=params.classification_threshold,
+            start_date=datetime(params.year_after, 7, 1),
+            end_date=datetime(params.year_after, 7, 31),
+            threshold=CLASSIFICATION_THRESHOLD,
             fusion_mode=FusionMode.ONLY_MODEL,
         )
 
@@ -245,9 +250,9 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             floatfmt='#.1f',
         )
         formatted_text = content.format(
-            date_before=params.date_before,
-            date_after=params.date_after,
-            classification_threshold=params.classification_threshold * 100,
+            year_before=params.year_before,
+            year_after=params.year_after,
+            classification_threshold=CLASSIFICATION_THRESHOLD * 100,
             carbon_stocks=carbon_stocks,
             emission_factors=emission_factors,
         )

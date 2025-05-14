@@ -5,13 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change)
+## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.2.0...main)
+
+## [2.2.0](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.2.0)
 
 ### Changed
 
 - Allow only selection of years for `Period start` and `Period end` inputs ([#97](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/97))
-- Make LULC utility use images from a two-month period instead of just one week for higher stability ([#97](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/97)
-- Renamed plugin to `LULC Change`
+- Make LULC utility use images from a one-month period instead of just one week for higher stability ([#97](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/97)
+- Rename plugin to `LULC Change`
+- Update climatoology to 6.4.1
 
 ### Removed
 

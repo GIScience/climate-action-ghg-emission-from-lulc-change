@@ -112,9 +112,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         trained_region_bbox = GERMANY_BBOX_4326
 
         if not aoi.intersects(trained_region_bbox):
-            raise ClimatoologyUserError(
-                'The selected area is too far from Germany. Please select an area within Germany'
-            )
+            raise ClimatoologyUserError('The selected area is outside of Germany. Please select an area within Germany')
 
         aoi_utm32n = reproject_aoi(aoi)
         aoi_utm32n_area_km2 = round(aoi_utm32n.area / 1000000, 2)

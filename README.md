@@ -1,13 +1,13 @@
 
-# <img src="resources/icon.jpeg" width="5%"> Carbon emissions from LULC change
+# <img src="resources/icon.jpeg" width="5%"> Carbon flows from LULC change
 
 [![status: hibernate](https://github.com/GIScience/badges/raw/master/status/hibernate.svg)](https://github.com/GIScience/badges#hibernate)
 
 > ⚠️ This plugin is in hibernation state. It is available as a showcase, but not actively developed. If you are interested in a collaboration on this topic, please contact us at [climate-action@heigit.org](mailto:climate-action@heigit.org).
 
-The purpose of this plugin is to estimate carbon emissions from land use and land cover (LULC) change, given a selected area of interest and observation period.
-The plugin provides maps of the LULC classification at the beginning and at the end of the observation period, as well as maps of the LULC changes.
-Additionally, tables and plots with information on the LULC change areas and LULC change emissions are produced.
+The purpose of this plugin is to estimate carbon flows from land use and land cover (LULC) change, given a selected area of interest and analysis period.
+The plugin provides maps of the LULC classification at the beginning and at the end of the analysis period, as well as maps of the LULC changes.
+Additionally, tables and plots with information on the LULC change areas and carbon flows from LULC change are produced.
 For more documentation see the [climate action website](https://climate-action.heigit.org/) or the [purpose](resources/purpose.md), [methodology](resources/methodology.md) and [sources](resources/sources.bib) files in the [resources directory](resources).
 
 ## Preparation
@@ -80,7 +80,7 @@ The files [test_emissions.py](test/test_emissions.py) and [test_utils.py](test/t
 This is the heart of the plugin where the emission estimation happens.
 The most important functions are the info function and the compute function.
 The info function simply returns information about the plugin.
-The compute function estimates the emissions and returns the outputs of the operator as a list of artifacts.
+The compute function estimates the carbon flows and returns the outputs of the operator as a list of artifacts.
 
 ### Input parameters in [input.py](plugin_blueprint/input.py)
 

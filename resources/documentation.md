@@ -2,7 +2,7 @@
 
 ## Methodology
 
-The plugin initiates the emission estimation process by obtaining two distinct Land Use and Land Cover (LULC) classifications at the beginning and end of the chosen observation period using a custom LULC classification model based on Sentinel remote sensing data.
+The plugin initiates the emission estimation process by obtaining two distinct Land Use and Land Cover (LULC) classifications at the beginning and end of the chosen analysis period using a custom LULC classification model based on Sentinel remote sensing data.
 Subsequently, the plugin identifies LULC changes that occurred during this period.
 Carbon emissions associated with these changes are calculated by subtracting the carbon stocks (measured in t/ha) of the initial and final LULC classes for each specific change type in a specific vegetation zone, e.g. temperate coniferous forest (e.g. carbon stock forest – carbon stock meadow).
 These carbon stocks encompass estimated soil and vegetation carbon content, providing an average measure of carbon stored per hectare.
@@ -12,7 +12,7 @@ Emissions (in t/ha) are calculated by subtracting the final from the initially a
 The resulting emission values of the different LULC change types are shown in Table 2.
 Positive emission values indicate carbon emissions resulting from the LULC change.
 Negative emission values indicate carbon sequestration resulting from the LULC change.
-It is assumed that each location experiences a maximum of one LULC change during the observation period.
+It is assumed that each location experiences a maximum of one LULC change during the analysis period.
 
 **Table 1. Carbon stocks of the LULC classes in t/ha**
 |LULC class|Hansis et al. (2015)|Hansis et al. (2015), higher carbon values|Houghton & Hackler (2001)|

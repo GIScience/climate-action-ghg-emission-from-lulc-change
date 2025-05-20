@@ -1,3 +1,3 @@
-## Bar chart: Carbon emissions by LULC change type [t]
+## Bar chart: Carbon flows by LULC change type (tonnes)
 
-This bar chart shows the total carbon emissions by LULC change type [t] in the observation period.
+This bar chart shows the total carbon flows by LULC change type (tonnes) in the analysis period.

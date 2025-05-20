@@ -168,12 +168,12 @@ class EmissionCalculator:
 
     def summary_stats(self, emissions_df: gpd.GeoDataFrame, aoi: shapely.MultiPolygon) -> (pd.DataFrame, pd.DataFrame):
         """
-        Calculate statistics about total change areas and emissions in the observation period.
+        Calculate statistics about total change areas and emissions in the analysis period.
 
         :param emissions_df: geodataframe with LULC change polygons and emissions [t] for each change type
         :param aoi: multipolygon of the area of interest
-        :return: dataframe with statistics about emissions in the observation period
-        :return: dataframe with statistics about change areas in the observation period
+        :return: dataframe with statistics about emissions in the analysis period
+        :return: dataframe with statistics about change areas in the analysis period
         """
         emissions_df = emissions_df.copy()
         subset_pos = emissions_df[emissions_df['emissions'] > 0]
@@ -191,7 +191,7 @@ class EmissionCalculator:
         :param emissions_df: geodataframe with LULC change polygons and emissions [t] for each change type
         :param subset_pos: subset of emissions_df with LULC change polygons causing emissions
         :param subset_neg: subset of emissions_df with LULC change polygons causing sinks
-        :return: dataframe with statistics about emissions in the observation period
+        :return: dataframe with statistics about emissions in the analysis period
         """
         total_gross_emissions = round(subset_pos['emissions'].sum(), 2)
         total_gross_sink = round(subset_neg['emissions'].sum(), 2)
@@ -201,7 +201,7 @@ class EmissionCalculator:
             ['Gross Sink', total_gross_sink],
             ['Net Emissions/Sink', total_net_emissions],
         ]
-        emission_info = pd.DataFrame(data_emission_info, columns=['Metric Name', 'Value [t]'])
+        emission_info = pd.DataFrame(data_emission_info, columns=['Metric Name', 'Value (tonnes)'])
         emission_info.set_index('Metric Name', inplace=True)
         return emission_info
 
@@ -218,7 +218,7 @@ class EmissionCalculator:
         :param subset_pos: subset of emissions_df with LULC change polygons causing emissions
         :param subset_neg: subset of emissions_df with LULC change polygons causing sinks
         :param aoi: multipolygon of the area of interest
-        :return: dataframe with statistics about change areas in the observation period
+        :return: dataframe with statistics about change areas in the analysis period
         """
         total_emission_change_area = round(subset_pos.area.sum() * SQM_TO_HA, 2)
         total_sink_change_area = round(subset_neg.area.sum() * SQM_TO_HA, 2)
@@ -242,7 +242,7 @@ class EmissionCalculator:
             ['Sink Area', total_sink_change_area, sink_change_area_percent],
         ]
         area_info = pd.DataFrame(
-            data_area_info, columns=['Metric Name', 'Absolute Value [ha]', 'Proportion of AOI [%]']
+            data_area_info, columns=['Metric Name', 'Absolute Value (ha)', 'Proportion of AOI [%]']
         )
         area_info.set_index('Metric Name', inplace=True)
         return area_info
@@ -260,14 +260,14 @@ class EmissionCalculator:
         change_type_df['Change'] = change_type_df.apply(
             lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}', axis=1
         )
-        change_type_df['Area [ha]'] = round(change_type_df.area * SQM_TO_HA, 2)
-        change_type_df['Total emissions [t]'] = round(change_type_df.emissions, 2)
+        change_type_df['Area (ha)'] = round(change_type_df.area * SQM_TO_HA, 2)
+        change_type_df['Total carbon flows (tonnes)'] = round(change_type_df.emissions, 2)
 
         change_type_df = change_type_df.set_index('Change')
 
-        change_type_df = change_type_df.sort_values('Total emissions [t]')
+        change_type_df = change_type_df.sort_values('Total carbon flows (tonnes)')
 
-        return change_type_df[['Area [ha]', 'Total emissions [t]']]
+        return change_type_df[['Area (ha)', 'Total carbon flows (tonnes)']]
 
     def area_plot(self, emissions_df: gpd.GeoDataFrame) -> Chart2dData:
         """
@@ -351,7 +351,7 @@ class EmissionCalculator:
             columns={
                 'utility_class_name': 'Class',
                 'description': 'Definition',
-                'ghg_stock': 'GHG stock value [t/ha]',
+                'ghg_stock': 'Carbon stock value [tonnes/ha]',
             }
         )
         ghg_stock.set_index('Class', inplace=True)

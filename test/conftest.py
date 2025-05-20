@@ -17,8 +17,8 @@ TEST_RESOURCES_DIR = Path(__file__).parent / 'resources'
 @pytest.fixture
 def expected_compute_input() -> ComputeInput:
     return ComputeInput(
-        year_before='2022',
-        year_after='2023',
+        start_year='2022',
+        end_year='2023',
     )
 
 

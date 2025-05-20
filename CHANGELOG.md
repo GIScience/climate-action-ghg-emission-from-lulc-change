@@ -7,6 +7,14 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 ## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.2.0...main)
 
+### Changed
+
+- Ensure that plugin content meets content guidelines, ensure consistent terminology throughout plugin: Edit purpose, methodology, artifact captions and descriptions, rename input parameters ([#99](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/99))
+
+### Removed
+
+- Artifact description artifact, as the descriptions now appear under each respective artifact ([#99](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/99))
+
 ## [2.2.0](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.2.0)
 
 ### Changed

@@ -250,11 +250,11 @@ def test_summary_stats(default_calculator):
         ['Sink Area', 0.01, 10.0],
     ]
 
-    expected_summary = pd.DataFrame(data_summary, columns=['Metric Name', 'Value [t]'])
+    expected_summary = pd.DataFrame(data_summary, columns=['Metric Name', 'Value (tonnes)'])
     expected_summary.set_index('Metric Name', inplace=True)
 
     expected_area_info = pd.DataFrame(
-        data_area_info, columns=['Metric Name', 'Absolute Value [ha]', 'Proportion of AOI [%]']
+        data_area_info, columns=['Metric Name', 'Absolute Value (ha)', 'Proportion of AOI [%]']
     )
     expected_area_info.set_index('Metric Name', inplace=True)
 
@@ -279,8 +279,8 @@ def test_get_change_type_table(default_calculator):
 
     data = {
         'Change': ['built-up to forest', 'forest to built-up'],
-        'Area [ha]': [0.01, 0.01],
-        'Total emissions [t]': [-0.01, 0.01],
+        'Area (ha)': [0.01, 0.01],
+        'Total carbon flows (tonnes)': [-0.01, 0.01],
     }
     expected_table = pd.DataFrame(data)
     expected_table.set_index('Change', inplace=True)
@@ -339,7 +339,7 @@ def test_filter_ghg_stock(lulc_utility_mock):
         {
             'Class': ['built-up', 'farmland', 'grass', 'forest'],
             'Definition': ['Sealed surface', 'A farmland', 'A grass patch', 'A forest'],
-            'GHG stock value [t/ha]': [71, 108, 161.5, 253],
+            'Carbon stock value [tonnes/ha]': [71, 108, 161.5, 253],
         }
     )
     expected_output.set_index('Class', inplace=True)

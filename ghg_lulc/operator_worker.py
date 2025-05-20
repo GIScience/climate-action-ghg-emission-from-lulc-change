@@ -17,7 +17,6 @@ from semver import Version
 
 from ghg_lulc.artifact import (
     create_area_plot_artifact,
-    create_artifact_description_artifact,
     create_change_artifacts,
     create_change_type_artifact,
     create_classification_artifacts,
@@ -87,7 +86,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             methodology=Path(PROJECT_DIR / 'resources/methodology.md'),
             sources=PROJECT_DIR / 'resources/sources.bib',
             concerns={Concern.CLIMATE_ACTION__GHG_EMISSION},
-            demo_input_parameters=ComputeInput(year_before='2017', year_after='2024'),
+            demo_input_parameters=ComputeInput(start_year='2017', end_year='2024'),
             demo_aoi=Path(PROJECT_DIR / 'resources/gruenheide.geojson'),
             computation_shelf_life=timedelta(weeks=52),
         )
@@ -123,7 +122,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             )
 
         emission_calculator = EmissionCalculator(
-            emission_factors=self.emission_factors[params.ghg_stock_source], resources=resources
+            emission_factors=self.emission_factors[params.carbon_stock_source], resources=resources
         )
 
         change_df, change_artifacts = self.get_changes(emission_calculator, aoi, params, resources)
@@ -133,7 +132,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         table_artifacts = create_table_artifacts(
             emission_calculator,
             emissions_df,
-            self.ghg_stock[params.ghg_stock_source],
+            self.ghg_stock[params.carbon_stock_source],
             aoi,
             params,
             resources,
@@ -144,10 +143,8 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             emission_calculator,
             resources,
         )
-        formatted_text = self.create_markdown(params)
-        artifact_description_artifact = create_artifact_description_artifact(formatted_text, resources)
 
-        return change_artifacts + table_artifacts + chart_artifacts + [artifact_description_artifact]
+        return change_artifacts + table_artifacts + chart_artifacts
 
     def get_changes(
         self,
@@ -180,8 +177,8 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         change_artifacts = create_change_artifacts(
             change_raster,
             change_emissions_raster,
-            self.ghg_stock[params.ghg_stock_source],
-            self.emission_factors[params.ghg_stock_source],
+            self.ghg_stock[params.carbon_stock_source],
+            self.emission_factors[params.carbon_stock_source],
             resources,
         )
 
@@ -201,15 +198,15 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
 
         area_before = LulcWorkUnit(
             area_coords=aoi_box,
-            start_date=datetime(params.year_before, 7, 1),
-            end_date=datetime(params.year_before, 7, 31),
+            start_date=datetime(params.start_year, 7, 1),
+            end_date=datetime(params.start_year, 7, 31),
             threshold=CLASSIFICATION_THRESHOLD,
             fusion_mode=FusionMode.ONLY_MODEL,
         )
         area_after = LulcWorkUnit(
             area_coords=aoi_box,
-            start_date=datetime(params.year_after, 7, 1),
-            end_date=datetime(params.year_after, 7, 31),
+            start_date=datetime(params.end_year, 7, 1),
+            end_date=datetime(params.end_year, 7, 31),
             threshold=CLASSIFICATION_THRESHOLD,
             fusion_mode=FusionMode.ONLY_MODEL,
         )
@@ -218,44 +215,6 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         lulc_after = fetch_lulc(self.lulc_utility, area_after, aoi)
 
         return lulc_before, lulc_after
-
-    def create_markdown(self, params: ComputeInput) -> str:
-        """
-        Create a formatted description of all artifacts using the selected GHG stocks and emission factors.
-
-        :param params: Operator input
-        :return: Formatted string for artifact description artifact
-        """
-        directory = PROJECT_DIR / 'resources/artifact_descriptions'
-        content = [file.read_text(encoding='utf-8') for file in sorted(directory.glob('*.md'))]
-        content = '\n\n'.join(content)
-        carbon_stocks = self.ghg_stock[params.ghg_stock_source][['utility_class_name', 'ghg_stock']].to_markdown(
-            index=False, headers=['LULC Class', 'Carbon stock [t/ha]'], floatfmt='#.1f'
-        )
-        emission_factors = self.emission_factors[params.ghg_stock_source][
-            [
-                'utility_class_name_before',
-                'utility_class_name_after',
-                'emission_factor',
-            ]
-        ].to_markdown(
-            index=False,
-            headers=[
-                'From Class',
-                'To Class',
-                'Factor [t/ha]',
-            ],
-            floatfmt='#.1f',
-        )
-        formatted_text = content.format(
-            year_before=params.year_before,
-            year_after=params.year_after,
-            classification_threshold=CLASSIFICATION_THRESHOLD * 100,
-            carbon_stocks=carbon_stocks,
-            emission_factors=emission_factors,
-        )
-
-        return formatted_text
 
 
 def create_table_artifacts(
@@ -277,7 +236,7 @@ def create_table_artifacts(
     :return: List of the table artifacts
     """
     ghg_stock_df = EmissionCalculator.filter_ghg_stock(ghg_stock)
-    stock_artifact = create_stock_artifact(ghg_stock_df, params.ghg_stock_source, resources)
+    stock_artifact = create_stock_artifact(ghg_stock_df, params.carbon_stock_source, resources)
 
     emission_info_df, area_info_df = emission_calculator.summary_stats(emissions_df, aoi)
     summary_artifact = create_summary_artifact(emission_info_df, resources)

@@ -30,7 +30,7 @@ def test_plugin_compute_request(
         params=expected_compute_input,
     )
 
-    assert len(computed_artifacts) == 11
+    assert len(computed_artifacts) == 10
     for artifact in computed_artifacts:
         assert isinstance(artifact, _Artifact)
 
@@ -50,13 +50,6 @@ def test_no_change_case(
         _ = operator.compute(compute_resources, default_aoi, default_aoi_properties, expected_compute_input)
 
 
-def test_create_markdown(lulc_utility_mock, expected_compute_input):
-    operator = GHGEmissionFromLULC(lulc_utility_mock)
-    expected_content = (TEST_RESOURCES_DIR / 'artifact_description_test.md').read_text(encoding='utf-8')
-    formatted_text = operator.create_markdown(expected_compute_input)
-    assert formatted_text == expected_content
-
-
 def test_plugin_compute_result(
     lulc_utility_mock, expected_compute_input, default_aoi, default_aoi_properties, compute_resources
 ):
@@ -71,26 +64,25 @@ def test_plugin_compute_result(
 
     assert {a.name for a in artifacts} == {
         'Carbon stock values per class',
-        'Carbon emissions by LULC change type [t]',
-        'Change areas and emissions by LULC change type',
-        'Change areas by LULC change type [ha]',
-        'Classification for first timestamp',
-        'Classification for second timestamp',
+        'Carbon flows by LULC change type (tonnes)',
+        'Change areas and carbon flows by LULC change type',
+        'Change areas by LULC change type (ha)',
+        'Classification for period start',
+        'Classification for period end',
         'LULC Change',
-        'Localised Emissions [t per 100m²]',
+        'Localised carbon flows (tonnes per 100m²)',
         'Summary of results',
-        'Description of the artifacts',
-        'Information on the area of interest',
+        'Summary of detected changes',
     }
 
     for artifact in artifacts:
         match artifact.name:
-            case 'Classification for first timestamp':
+            case 'Classification for period start':
                 expected_array = np.array([[[0, 0, 0], [1, 1, 1], [4, 4, 4]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
-            case 'Classification for second timestamp':
+            case 'Classification for period end':
                 expected_array = np.array([[[0, 1, 4], [0, 1, 4], [0, 1, 4]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
@@ -100,7 +92,7 @@ def test_plugin_compute_result(
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
                 assert_array_equal(raster_array, expected_array)
-            case 'Localised Emissions [t per 100m²]':
+            case 'Localised carbon flows (tonnes per 100m²)':
                 expected_array = np.array([[[0, 0, 0], [0, 2, 3], [0, 1, 2]]])
                 with rasterio.open(artifact.file_path) as src:
                     raster_array = src.read()
@@ -110,7 +102,7 @@ def test_plugin_compute_result(
                     {
                         'Class': ['built-up', 'farmland', 'grass', 'forest'],
                         'Definition': ['Sealed surface', 'A farmland', 'A grass patch', 'A forest'],
-                        'GHG stock value [t/ha]': [71, 108, 161.5, 253],
+                        'Carbon stock value [tonnes/ha]': [71, 108, 161.5, 253],
                     }
                 )
                 exported_df = pd.read_csv(artifact.file_path)
@@ -121,11 +113,11 @@ def test_plugin_compute_result(
                     ['Gross Sink', -1.83],
                     ['Net Emissions/Sink', 0],
                 ]
-                expected_summary = pd.DataFrame(data_summary, columns=['Metric Name', 'Value [t]'])
+                expected_summary = pd.DataFrame(data_summary, columns=['Metric Name', 'Value (tonnes)'])
                 expected_summary.set_index('Metric Name', inplace=True)
                 exported_df = pd.read_csv(artifact.file_path, index_col=0)
                 pd.testing.assert_frame_equal(exported_df, expected_summary)
-            case 'Information on the area of interest':
+            case 'Summary of detected changes':
                 data_area_info = [
                     ['Area of Interest (AOI)', 0.81, 100.0],
                     ['Change Area', 0.02, 2.49],
@@ -133,28 +125,22 @@ def test_plugin_compute_result(
                     ['Sink Area', 0.01, 1.24],
                 ]
                 expected_area_info = pd.DataFrame(
-                    data_area_info, columns=['Metric Name', 'Absolute Value [ha]', 'Proportion of AOI [%]']
+                    data_area_info, columns=['Metric Name', 'Absolute Value (ha)', 'Proportion of AOI [%]']
                 )
                 expected_area_info.set_index('Metric Name', inplace=True)
                 exported_df = pd.read_csv(artifact.file_path, index_col=0)
                 pd.testing.assert_frame_equal(exported_df, expected_area_info)
-            case 'Change areas and emissions by LULC change type':
+            case 'Change areas and carbon flows by LULC change type':
                 expected_change_type_table = pd.DataFrame(
                     {
                         'Change': ['built-up to forest', 'forest to built-up'],
-                        'Area [ha]': [0.01, 0.01],
-                        'Total emissions [t]': [-1.83, 1.83],
+                        'Area (ha)': [0.01, 0.01],
+                        'Total carbon flows (tonnes)': [-1.83, 1.83],
                     }
                 )
                 exported_df = pd.read_csv(artifact.file_path)
                 pd.testing.assert_frame_equal(exported_df, expected_change_type_table)
-            case 'Description of the artifacts':
-                with (
-                    open('test/resources/artifact_description_test.md', 'r', encoding='utf-8') as expected_description,
-                    open(artifact.file_path, 'r') as computed_description,
-                ):
-                    assert computed_description.read() == expected_description.read()
-            case 'Change areas by LULC change type [ha]':
+            case 'Change areas by LULC change type (ha)':
                 if artifact.modality == ArtifactModality.CHART:
                     expected_area_data = {
                         'x': ['built-up to forest', 'forest to built-up'],
@@ -167,7 +153,7 @@ def test_plugin_compute_result(
                     with open(artifact.file_path) as file:
                         exported_data = json.load(file)
                     assert exported_data == expected_area_data
-            case 'Carbon emissions by LULC change type [t]':
+            case 'Carbon flows by LULC change type (tonnes)':
                 if artifact.modality == ArtifactModality.CHART:
                     expected_emission_data = {
                         'x': ['built-up to forest', 'forest to built-up'],

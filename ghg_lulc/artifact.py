@@ -41,7 +41,7 @@ def create_classification_artifacts(
             nodata=RASTER_NO_DATA_VALUE,
         ),
         layer_name='Classification for period start',
-        caption='LULC classification at the start of the analysis period',
+        caption='LULC classification at the start of the analysis period.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(
             encoding='utf-8'
         ),
@@ -60,7 +60,7 @@ def create_classification_artifacts(
             nodata=RASTER_NO_DATA_VALUE,
         ),
         layer_name='Classification for period end',
-        caption='LULC classification at the end of the analysis period',
+        caption='LULC classification at the end of the analysis period.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(
             encoding='utf-8'
         ),
@@ -97,9 +97,7 @@ def create_change_artifacts(
     change_artifact = create_geotiff_artifact(
         raster_info=filled_change,
         layer_name='LULC Change',
-        caption='LULC changes within the analysis period. Note: Transparent pixels within the '
-        'area of interest show areas where LULC could not be classified with enough confidence '
-        'at the start and/or end of the period of analysis.',
+        caption='LULC changes within the analysis period.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/03_LULC_change.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='LULC_change',
@@ -205,7 +203,7 @@ def create_stock_artifact(
     stock_artifact = create_table_artifact(
         data=stock_df,
         title='Carbon stock values per class',
-        caption=f'Carbon stock values for each class according to: {stock_source.value}.',
+        caption=f'Carbon stock values for each class according to: {stock_source.value}',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/08_ghg_stocks.md').read_text(encoding='utf-8'),
         resources=resources,
         filename='stock',

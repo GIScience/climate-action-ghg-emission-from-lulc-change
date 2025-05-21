@@ -1,3 +1,1 @@
-## Map: LULC change
-
-The LULC changes that occurred during the analysis period are shown in this map.
+Note: Transparent pixels within the area of interest show areas where LULC could not be classified with enough confidence at the start and/or end of the period of analysis.

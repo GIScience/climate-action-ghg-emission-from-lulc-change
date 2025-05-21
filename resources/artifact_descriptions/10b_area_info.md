@@ -1,3 +1,2 @@
-## Table: Information on the area of interest
-
-This table shows the absolute size and the relative proportion with respect to the area of interest of the change area, emitting area, and sink area in the analysis period.
+The column "Absolute Value (ha)" shows the total area of interest, how much of this area has changed, and how much of this changed area was classified as carbon source and carbon sink.
+The column "Proportion of AOI [%]" shows these areas as a percentage of the area of interest.

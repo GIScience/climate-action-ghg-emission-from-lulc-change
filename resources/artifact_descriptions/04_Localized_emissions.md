@@ -1,6 +1,3 @@
-## Map: Localized carbon flows - Carbon flows per pixel due to LULC change (tonnes)
-
-The LULC change carbon flows per pixel (tonnes) during the analysis period are shown in this map.
 To estimate carbon flows, we assign a carbon stock value to each LULC class. For example, forests typically store more carbon than meadows or settlements.
 Table 1 shows the carbon stocks of each LULC class.
 These carbon stocks encompass soil and vegetation carbon, providing an average measure of carbon stored per hectare.

@@ -1,3 +1,1 @@
-## Bar chart: Carbon flows by LULC change type (tonnes)
-
-This bar chart shows the total carbon flows by LULC change type (tonnes) in the analysis period.
+Positive values indicate carbon emissions, negative emission values indicate a carbon sink resulting from the LULC change.

@@ -1,7 +1,3 @@
-## Map: LULC classifications
-
-LULC classification for the start and the end of the analysis period.
-
 The model’s confidence for all areas that have been assigned a LULC class lies above the classification confidence threshold of 75 %.
 All areas where the model’s confidence lies below the threshold have been classified as “unknown”.
 

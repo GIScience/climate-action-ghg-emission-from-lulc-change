@@ -10,7 +10,7 @@ import shapely
 from climatoology.base.artifact import RasterInfo
 from climatoology.base.baseoperator import BaseOperator, _Artifact, AoiProperties
 from climatoology.base.computation import ComputationResources
-from climatoology.base.info import generate_plugin_info, _Info, PluginAuthor, Concern
+from climatoology.base.info import generate_plugin_info, _Info, PluginAuthor, Concern, PluginState
 from climatoology.utility.LULC import LulcUtility, LulcWorkUnit, FusionMode
 from climatoology.utility.exception import ClimatoologyUserError
 from semver import Version
@@ -54,6 +54,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         return generate_plugin_info(
             name='LULC Change',
             icon=PROJECT_DIR / 'resources/icon.jpeg',
+            state=PluginState.HIBERNATE,
             authors=[
                 PluginAuthor(
                     name='Veit Ulrich',

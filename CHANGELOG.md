@@ -16,6 +16,9 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 - Artifact description artifact, as the descriptions now appear under each respective artifact ([#99](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/99))
 
+### Added
+- Add commit hash to plugin version in dockerfile ([#103](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/103))
+
 ## [2.2.0](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.2.0)
 
 ### Changed

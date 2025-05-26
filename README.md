@@ -25,6 +25,14 @@ Make sure you have it installed.
 Apart from some base dependencies, there is only one fixed dependency for you, which is the [climatoology](https://gitlab.heigit.org/climate-action/climatoology) package that holds all the infrastructure functionality.
 Make sure you have read-access to the climatoology repository (i.e. you can clone it).
 
+```shell
+DOCKER_BUILDKIT=1 docker build --secret id=CI_JOB_TOKEN . --tag repo.heigit.org/climate-action/ghg-emission-from-lulc-change:devel
+```
+
+To mimic the build behaviour of the CI you have to add `--build-arg CI_COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)`
+to the above command.
+
+
 Now run
 ```
 poetry install --no-root

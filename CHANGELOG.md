@@ -27,6 +27,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 - Make LULC utility use images from a one-month period instead of just one week for higher stability ([#97](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/97)
 - Rename plugin to `LULC Change`
 - Update climatoology to 6.4.1
+- CI pipeline now includes test-coverage checks ([#102](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/102))
 
 ### Removed
 

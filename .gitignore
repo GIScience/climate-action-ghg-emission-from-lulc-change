@@ -4,4 +4,7 @@
 __pycache__/
 output/**
 
+.coverage
+coverage.xml
+
 CI_JOB_TOKEN

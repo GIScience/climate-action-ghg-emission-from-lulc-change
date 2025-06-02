@@ -5,19 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.2.0...main)
+## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.0...main)
+
+## [2.3.0](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.0)
 
 ### Changed
 
 - Ensure that plugin content meets content guidelines, ensure consistent terminology throughout plugin: Edit purpose, methodology, artifact captions and descriptions, rename input parameters ([#99](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/99))
 - Remove duplications between artifact captions and artifact descriptions ([#101](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/101))
+- Docker builds now take the commit hash as an argument to avoid version collisions on staging ([#103](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/103))
+- CI pipeline now includes test-coverage checks ([#102](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/102))
 
 ### Removed
 
 - Artifact description artifact, as the descriptions now appear under each respective artifact ([#99](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/99))
-
-### Added
-- Add commit hash to plugin version in dockerfile ([#103](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/103))
 
 ## [2.2.0](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.2.0)
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ghg_lulc"
-version = "2.3.0"
+version = "2.3.1"
 description = "This plugin computes carbon flows from land use and land cover changes between two timestamps."
 authors = ["Veit Ulrich <veit.ulrich@uni-heidelberg.de>", "Moritz Schott <moritz.schott@heigit.org>"]
 readme = "README.md"

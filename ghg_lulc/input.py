@@ -20,8 +20,7 @@ class ComputeInput(BaseModel):
     )
     carbon_stock_source: GhgStockSource = Field(
         title='Source of LULC carbon stock values',
-        description='Please select the source of the carbon stock values used in estimating carbon flows from LULC change. '
-        'For more information on the carbon stock sources, please refer to the documentation.',
+        description='Please select the source of the carbon stock values used in estimating carbon flows from LULC change.',
         examples=[GhgStockSource.HANSIS],
         default=GhgStockSource.HANSIS,
     )

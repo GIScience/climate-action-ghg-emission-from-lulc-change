@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "ghg_lulc"
-version = "2.3.2"
+version = "2.3.3"
 description = "This plugin computes carbon flows from land use and land cover changes between two timestamps."
 authors = ["Veit Ulrich <veit.ulrich@uni-heidelberg.de>", "Moritz Schott <moritz.schott@heigit.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.11.5"
-climatoology = {git = "ssh://git@gitlab.heigit.org:2022/climate-action/climatoology.git", tag = "6.4.2"}
+climatoology = {git = "ssh://git@gitlab.heigit.org:2022/climate-action/climatoology.git", tag = "6.4.3"}
 pydantic = "^2.8.2"
 pydantic-settings = "^2.1.0"
 geojson-pydantic = "^1.0.1"

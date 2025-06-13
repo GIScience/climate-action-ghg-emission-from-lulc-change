@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.2...main)
+## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.3...main)
+
+## [2.3.3](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.3) - 2025-06-13
+
+### Fixed
+
+- update climatoology to include the LULC Utility fix, which refines the binning of the AOI to avoid out of memory
+  issues ([LULC Utility #83](https://gitlab.heigit.org/climate-action/utilities/lulc-utility/-/issues/83))
 
 ## [2.3.2](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.2) - 2025-06-04
 

@@ -36,7 +36,7 @@ class EmissionCalculator:
         :return: a raster with LULC changes and a raster with pixel-wise emissions
         between first and second time stamp
         """
-        log.debug('Deriving LULC changes')
+        log.info('Deriving LULC changes')
 
         changes_info = self.get_change_info(lulc_before, lulc_after)
 

@@ -140,7 +140,7 @@ def fetch_lulc(lulc_utility: LulcUtility, lulc_area: LulcWorkUnit, aoi: shapely.
     :return: RasterInfo object containing an array of the LULC in the AOI and the meta information needed to create
     the LULC raster
     """
-    log.debug('Fetching classification.')
+    log.info(f'Fetching classification for {lulc_area}')
     with lulc_utility.compute_raster([lulc_area]) as lulc_classification:
         lulc_array = lulc_classification.read().astype(np.uint8)
         crs = lulc_classification.crs
@@ -171,6 +171,7 @@ def mask_raster(
     geographic/projected (x, y) coordinates
     :return: Array of the LULC in the AOI
     """
+    log.debug('Clipping lulc_array to aoi geometry')
     rows = lulc_array.shape[-2]
     cols = lulc_array.shape[-1]
     mask = ~geometry_mask([aoi], (rows, cols), transform=transform, invert=True)

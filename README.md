@@ -111,6 +111,61 @@ The input parameters are defined here and some validation on them is done.
 - The file [utils.py](ghg_lulc/utils.py) contains mischellaneous functions.
 - The file [artifact.py](ghg_lulc/artifact.py) contains the functions that create the artifacts.
 
+## Releasing a new plugin version
+
+To release a new plugin version
+
+1. Update the [CHANGELOG.md](CHANGELOG.md).
+   It should already be up to date but give it one last read and update the heading above this upcoming release
+2. Decide on the new version number.
+   We suggest you adhere to the [Semantic Versioning](https://semver.org/) scheme, based on the changes since the last
+   release.
+   You can think of your plugin methods (info method, input parameters and artifacts) as the public API of your plugin.
+3. Update the version attribute in the [pyproject.toml](pyproject.toml) (e.g. by running
+   `poetry version {patch|minor|major}`)
+4. Create a [release]((https://docs.gitlab.com/ee/user/project/releases/#create-a-release-in-the-releases-page)) on
+   GitLab, including a changelog
+
+## Docker
+
+To build docker images, you need to give the engine access to the climatoology repository.
+Create a file `CI_JOB_TOKEN` that contains your personal access token to the climatoology repository.
+
+### Build
+
+The tool is also [Dockerised](Dockerfile).
+Images are automatically built and deployed in the [CI-pipeline](.gitlab-ci.yml).
+
+In case you want to manually build and run locally (e.g. to test a new feature in development), execute
+
+```shell
+docker build --secret id=CI_JOB_TOKEN . --tag repo.heigit.org/climate-action/ghg-emission-from-lulc-change:devel
+```
+
+Note that this will overwrite any existing image with the same tag (i.e. the one you previously pulled from the Climate
+Action docker registry).
+
+To mimic the build behaviour of the CI you have to add `--build-arg CI_COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)`
+to the above command.
+
+### Run
+
+If you have the Climate Infrastructure running (see [Development Setup](#development-setup)) you can now run the
+container via
+
+```shell
+docker run --rm --network=host --env-file .env.base --env-file .env repo.heigit.org/climate-action/ghg-emission-from-lulc-change:devel
+```
+
+### Deploy
+
+Deployment is handled by the GitLab CI automatically.
+If for any reason you want to deploy manually (and have the required rights), after building the image, run
+
+```shell
+docker image push repo.heigit.org/climate-action/ghg-emission-from-lulc-change:devel
+```
+
 ## Contribute
 
 Contributions are welcome. Feel free to create a merge request and contact

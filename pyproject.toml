@@ -24,7 +24,7 @@ pytest = "^7.4.4"
 pytest-cov = "^6.1.1"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.6.0"
+pre-commit = "^4.0.0"
 
 [tool.coverage.run]
 omit = ["test/*" , "ghg_lulc/plugin.py"]

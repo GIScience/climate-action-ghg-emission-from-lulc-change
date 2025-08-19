@@ -84,6 +84,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             ],
             version=Version.parse(importlib.metadata.version('ghg_lulc')),
             purpose=Path(PROJECT_DIR / 'resources/purpose.md'),
+            teaser='Assess the carbon flows from Land Use and Land Cover (LULC) change during a given period in any area within Germany.',
             methodology=Path(PROJECT_DIR / 'resources/methodology.md'),
             sources=PROJECT_DIR / 'resources/sources.bib',
             concerns={Concern.CLIMATE_ACTION__GHG_EMISSION},

@@ -61,7 +61,7 @@ The carbon stocks might have to be adapted when applying this plugin outside Cen
 For the classes farmland, meadow, and forest, the carbon stock values are taken from the BLUE model (Hansis et al., 2015) and from a database of the Carbon Dioxide Information Analysis Center (Houghton & Hackler, 2001).
 The higher carbon stock values from Hansis et al. (2015) are based on Reick et al. (2010).
 For forest in temperate climates, these sources offer carbon stock values for primary and secondary forests, as well as deciduous broadleaf forests and evergreen or deciduous coniferous forests.
-The carbon stock values for secondary evergreen coniferous forests were chosen because the first area of application for this plugin is Germany, where nearly all forests are secondary forests with spruce and pine as dominant tree species (NABU, 2024).
+The carbon stock values for secondary evergreen coniferous forests were chosen because the first area of application for this plugin is Germany, where nearly all forests are secondary forests with spruce and pine as dominant tree species.
 For other study areas, different carbon stock values might be more suitable.
 Therefore, it is recommended to use this version of the LULC change plugin only in areas with temperate climate.
 
@@ -108,8 +108,6 @@ Bradley, R. i., Milne, R., Bell, J., Lilly, A., Jordan, C., & Higgins, A. (2005)
 Hansis, E., Davis, S. J., & Pongratz, J. (2015). Relevance of methodological choices for accounting of land use change carbon fluxes. Global Biogeochemical Cycles, 29(8), 1230–1246. [https://doi.org/10.1002/2014GB004997](https://doi.org/10.1002/2014GB004997)
 
 Houghton, R. A., Hackler, J. L., & Cushman, R. M. (2001). Carbon flux to the atmosphere from land-use changes: 1850 to 1990. Oak Ridge: Carbon Dioxide Information Center, Environmental Sciences Division, Oak Ridge National Laboratory.
-
-NABU. (2024). Zahlen und Fakten ... Zum Wald in Deutschland und weltweit. [https://www.nabu.de/natur-und-landschaft/waelder/lebensraum-wald/13284.html](https://www.nabu.de/natur-und-landschaft/waelder/lebensraum-wald/13284.html)
 
 Olson, J. S. (1983). Carbon in Live Vegetation of Major World Ecosystems. U.S. Department of Energy.
 

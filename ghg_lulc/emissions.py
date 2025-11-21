@@ -66,13 +66,13 @@ class EmissionCalculator:
         changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.uint8)
 
         for row in self.emission_factors.itertuples():
-            changes[
-                (lulc_before.data == row.raster_value_before) & (lulc_after.data == row.raster_value_after)
-            ] = row.change_id
+            changes[(lulc_before.data == row.raster_value_before) & (lulc_after.data == row.raster_value_after)] = (
+                row.change_id
+            )
 
-        changes[
-            np.logical_and(lulc_before.data == lulc_after.data, lulc_before.data != no_change_value)
-        ] = no_change_value
+        changes[np.logical_and(lulc_before.data == lulc_after.data, lulc_before.data != no_change_value)] = (
+            no_change_value
+        )
 
         cmap = plt.get_cmap('tab20b')
         changes_colormap = {}

@@ -43,6 +43,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 - Rename plugin to `LULC Change`
 - Update climatoology to 6.4.1
 - CI pipeline now includes test-coverage checks ([#102](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/102))
+- Updated ruff and pre-commit configs for more checks ([#92](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/92))
 
 ### Removed
 

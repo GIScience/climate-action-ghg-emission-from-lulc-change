@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     mplbackend: str = 'agg'
 
-    model_config = SettingsConfigDict(env_file='.env')
+    model_config = SettingsConfigDict(env_file='.env')  # dead: disable
 
 
 def init_plugin(settings: Settings) -> int:

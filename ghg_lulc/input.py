@@ -26,7 +26,7 @@ class ComputeInput(BaseModel):
     )
 
     @model_validator(mode='after')
-    def check_order(self):
+    def check_order(self):  # dead: disable
         if not self.end_year > self.start_year:
             raise ValueError('Period start must be before period end')
         return self

@@ -53,8 +53,10 @@ GERMANY_BBOX_4326 = Polygon(
 
 class GhgStockSource(Enum):
     HANSIS = 'Hansis et al. (2015): Carbon stock values from the BLUE model.'
-    HANSIS_HIGHER = 'Hansis et al. (2015) - Higher: Higher carbon stock values based Reick et al. (2010).'
-    HOUGHTON = 'Houghton & Hackler (2001): Carbon stock values from a database of the Carbon Dioxide Information '
+    HANSIS_HIGHER = (  # dead: disable
+        'Hansis et al. (2015) - Higher: Higher carbon stock values based Reick et al. (2010).'
+    )
+    HOUGHTON = 'Houghton & Hackler (2001): Carbon stock values from a database of the Carbon Dioxide Information '  # dead: disable
     'Analysis Center.'
 
 
@@ -93,8 +95,7 @@ def read_stock_source(source_file: Path, utility_labels: Dict[str, LabelDescript
         )
     except AttributeError as e:
         log.error(
-            'One of the expected utility class names defined in the ghg stock source is unknown to the lulc '
-            'utility.',
+            'One of the expected utility class names defined in the ghg stock source is unknown to the lulc utility.',
             exc_info=e,
         )
         raise e

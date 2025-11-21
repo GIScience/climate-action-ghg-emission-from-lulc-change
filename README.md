@@ -61,6 +61,9 @@ It is important that the code created by the different plugin developers adheres
 We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting the code as part of our pre-commit hooks.
 Please activate pre-commit by running `poetry run pre-commit install`.
 It will now run automatically before each commit and apply fixes for a variety of lint errors to your code.
+
+To manually run the linter and formatter, you can execute `poetry run pre-commit run -a`.
+
 Note that we have increased the maximum number of characters per line to be 120 to make better use of large modern displays.
 If you want to keep short lines explicitly seperate (e.g. in the definition of functions or list) please use ["magic trailing commas"](https://docs.astral.sh/ruff/settings/#format_skip-magic-trailing-comma).
 

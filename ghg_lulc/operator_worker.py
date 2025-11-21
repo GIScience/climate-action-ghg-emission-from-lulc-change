@@ -93,7 +93,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             computation_shelf_life=timedelta(weeks=52),
         )
 
-    def compute(
+    def compute(  # dead: disable
         self,
         resources: ComputationResources,
         aoi: shapely.MultiPolygon,

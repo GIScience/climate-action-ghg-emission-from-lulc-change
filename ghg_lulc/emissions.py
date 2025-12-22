@@ -9,7 +9,7 @@ import pyproj
 import shapely
 from climatoology.base.artifact import Chart2dData, ChartType, RasterInfo
 from climatoology.base.computation import ComputationResources
-from climatoology.utility.exception import ClimatoologyUserError
+from climatoology.base.exception import ClimatoologyUserError
 from numpy import ma
 from pydantic_extra_types.color import Color
 from rasterio.features import shapes
@@ -90,7 +90,6 @@ class EmissionCalculator:
             crs=lulc_before.crs,
             transformation=lulc_before.transformation,
             colormap=changes_colormap,
-            nodata=unknown_change_value,
         )
 
     def get_change_emissions_info(self, changes: RasterInfo, unknown_emissions_value: float = -999.999) -> RasterInfo:
@@ -119,7 +118,6 @@ class EmissionCalculator:
             crs=changes.crs,
             transformation=changes.transformation,
             colormap=emissions_colormap,
-            nodata=unknown_emissions_value,
         )
 
     def convert_change_raster(self, change_raster: RasterInfo) -> gpd.GeoDataFrame:

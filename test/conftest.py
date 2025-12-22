@@ -7,7 +7,7 @@ import shapely
 import rasterio
 from climatoology.base.computation import ComputationScope
 from climatoology.base.baseoperator import AoiProperties
-from climatoology.utility.LULC import LabelDescriptor, LabelResponse
+from climatoology.utility.lulc import LabelDescriptor, LabelResponse
 
 from ghg_lulc.input import ComputeInput
 
@@ -52,7 +52,7 @@ def compute_resources():
 
 @pytest.fixture
 def lulc_utility_mock():
-    with patch('climatoology.utility.LULC.LulcUtility') as lulc_utility:
+    with patch('climatoology.utility.lulc.LulcUtility') as lulc_utility:
         lulc_utility.compute_raster.side_effect = [
             rasterio.open(TEST_RESOURCES_DIR / 'minimal_first_ts.tiff'),
             rasterio.open(TEST_RESOURCES_DIR / 'minimal_second_ts.tiff'),

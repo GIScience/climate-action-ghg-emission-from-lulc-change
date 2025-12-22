@@ -2,7 +2,7 @@ import logging.config
 
 import matplotlib
 from climatoology.app.plugin import start_plugin
-from climatoology.utility.LULC import LulcUtility
+from climatoology.utility.lulc import LulcUtility
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ghg_lulc.operator_worker import GHGEmissionFromLULC
@@ -11,9 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
-    lulc_host: str
-    lulc_port: int
-    lulc_path: str
+    lulc_base_url: str
 
     mplbackend: str = 'agg'
 
@@ -21,11 +19,7 @@ class Settings(BaseSettings):
 
 
 def init_plugin(settings: Settings) -> int:
-    lulc_utility = LulcUtility(
-        host=settings.lulc_host,
-        port=settings.lulc_port,
-        path=settings.lulc_path,
-    )
+    lulc_utility = LulcUtility(base_url=settings.lulc_base_url)
     operator = GHGEmissionFromLULC(lulc_utility)
 
     log.info(f'Running plugin: {operator.info().name}')

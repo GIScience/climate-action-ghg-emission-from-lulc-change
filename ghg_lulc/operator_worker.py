@@ -1,4 +1,3 @@
-import importlib.metadata
 import logging
 from datetime import timedelta, datetime
 from pathlib import Path
@@ -8,12 +7,19 @@ import geopandas as gpd
 import pandas as pd
 import shapely
 from climatoology.base.artifact import RasterInfo
-from climatoology.base.baseoperator import BaseOperator, _Artifact, AoiProperties
+from climatoology.base.baseoperator import BaseOperator, Artifact, AoiProperties
 from climatoology.base.computation import ComputationResources
-from climatoology.base.info import generate_plugin_info, _Info, PluginAuthor, Concern, PluginState
-from climatoology.utility.LULC import LulcUtility, LulcWorkUnit, FusionMode
-from climatoology.utility.exception import ClimatoologyUserError
-from semver import Version
+from climatoology.base.plugin_info import (
+    generate_plugin_info,
+    PluginInfo,
+    PluginAuthor,
+    Concern,
+    PluginState,
+    CustomAOI,
+)
+from climatoology.utility.lulc import LulcUtility, LulcWorkUnit, FusionMode
+from climatoology.base.exception import ClimatoologyUserError
+from pydantic import HttpUrl
 
 from ghg_lulc.artifact import (
     create_area_plot_artifact,
@@ -47,7 +53,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         self.ghg_stock = get_ghg_stock(self.lulc_utility.get_class_legend().osm)
         self.emission_factors = calc_emission_factors(self.ghg_stock)
 
-    def info(self) -> _Info:
+    def info(self) -> PluginInfo:
         """
         :return: Info object with information about the plugin.
         """
@@ -59,38 +65,37 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
                 PluginAuthor(
                     name='Veit Ulrich',
                     affiliation='HeiGIT gGmbH',
-                    website='https://heigit.org/heigit-team',
+                    website=HttpUrl('https://heigit.org/heigit-team'),
                 ),
                 PluginAuthor(
                     name='Moritz Schott',
                     affiliation='HeiGIT gGmbH',
-                    website='https://heigit.org/heigit-team',
+                    website=HttpUrl('https://heigit.org/heigit-team'),
                 ),
                 PluginAuthor(
                     name='Maciej Adamiak',
                     affiliation='HeiGIT gGmbH',
-                    website='https://heigit.org/heigit-team',
+                    website=HttpUrl('https://heigit.org/heigit-team'),
                 ),
                 PluginAuthor(
                     name='Maria Martin',
                     affiliation='HeiGIT gGmbH',
-                    website='https://heigit.org/heigit-team',
+                    website=HttpUrl('https://heigit.org/heigit-team'),
                 ),
                 PluginAuthor(
                     name='Sven Lautenbach',
                     affiliation='HeiGIT gGmbH',
-                    website='https://heigit.org/heigit-team',
+                    website=HttpUrl('https://heigit.org/heigit-team'),
                 ),
             ],
-            version=Version.parse(importlib.metadata.version('ghg_lulc')),
             purpose=Path(PROJECT_DIR / 'resources/purpose.md'),
             teaser='Assess the carbon flows from Land Use and Land Cover (LULC) change during a given period in any area within Germany.',
             methodology=Path(PROJECT_DIR / 'resources/methodology.md'),
-            sources=PROJECT_DIR / 'resources/sources.bib',
+            sources_library=PROJECT_DIR / 'resources/sources.bib',
             concerns={Concern.CLIMATE_ACTION__GHG_EMISSION},
-            demo_input_parameters=ComputeInput(start_year='2017', end_year='2024'),
-            demo_aoi=Path(PROJECT_DIR / 'resources/gruenheide.geojson'),
             computation_shelf_life=timedelta(weeks=52),
+            demo_input_parameters=ComputeInput(start_year=2017, end_year=2024),
+            demo_aoi=CustomAOI(name='Grünheide Demo', path=Path(PROJECT_DIR / 'resources/gruenheide.geojson')),
         )
 
     def compute(  # dead: disable
@@ -99,7 +104,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         aoi: shapely.MultiPolygon,
         aoi_properties: AoiProperties,
         params: ComputeInput,
-    ) -> List[_Artifact]:
+    ) -> List[Artifact]:
         """
         Main method of the operator.
 
@@ -154,7 +159,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         aoi: shapely.MultiPolygon,
         params: ComputeInput,
         resources: ComputationResources,
-    ) -> Tuple[gpd.GeoDataFrame, List[_Artifact]]:
+    ) -> Tuple[gpd.GeoDataFrame, List[Artifact]]:
         """
         Get LULC classifications and LULC changes.
 
@@ -196,17 +201,16 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         :param params: Operator input
         :return: RasterInfo objects with LULC classifications at first and second timestamp
         """
-        aoi_box = aoi.bounds
 
         area_before = LulcWorkUnit(
-            area_coords=aoi_box,
+            aoi=aoi,
             start_date=datetime(params.start_year, 7, 1),
             end_date=datetime(params.start_year, 7, 31),
             threshold=CLASSIFICATION_THRESHOLD,
             fusion_mode=FusionMode.ONLY_MODEL,
         )
         area_after = LulcWorkUnit(
-            area_coords=aoi_box,
+            aoi=aoi,
             start_date=datetime(params.end_year, 7, 1),
             end_date=datetime(params.end_year, 7, 31),
             threshold=CLASSIFICATION_THRESHOLD,
@@ -226,7 +230,7 @@ def create_table_artifacts(
     aoi: shapely.MultiPolygon,
     params: ComputeInput,
     resources: ComputationResources,
-) -> List[_Artifact]:
+) -> List[Artifact]:
     """
     Contains the methods to create the table artifacts.
 
@@ -254,7 +258,7 @@ def create_chart_artifacts(
     emissions_df: gpd.GeoDataFrame,
     emissions_calculator: EmissionCalculator,
     resources: ComputationResources,
-) -> List[_Artifact]:
+) -> List[Artifact]:
     """
     Contains the methods to create the chart artifacts.
 

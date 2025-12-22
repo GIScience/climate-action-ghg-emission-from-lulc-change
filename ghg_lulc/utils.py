@@ -9,7 +9,7 @@ import pyproj
 import shapely
 from affine import Affine
 from climatoology.base.artifact import RasterInfo
-from climatoology.utility.LULC import LabelDescriptor, LulcUtility, LulcWorkUnit
+from climatoology.utility.lulc import LabelDescriptor, LulcUtility, LulcWorkUnit
 from matplotlib import pyplot as plt
 from matplotlib.colors import TwoSlopeNorm, to_hex
 from pydantic_extra_types.color import Color

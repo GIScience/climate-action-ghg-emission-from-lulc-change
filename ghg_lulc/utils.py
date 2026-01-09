@@ -1,5 +1,5 @@
 import logging
-from enum import Enum
+from enum import Enum, StrEnum
 from pathlib import Path
 from typing import Dict
 
@@ -58,6 +58,12 @@ class GhgStockSource(Enum):
     )
     HOUGHTON = 'Houghton & Hackler (2001): Carbon stock values from a database of the Carbon Dioxide Information '  # dead: disable
     'Analysis Center.'
+
+
+class Topics(StrEnum):
+    MAPS = 'maps'
+    CHARTS = 'charts'
+    TABLES = 'tables'
 
 
 def get_ghg_stock(utility_labels: Dict[str, LabelDescriptor]) -> Dict[GhgStockSource, pd.DataFrame]:

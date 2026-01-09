@@ -9,7 +9,7 @@ from climatoology.base.computation import ComputationResources
 from climatoology.utility.lulc import LabelDescriptor
 from pydantic_extra_types.color import Color
 
-from ghg_lulc.utils import PROJECT_DIR, GhgStockSource, RASTER_NO_DATA_VALUE, EMISSION_PER_PIXEL_FACTOR
+from ghg_lulc.utils import PROJECT_DIR, GhgStockSource, RASTER_NO_DATA_VALUE, EMISSION_PER_PIXEL_FACTOR, Topics
 
 
 def create_classification_artifacts(
@@ -32,7 +32,7 @@ def create_classification_artifacts(
         description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(
             encoding='utf-8'
         ),
-        primary=False,
+        tags={Topics.MAPS},
     )
     lulc_before_artifact = create_raster_artifact(
         raster_info=RasterInfo(
@@ -53,7 +53,7 @@ def create_classification_artifacts(
         description=(PROJECT_DIR / 'resources/artifact_descriptions/02_LULC_classifications.md').read_text(
             encoding='utf-8'
         ),
-        primary=False,
+        tags={Topics.MAPS},
     )
     lulc_after_artifact = create_raster_artifact(
         raster_info=RasterInfo(
@@ -95,7 +95,7 @@ def create_change_artifacts(
         filename='LULC_change',
         summary='LULC changes within the analysis period.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/03_LULC_change.md').read_text(encoding='utf-8'),
-        primary=False,
+        tags={Topics.MAPS},
     )
     change_artifact = create_raster_artifact(
         raster_info=filled_change,
@@ -142,7 +142,7 @@ def create_change_artifacts(
         'not be classified with sufficient confidence or they were classified as "permanent crops" or "water", for '
         'which no carbon stock values are available.',
         description=change_emission_description,
-        primary=True,
+        tags={Topics.MAPS},
     )
     patched_localised_emission_artifact = create_raster_artifact(
         raster_info=patched_change_emissions,
@@ -180,7 +180,7 @@ def create_summary_artifact(summary_df: pd.DataFrame, resources: ComputationReso
         filename='summary',
         summary='Gross emissions, gross sinks, and net emissions/sinks in the analysis period.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/10a_summary.md').read_text(encoding='utf-8'),
-        primary=True,
+        tags={Topics.TABLES},
     )
     summary_artifact = create_table_artifact(
         data=summary_df,
@@ -197,7 +197,7 @@ def create_area_info_artifact(area_info_df: pd.DataFrame, resources: Computation
         summary='Size of the area classified as a carbon source, carbon sink, and total LULC change during the period '
         'of analysis.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/10b_area_info.md').read_text(encoding='utf-8'),
-        primary=False,
+        tags={Topics.TABLES},
     )
     summary_artifact = create_table_artifact(
         data=area_info_df,
@@ -215,7 +215,7 @@ def create_stock_artifact(
         filename='stock',
         summary=f'Carbon stock values for each class according to: {stock_source.value}',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/08_ghg_stocks.md').read_text(encoding='utf-8'),
-        primary=False,
+        tags={Topics.TABLES},
     )
     stock_artifact = create_table_artifact(
         data=stock_df,
@@ -234,7 +234,7 @@ def create_change_type_artifact(change_type_table: pd.DataFrame, resources: Comp
         description=(PROJECT_DIR / 'resources/artifact_descriptions/09_stats_change_type.md').read_text(
             encoding='utf-8'
         ),
-        primary=True,
+        tags={Topics.TABLES},
     )
     change_type_table_artifact = create_table_artifact(
         data=change_type_table,
@@ -250,7 +250,7 @@ def create_area_plot_artifact(area_data: Chart2dData, resources: ComputationReso
         filename='area_plot',
         summary='Change areas by LULC change type (ha) in the analysis period.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/07_area_plot.md').read_text(encoding='utf-8'),
-        primary=True,
+        tags={Topics.CHARTS},
     )
     area_data_artifact = create_chart_artifact(
         data=area_data,
@@ -266,7 +266,7 @@ def create_emission_plot_artifact(emission_data: Chart2dData, resources: Computa
         filename='emission_plot',
         summary='Carbon flows by LULC change type (tonnes) in the analysis period.',
         description=(PROJECT_DIR / 'resources/artifact_descriptions/06_emission_plot.md').read_text(encoding='utf-8'),
-        primary=True,
+        tags={Topics.CHARTS},
     )
     emission_data_artifact = create_chart_artifact(
         data=emission_data,

@@ -73,15 +73,15 @@ def test_get_change_info(default_calculator):
     )
     expected_output_colormap = {
         0: (128, 128, 128),
-        2: (107, 110, 207),
-        3: (99, 121, 57),
-        4: (140, 162, 82),
-        7: (231, 186, 82),
-        8: (231, 203, 148),
-        9: (132, 60, 57),
-        12: (165, 81, 148),
-        13: (206, 109, 189),
-        14: (222, 158, 214),
+        2: (235, 84, 107),
+        3: (207, 91, 19),
+        4: (230, 171, 34),
+        7: (111, 242, 194),
+        8: (13, 64, 166),
+        9: (22, 124, 184),
+        12: (106, 24, 173),
+        13: (227, 125, 245),
+        14: (153, 14, 83),
     }
 
     changes = default_calculator.get_change_info(lulc_before, lulc_after)
@@ -110,7 +110,7 @@ def test_masked_change_info(default_calculator):
     )
     expected_output_colormap = {
         0: (128, 128, 128),
-        2: (222, 158, 214),
+        2: (153, 14, 83),
     }
 
     changes = default_calculator.get_change_info(lulc_before, lulc_after)

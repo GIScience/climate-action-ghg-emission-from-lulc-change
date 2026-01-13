@@ -10,6 +10,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 ### Changed
 - Add teaser to plugin and restore the previous purpose
 - Update the plugin to use the climatoology version 7.0.0
+- Change the color map for the lulc change map ([#96](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/96))
 
 - Assigning new artifact tags instead of the default version (primary/non-primary) ([#106](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/106))
 

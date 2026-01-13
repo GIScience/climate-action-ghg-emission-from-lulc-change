@@ -2,7 +2,6 @@ import logging
 from typing import Tuple
 
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyproj
@@ -15,7 +14,13 @@ from pydantic_extra_types.color import Color
 from rasterio.features import shapes
 from shapely.ops import transform
 
-from ghg_lulc.utils import SQM_TO_HA, pyplot_to_pydantic_color, EMISSION_PER_PIXEL_FACTOR, RASTER_NO_DATA_VALUE
+from ghg_lulc.utils import (
+    SQM_TO_HA,
+    pyplot_to_pydantic_color,
+    EMISSION_PER_PIXEL_FACTOR,
+    RASTER_NO_DATA_VALUE,
+    get_change_colormap,
+)
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +79,7 @@ class EmissionCalculator:
             no_change_value
         )
 
-        cmap = plt.get_cmap('tab20b')
+        cmap = get_change_colormap()
         changes_colormap = {}
 
         change_classes = np.unique(ma.compressed(changes))

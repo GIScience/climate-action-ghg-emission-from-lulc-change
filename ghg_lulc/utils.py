@@ -11,7 +11,7 @@ from affine import Affine
 from climatoology.base.artifact import RasterInfo
 from climatoology.utility.lulc import LabelDescriptor, LulcUtility, LulcWorkUnit
 from matplotlib import pyplot as plt
-from matplotlib.colors import TwoSlopeNorm, to_hex
+from matplotlib.colors import TwoSlopeNorm, to_hex, ListedColormap
 from pydantic_extra_types.color import Color
 from rasterio.features import geometry_mask
 from shapely import Polygon
@@ -221,3 +221,27 @@ def reproject_aoi(aoi: shapely.MultiPolygon, source_crs='EPSG:4326', target_crs=
 
     aoi_reprojected = transform(project, aoi)
     return aoi_reprojected
+
+
+def get_change_colormap() -> ListedColormap:
+    hex_colors = [
+        '#750641',
+        '#d60f37',
+        '#eb546b',
+        '#cf5b13',
+        '#e6ab22',
+        '#f5c86e',
+        '#118a19',
+        '#1fcf62',
+        '#6ff2c2',
+        '#0d40a6',
+        '#167cb8',
+        '#7bcde8',
+        '#2d0a8c',
+        '#6a18ad',
+        '#e37df5',
+        '#990e53',
+    ]
+
+    custom_cmap = ListedColormap(hex_colors, name='change_colormap')
+    return custom_cmap

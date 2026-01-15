@@ -19,7 +19,7 @@ from shapely.ops import transform
 
 log = logging.getLogger(__name__)
 
-PROJECT_DIR = Path(__file__).parent.parent
+PROJECT_DIR = Path(__file__).parent.parent.parent
 
 CLASSIFICATION_THRESHOLD = 0.75
 

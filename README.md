@@ -95,9 +95,9 @@ This file contains fixtures where the expected compute input is given (`expected
 
 #### Other tests
 
-The files [test_emissions.py](test/test_emissions.py) and [test_utils.py](test/test_utils.py) contain tests of the functions in the files [emissions.py](ghg_lulc/emissions.py) and [utils.py](ghg_lulc/utils.py).
+The files [test_emissions.py](test/test_emissions.py) and [test_utils.py](test/test_utils.py) contain tests of the functions in the files [emissions.py](ghg_lulc/components/emissions.py) and [utils.py](ghg_lulc/components/utils.py).
 
-### Operator in [operator_worker.py](ghg_lulc/operator_worker.py)
+### Operator in [operator_worker.py](ghg_lulc/core/operator_worker.py)
 
 This is the heart of the plugin where the emission estimation happens.
 The most important functions are the info function and the compute function.
@@ -110,9 +110,9 @@ The input parameters are defined here and some validation on them is done.
 
 ### Other Python files in [ghg_lulc](ghg_lulc)
 
-- The file [emissions.py](ghg_lulc/emissions.py) contains the functions of the emission calculator.
-- The file [utils.py](ghg_lulc/utils.py) contains mischellaneous functions.
-- The file [artifact.py](ghg_lulc/artifact.py) contains the functions that create the artifacts.
+- The file [emissions.py](ghg_lulc/components/emissions.py) contains the functions of the emission calculator.
+- The file [utils.py](ghg_lulc/components/utils.py) contains mischellaneous functions.
+- The file [artifact.py](ghg_lulc/components/raster_artifacts.py) contains the functions that create the artifacts.
 
 ## Releasing a new plugin version
 

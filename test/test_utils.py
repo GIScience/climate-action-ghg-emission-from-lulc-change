@@ -5,7 +5,7 @@ from numpy import ma
 from pydantic_extra_types.color import Color
 from shapely import Polygon
 
-from ghg_lulc.utils import GhgStockSource, calc_emission_factors, get_colors, get_ghg_stock, mask_raster
+from ghg_lulc.components.utils import GhgStockSource, calc_emission_factors, get_colors, get_ghg_stock, mask_raster
 
 
 def test_get_ghg_stock(lulc_utility_mock):

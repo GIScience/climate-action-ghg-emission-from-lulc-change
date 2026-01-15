@@ -9,7 +9,7 @@ from climatoology.base.computation import ComputationScope
 from climatoology.base.baseoperator import AoiProperties
 from climatoology.utility.lulc import LabelDescriptor, LabelResponse
 
-from ghg_lulc.input import ComputeInput
+from ghg_lulc.core.input import ComputeInput
 
 TEST_RESOURCES_DIR = Path(__file__).parent / 'resources'
 

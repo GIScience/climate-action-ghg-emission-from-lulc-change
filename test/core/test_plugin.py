@@ -4,7 +4,7 @@ import rasterio
 from climatoology.base.artifact import Artifact
 from climatoology.base.plugin_info import PluginInfo
 
-from ghg_lulc.operator_worker import GHGEmissionFromLULC
+from ghg_lulc.core.operator_worker import GHGEmissionFromLULC
 from test.conftest import TEST_RESOURCES_DIR
 
 

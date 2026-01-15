@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.3...main)
+- Refactor plugin and reorganize project structure ([#108](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/108))
 
 ### Changed
 - Add teaser to plugin and restore the previous purpose

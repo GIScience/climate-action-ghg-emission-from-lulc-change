@@ -14,7 +14,7 @@ from pydantic_extra_types.color import Color
 from rasterio.features import shapes
 from shapely.ops import transform
 
-from ghg_lulc.utils import (
+from ghg_lulc.components.utils import (
     SQM_TO_HA,
     pyplot_to_pydantic_color,
     EMISSION_PER_PIXEL_FACTOR,

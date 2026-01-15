@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, conint, model_validator
 
-from ghg_lulc.utils import GhgStockSource
+from ghg_lulc.components.utils import GhgStockSource
 
 
 class ComputeInput(BaseModel):

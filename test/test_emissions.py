@@ -15,8 +15,8 @@ from shapely import MultiPolygon
 from shapely.geometry import Polygon
 from shapely.ops import transform
 
-from ghg_lulc.emissions import EmissionCalculator
-from ghg_lulc.utils import GhgStockSource, calc_emission_factors, get_ghg_stock
+from ghg_lulc.components.emissions import EmissionCalculator
+from ghg_lulc.components.utils import GhgStockSource, calc_emission_factors, get_ghg_stock
 
 
 @pytest.fixture()

@@ -5,7 +5,7 @@ from climatoology.app.plugin import start_plugin
 from climatoology.utility.lulc import LulcUtility
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ghg_lulc.operator_worker import GHGEmissionFromLULC
+from ghg_lulc.core.operator_worker import GHGEmissionFromLULC
 
 log = logging.getLogger(__name__)
 

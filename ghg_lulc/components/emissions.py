@@ -16,10 +16,8 @@ from shapely.ops import transform
 
 from ghg_lulc.components.utils import (
     SQM_TO_HA,
-    pyplot_to_pydantic_color,
     EMISSION_PER_PIXEL_FACTOR,
     RASTER_NO_DATA_VALUE,
-    get_change_colormap,
 )
 
 log = logging.getLogger(__name__)
@@ -70,7 +68,11 @@ class EmissionCalculator:
         """
         changes = np.full_like(lulc_before.data, fill_value=unknown_change_value, dtype=np.uint8)
 
-        for row in self.emission_factors.itertuples():
+        emission_factors_only_change_rows = self.emission_factors[
+            self.emission_factors['raster_value_before'] != self.emission_factors['raster_value_after']
+        ]
+
+        for row in emission_factors_only_change_rows.itertuples():
             changes[(lulc_before.data == row.raster_value_before) & (lulc_after.data == row.raster_value_after)] = (
                 row.change_id
             )
@@ -79,16 +81,22 @@ class EmissionCalculator:
             no_change_value
         )
 
-        cmap = get_change_colormap()
-        changes_colormap = {}
-
         change_classes = np.unique(ma.compressed(changes))
         unknown_index = np.argwhere(change_classes == unknown_change_value)
         change_classes = np.delete(change_classes, unknown_index)
-        for change_class in change_classes:
-            pyplot_color = cmap(change_class / max(change_classes))
-            changes_colormap[change_class] = pyplot_to_pydantic_color(pyplot_color).as_rgb_tuple()
-        changes_colormap[no_change_value] = Color('gray').as_rgb_tuple()
+
+        change_id_color_map = emission_factors_only_change_rows.set_index('change_id')['change_color'].to_dict()
+
+        changes_colormap = {}
+
+        # using dictionary
+        for change_id in change_classes:
+            cid = int(change_id)
+            change_color = change_id_color_map.get(cid)
+            if change_color:
+                changes_colormap[cid] = Color(change_color).as_rgb_tuple()
+
+            changes_colormap[no_change_value] = Color('gray').as_rgb_tuple()
 
         return RasterInfo(
             data=changes,

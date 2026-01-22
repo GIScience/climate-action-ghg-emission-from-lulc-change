@@ -15,7 +15,7 @@ def test_get_ghg_stock(lulc_utility_mock):
 
 def test_calc_emission_factors(lulc_utility_mock):
     calculated_emission_factors = calc_emission_factors(get_ghg_stock(lulc_utility_mock.get_class_legend().osm))
-    assert calculated_emission_factors.get(GhgStockSource.HANSIS).size == 16 * 7
+    assert calculated_emission_factors.get(GhgStockSource.HANSIS).size == 16 * 8
     assert calculated_emission_factors.get(GhgStockSource.HANSIS).emission_factor.sum() == 0
     assert 'color' in calculated_emission_factors.get(GhgStockSource.HANSIS).columns
 

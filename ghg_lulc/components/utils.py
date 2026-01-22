@@ -11,7 +11,7 @@ from affine import Affine
 from climatoology.base.artifact import RasterInfo
 from climatoology.utility.lulc import LabelDescriptor, LulcUtility, LulcWorkUnit
 from matplotlib import pyplot as plt
-from matplotlib.colors import TwoSlopeNorm, to_hex, ListedColormap
+from matplotlib.colors import TwoSlopeNorm, to_hex
 from pydantic_extra_types.color import Color
 from rasterio.features import geometry_mask
 from shapely import Polygon
@@ -49,6 +49,25 @@ GERMANY_BBOX_4326 = Polygon(
         (5.87, 47.27),
     ]
 )
+
+CHANGE_COLORS = [
+    '#808080',  # Forest to Forest (gray)
+    '#1a5e09',  # Forest to Grass (dark green)
+    '#c9ac08',  # Forest to Farmland (dark yellow)
+    '#b33904',  # Forest to Built-Up (dark red)
+    '#056a99',  # Grass to Forest (semidark blue)
+    '#808080',  # Grass to Grass (gray)
+    '#c9bc10',  # Grass to Farmland (semidark yellow)
+    '#db5218',  # Grass to Built-Up (semidark red)
+    '#3da0e3',  # Farmland to Forest (semilight blue)
+    '#31c227',  # Farmland to Grass (semilight green)
+    '#808080',  # Farm to Farm (gray)
+    '#e85b35',  # Farm to Built-Up (semilight red)
+    '#aef5e6',  # Built-Up to Forest (light blue)
+    '#aef5bf',  # Built-Up to Grass (light green)
+    '#f5f4ae',  # Built-Up to Farm (light yellow)
+    '#808080',  # Built-Up to Built-Up (gray)
+]
 
 
 class GhgStockSource(Enum):
@@ -122,6 +141,7 @@ def calc_emission_factors(ghg_stock: Dict[GhgStockSource, pd.DataFrame]) -> Dict
         emission_factor['change_id'] = pd.RangeIndex(start=1, stop=len(emission_factor) + 1)
         emission_factor['emission_factor'] = emission_factor['ghg_stock_before'] - emission_factor['ghg_stock_after']
         emission_factor['color'] = get_colors(emission_factor['emission_factor'])
+        emission_factor['change_color'] = CHANGE_COLORS
         emission_factors[source] = emission_factor[
             [
                 'change_id',
@@ -131,6 +151,7 @@ def calc_emission_factors(ghg_stock: Dict[GhgStockSource, pd.DataFrame]) -> Dict
                 'raster_value_after',
                 'emission_factor',
                 'color',
+                'change_color',
             ]
         ]
     return emission_factors
@@ -221,27 +242,3 @@ def reproject_aoi(aoi: shapely.MultiPolygon, source_crs='EPSG:4326', target_crs=
 
     aoi_reprojected = transform(project, aoi)
     return aoi_reprojected
-
-
-def get_change_colormap() -> ListedColormap:
-    hex_colors = [
-        '#750641',
-        '#d60f37',
-        '#eb546b',
-        '#cf5b13',
-        '#e6ab22',
-        '#f5c86e',
-        '#118a19',
-        '#1fcf62',
-        '#6ff2c2',
-        '#0d40a6',
-        '#167cb8',
-        '#7bcde8',
-        '#2d0a8c',
-        '#6a18ad',
-        '#e37df5',
-        '#990e53',
-    ]
-
-    custom_cmap = ListedColormap(hex_colors, name='change_colormap')
-    return custom_cmap

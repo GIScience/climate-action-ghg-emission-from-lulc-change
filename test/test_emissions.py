@@ -73,15 +73,15 @@ def test_get_change_info(default_calculator):
     )
     expected_output_colormap = {
         0: (128, 128, 128),
-        2: (235, 84, 107),
-        3: (207, 91, 19),
-        4: (230, 171, 34),
-        7: (111, 242, 194),
-        8: (13, 64, 166),
-        9: (22, 124, 184),
-        12: (106, 24, 173),
-        13: (227, 125, 245),
-        14: (153, 14, 83),
+        2: (26, 94, 9),
+        3: (201, 172, 8),
+        4: (179, 57, 4),
+        7: (201, 188, 16),
+        8: (219, 82, 24),
+        9: (61, 160, 227),
+        12: (232, 91, 53),
+        13: (174, 245, 230),
+        14: (174, 245, 191),
     }
 
     changes = default_calculator.get_change_info(lulc_before, lulc_after)
@@ -110,7 +110,7 @@ def test_masked_change_info(default_calculator):
     )
     expected_output_colormap = {
         0: (128, 128, 128),
-        2: (153, 14, 83),
+        2: (26, 94, 9),
     }
 
     changes = default_calculator.get_change_info(lulc_before, lulc_after)
@@ -170,14 +170,23 @@ def test_convert_change_raster(default_calculator):
         'raster_value_before': [1, 2, 2],
         'utility_class_name_after': ['grass', 'forest', 'farmland'],
         'raster_value_after': [2, 1, 3],
+        'emission_factor': [91.5, -91.5, 53.5],
+        'color': ['#f4987a', '#8caffe', '#f6bea4'],
+        'change_color': ['#1a5e09', '#056a99', '#c9bc10'],
     }
     expected_df = pd.DataFrame(expected_df)
 
     emission_factor_df = default_calculator.convert_change_raster(changes)
 
+    # convert hex colors to string for comparison
+    for col in ['color', 'change_color']:
+        expected_df[col] = expected_df[col].astype(str)
+        emission_factor_df[col] = emission_factor_df[col].astype(str)
+
     assert emission_factor_df.crs == CRS.from_epsg(32631)
     pd.testing.assert_frame_equal(
-        pd.DataFrame(emission_factor_df.drop(['geometry', 'emission_factor', 'color'], axis=1)), expected_df
+        pd.DataFrame(emission_factor_df.drop(['geometry'], axis=1)),
+        expected_df,
     )
 
 
@@ -194,14 +203,23 @@ def test_convert_masked_change_raster(default_calculator):
         'raster_value_before': [2, 2],
         'utility_class_name_after': ['forest', 'farmland'],
         'raster_value_after': [1, 3],
+        'emission_factor': [-91.5, 53.5],
+        'color': ['#8caffe', '#f6bea4'],
+        'change_color': ['#056a99', '#c9bc10'],
     }
     expected_df = pd.DataFrame(expected_df)
 
     emission_factor_df = default_calculator.convert_change_raster(changes)
 
+    # convert hex colors to string for comparison
+    for col in ['color', 'change_color']:
+        expected_df[col] = expected_df[col].astype(str)
+        emission_factor_df[col] = emission_factor_df[col].astype(str)
+
     assert emission_factor_df.crs == CRS.from_epsg(32631)
     pd.testing.assert_frame_equal(
-        pd.DataFrame(emission_factor_df.drop(['geometry', 'emission_factor', 'color'], axis=1)), expected_df
+        pd.DataFrame(emission_factor_df.drop(['geometry'], axis=1)),
+        expected_df,
     )
 
 

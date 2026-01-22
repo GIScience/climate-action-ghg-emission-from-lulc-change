@@ -18,26 +18,14 @@ Create a new branch by running `git checkout -b <my_new_branch_name>`.
 After you have finished your implementation, you can create a merge request to the main branch that can be reviewed by the CA team.
 We highly encourage you to create smaller intermediate MRs for review!
 
-### Python Environment
+## Development setup
 
-We use [poetry](https://python-poetry.org/) as an environment management system.
-Make sure you have it installed.
-Apart from some base dependencies, there is only one fixed dependency for you, which is the [climatoology](https://gitlab.heigit.org/climate-action/climatoology) package that holds all the infrastructure functionality.
-Make sure you have read-access to the climatoology repository (i.e. you can clone it).
+To run your plugin locally requires the following setup:
 
-```shell
-DOCKER_BUILDKIT=1 docker build --secret id=CI_JOB_TOKEN . --tag repo.heigit.org/climate-action/ghg-emission-from-lulc-change:devel
-```
-
-To mimic the build behaviour of the CI you have to add `--build-arg CI_COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)`
-to the above command.
-
-
-Now run
-```
-poetry install --no-root
-```
-and you are ready to code within your poetry environment.
+1. Set up the [infrastructure](https://gitlab.heigit.org/climate-action/infrastructure) locally in `devel` mode
+2. Copy your [.env.base_template](.env.base_template) to `.env.base` and [.env_template](.env_template) to `.env` and
+   update them
+3. Run `poetry run python ghg_lulc/plugin.py`
 
 ### Testing
 
@@ -131,8 +119,6 @@ To release a new plugin version
 
 ## Docker
 
-To build docker images, you need to give the engine access to the climatoology repository.
-Create a file `CI_JOB_TOKEN` that contains your personal access token to the climatoology repository.
 
 ### Build
 
@@ -142,7 +128,7 @@ Images are automatically built and deployed in the [CI-pipeline](.gitlab-ci.yml)
 In case you want to manually build and run locally (e.g. to test a new feature in development), execute
 
 ```shell
-docker build --secret id=CI_JOB_TOKEN . --tag repo.heigit.org/climate-action/ghg-emission-from-lulc-change:devel
+docker build . --tag repo.heigit.org/climate-action/ghg-emission-from-lulc-change:devel
 ```
 
 Note that this will overwrite any existing image with the same tag (i.e. the one you previously pulled from the Climate
@@ -150,6 +136,19 @@ Action docker registry).
 
 To mimic the build behaviour of the CI you have to add `--build-arg CI_COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)`
 to the above command.
+
+#### Canary
+
+To build a canary version update your `climatoology` dependency declaration to point to the `main` branch and update
+your lock file (`poetry update climatoology`).
+Then run
+
+```shell
+docker build . \
+  --build-arg CI_COMMIT_SHORT_SHA=$(git rev-parse --short HEAD) \
+  --tag repo.heigit.org/climate-action/ghg-emission-from-lulc-change:canary \
+  --push
+```
 
 ### Run
 

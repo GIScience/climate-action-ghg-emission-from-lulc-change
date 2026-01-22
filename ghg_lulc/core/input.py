@@ -16,7 +16,7 @@ class ComputeInput(BaseModel):
         title='End',
         description=f'Last year of the period of analysis. Must be between 2018 and {datetime.now().year - 1}. '
         f'Satellite images from the month July of the selected year are used for LULC classification.',
-        examples=[2024],
+        examples=[datetime.now().year - 1],
     )
     carbon_stock_source: GhgStockSource = Field(
         title='Source of LULC carbon stock values',

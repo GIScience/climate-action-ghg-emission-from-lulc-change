@@ -89,7 +89,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             concerns={Concern.CLIMATE_ACTION__GHG_EMISSION},
             computation_shelf_life=timedelta(weeks=52),
             demo_input_parameters=ComputeInput(start_year=2017, end_year=2024),
-            demo_aoi=CustomAOI(name='Grünheide Demo', path=Path(PROJECT_DIR / 'resources/gruenheide.geojson')),
+            demo_aoi=CustomAOI(name='Grünheide', path=Path(PROJECT_DIR / 'resources/gruenheide.geojson')),
         )
 
     def compute(  # dead: disable

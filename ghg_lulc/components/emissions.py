@@ -116,7 +116,7 @@ class EmissionCalculator:
         :param unknown_emissions_value: a float value to indicate pixels with unknown emissions
         :return: a raster with pixel-wise emissions between first and second time stamp
         """
-        change_emissions = np.full_like(changes.data, fill_value=unknown_emissions_value, dtype=np.floating)
+        change_emissions = np.full_like(changes.data, fill_value=unknown_emissions_value, dtype=np.float64)
 
         emissions_colormap = {}
         for row in self.emission_factors.itertuples():

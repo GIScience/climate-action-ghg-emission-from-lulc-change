@@ -14,6 +14,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 - Assigning new artifact tags instead of the default version (primary/non-primary) ([#106](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/106))
 - Refactor plugin and reorganize project structure ([#108](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/108))
 - Default value for end_year is now always the year before the current year
+- Update LULC change artifact colors to make them more representative of the changes ([#87](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/87))
 
 ### Removed
 - all the shenanigans around accessing a private climatoology repository because that is now public

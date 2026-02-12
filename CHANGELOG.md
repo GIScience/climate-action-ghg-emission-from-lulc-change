@@ -5,11 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.3...main)
+## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.4...main)
+
+## [2.3.4](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.4) - 2026-02-12
 
 ### Changed
 - Add teaser to plugin and restore the previous purpose
-- Update the plugin to use the climatoology version 7.0.0
+- Update the plugin to use the climatoology version 7.0.3
 - Change the color map for the lulc change map ([#96](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/96))
 - Assigning new artifact tags instead of the default version (primary/non-primary) ([#106](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/106))
 - Refactor plugin and reorganize project structure ([#108](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/108))

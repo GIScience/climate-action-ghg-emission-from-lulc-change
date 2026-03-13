@@ -72,9 +72,10 @@ def create_change_artifacts(
     emission_factors: pd.DataFrame,
     resources: ComputationResources,
 ) -> Tuple[Artifact, Artifact]:
-    filled_change_data = change.data.filled(fill_value=RASTER_NO_DATA_VALUE)
-    filled_change = RasterInfo(
-        data=filled_change_data,
+    masked_change_data = np.ma.masked_equal(change.data, RASTER_NO_DATA_VALUE)
+    masked_change_data = masked_change_data.astype(np.uint8)
+    masked_change = RasterInfo(
+        data=masked_change_data,
         crs=change.crs,
         transformation=change.transformation,
         colormap=change.colormap,
@@ -93,13 +94,13 @@ def create_change_artifacts(
         tags={Topics.MAPS},
     )
     change_artifact = create_raster_artifact(
-        raster_info=filled_change,
+        raster_info=masked_change,
         resources=resources,
         legend=Legend(legend_data={lookup[change_id]: Color(color) for change_id, color in change.colormap.items()}),
         metadata=change_metadata,
     )
 
-    filled_change_emissions_data = change_emissions.data.filled(fill_value=RASTER_NO_DATA_VALUE)
+    masked_change_emissions_data = np.ma.masked_equal(change_emissions.data, RASTER_NO_DATA_VALUE)
     change_emission_description = (PROJECT_DIR / 'resources/artifact_descriptions/04_Localized_emissions.md').read_text(
         encoding='utf-8'
     )
@@ -119,7 +120,7 @@ def create_change_artifacts(
     )
 
     patched_change_emissions_data, patched_emissions_colormap = patch_change_data(
-        filled_change_emissions_data, change_emissions.colormap
+        masked_change_emissions_data, change_emissions.colormap
     )
 
     patched_change_emissions = RasterInfo(
@@ -158,12 +159,13 @@ def create_change_artifacts(
     return change_artifact, patched_localised_emission_artifact
 
 
-def patch_change_data(change_data: np.ndarray, orig_colormap: Dict[Number, Tuple[int, int, int]]):
+def patch_change_data(change_data: np.ma.MaskedArray, orig_colormap: Dict[Number, Tuple[int, int, int]]):
     patched_data = change_data.copy()
     patched_colormap = {}
-    for key, value in enumerate(np.unique(change_data)):
+    for key, value in enumerate(np.unique(change_data.compressed())):
         patched_data[change_data == value] = key
         patched_colormap[key] = orig_colormap.get(value, Color('black').as_rgb_tuple())
 
+    patched_data = np.ma.MaskedArray(patched_data, mask=change_data.mask)
     patched_data = patched_data.astype(np.uint8, copy=False)
     return patched_data, patched_colormap

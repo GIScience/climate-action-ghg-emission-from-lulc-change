@@ -314,8 +314,7 @@ def test_area_plot(default_calculator):
         Polygon([(10, 100), (10, 90), (0, 90), (0, 100), (10, 100)]),
     ]
     data = {
-        'emissions': [-1, 1],
-        'color': [Color('red'), Color('green')],
+        'emission_factor': [-1, 1],
         'utility_class_name_before': ['built-up', 'forest'],
         'utility_class_name_after': ['forest', 'built-up'],
     }
@@ -327,7 +326,6 @@ def test_area_plot(default_calculator):
 
     assert area_chart_data.x == ['built-up to forest', 'forest to built-up']
     assert area_chart_data.y == shares
-    assert area_chart_data.color[0] == Color('red')
 
 
 def test_emission_plot(default_calculator):

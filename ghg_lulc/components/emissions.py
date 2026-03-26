@@ -9,6 +9,8 @@ import shapely
 from climatoology.base.artifact import Chart2dData, ChartType, RasterInfo
 from climatoology.base.computation import ComputationResources
 from climatoology.base.exception import ClimatoologyUserError
+from matplotlib import pyplot as plt
+from matplotlib.colors import to_hex
 from numpy import ma
 from pydantic_extra_types.color import Color
 from rasterio.features import shapes
@@ -287,27 +289,62 @@ class EmissionCalculator:
         :param emissions_df: geodataframe with change area by LULC change type
         :return: Chart2dData object with change area by LULC change type
         """
-        emissions_df = emissions_df.sort_values(by='emissions')
+        emissions_df = emissions_df.sort_values(by='emission_factor').reset_index()
 
         areas = emissions_df.area * SQM_TO_HA
         labels = emissions_df.apply(
             lambda row: f'{row.utility_class_name_before} to {row.utility_class_name_after}', axis=1
         )
-        colors = emissions_df.color
 
-        area_chart_data = self.get_area_chart2ddata(areas, labels, colors)
+        area_chart_data = self.get_area_chart2ddata(areas, labels, emissions_df)
 
         return area_chart_data
 
-    def get_area_chart2ddata(self, sizes: pd.Series, labels: pd.Series, colors: pd.Series) -> Chart2dData:
+    def get_area_chart2ddata(
+        self,
+        sizes: pd.Series,
+        labels: pd.Series,
+        emissions_df: pd.DataFrame,
+    ) -> Chart2dData:
         """
         :param sizes: pd.Series with change areas by LULC change type
         :param labels: pd.Series with LULC change type labels
-        :param colors: pd.Series with plot color for each LULC change type
+        :param emissions_df: geodataframe with LULC change polygons and emissions [t] for each change type
         :return: Chart2dData object for pie chart showing change areas by LULC change type
         """
+        emission_values = emissions_df['emission_factor']
+        n_positives = (emission_values > 0).sum()
+        n_negatives = (emission_values < 0).sum()
+
+        cmap_pos = plt.get_cmap('Reds')
+        cmap_neg = plt.get_cmap('Blues_r')
+
+        pos_colors = [cmap_pos(i / max(n_positives, 1)) for i in range(n_positives)]
+        neg_colors = [cmap_neg(i / max(n_negatives, 1)) for i in range(n_negatives)]
+
+        colors = []
+        pos_counter = 0
+        neg_counter = 0
+
+        for e in emission_values:
+            if e > 0:
+                colors.append(pos_colors[pos_counter])
+                pos_counter += 1
+            elif e < 0:
+                colors.append(neg_colors[neg_counter])
+                neg_counter += 1
+            else:
+                colors.append('#808080')
+
+        colors = [to_hex(c) if not isinstance(c, str) else c for c in colors]
+        sort_emission = pd.DataFrame({'x': labels, 'y': sizes, 'colors': colors})
+        sort_emission = sort_emission.sort_values(by='y', ascending=False)
+
         area_chart_data = Chart2dData(
-            x=labels.to_list(), y=sizes.to_list(), color=colors.to_list(), chart_type=ChartType.PIE
+            x=sort_emission['x'].to_list(),
+            y=sort_emission['y'].to_list(),
+            color=sort_emission['colors'].to_list(),
+            chart_type=ChartType.PIE,
         )
         return area_chart_data
 

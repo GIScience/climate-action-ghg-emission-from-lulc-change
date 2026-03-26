@@ -9,6 +9,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 ### Changed
 - Making the raster background of the Localized Carbon Flows map transparent ([#115](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/115))
+- Defining the equidistant colors for the pie chart ([#107](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/work_items/107))
 
 ## [2.3.4](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.4) - 2026-02-12
 

@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.4...main)
+## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.5...main)
+
+## [2.3.5](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.5) - 2026-04-07
 
 ### Changed
+
+- Defining equidistant colors for the pie chart to make them better distinguishable ([#107](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/work_items/107))
+
+### Fixed
+
 - Making the raster background of the Localized Carbon Flows map transparent ([#115](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/issues/115))
-- Defining the equidistant colors for the pie chart ([#107](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/work_items/107))
 
 ## [2.3.4](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.4) - 2026-02-12
 

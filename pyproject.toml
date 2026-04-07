@@ -1,6 +1,6 @@
 [project]
 name = "ghg_lulc"
-version = "2.3.4"
+version = "2.3.5"
 description = "This plugin computes carbon flows from land use and land cover changes between two timestamps."
 authors = [
     { name = "Veit Ulrich", email = "veit.ulrich@heigit.org"},

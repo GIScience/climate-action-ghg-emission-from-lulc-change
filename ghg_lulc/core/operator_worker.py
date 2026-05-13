@@ -122,42 +122,63 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
                 f'The selected area is too large: {aoi_utm32n_area_km2} km². Currently, the maximum allowed area is 1000 km². Please select a smaller area or a sub-region of your selected area'
             )
 
-        emission_calculator = EmissionCalculator(
-            emission_factors=self.emission_factors[params.carbon_stock_source], resources=resources
+        lulc_before, lulc_after = self.get_classifications(aoi, params)
+        artifacts = create_classification_artifacts(
+            lulc_before=lulc_before,
+            lulc_after=lulc_after,
+            labels=self.lulc_utility.get_class_legend().osm,
+            resources=resources,
         )
+        artifacts = list(artifacts)
 
-        change_df, change_artifacts = self.get_changes(emission_calculator, aoi, params, resources)
+        with self.catch_exceptions(indicator_name='LULC change results', resources=resources):
+            emission_calculator = EmissionCalculator(
+                emission_factors=self.emission_factors[params.carbon_stock_source], resources=resources
+            )
 
-        emissions_df = emission_calculator.calculate_absolute_emissions_per_poly(change_df)
+            change_df, change_artifacts = self.get_changes(
+                lulc_before=lulc_before,
+                lulc_after=lulc_after,
+                emission_calculator=emission_calculator,
+                params=params,
+                resources=resources,
+            )
+            artifacts.extend(list(change_artifacts))
 
-        table_artifacts = create_table_artifacts(
-            emission_calculator,
-            emissions_df,
-            self.ghg_stock[params.carbon_stock_source],
-            aoi,
-            params,
-            resources,
-        )
+            emissions_df = emission_calculator.calculate_absolute_emissions_per_poly(change_df)
 
-        chart_artifacts = create_chart_artifacts(
-            emissions_df,
-            emission_calculator,
-            resources,
-        )
+            table_artifacts = create_table_artifacts(
+                emission_calculator,
+                emissions_df,
+                self.ghg_stock[params.carbon_stock_source],
+                aoi,
+                params,
+                resources,
+            )
+            artifacts.extend(table_artifacts)
 
-        return change_artifacts + table_artifacts + chart_artifacts
+            chart_artifacts = create_chart_artifacts(
+                emissions_df,
+                emission_calculator,
+                resources,
+            )
+            artifacts.extend(chart_artifacts)
+
+        return artifacts
 
     def get_changes(
         self,
+        lulc_before: RasterInfo,
+        lulc_after: RasterInfo,
         emission_calculator: EmissionCalculator,
-        aoi: shapely.MultiPolygon,
         params: ComputeInput,
         resources: ComputationResources,
-    ) -> Tuple[gpd.GeoDataFrame, List[Artifact]]:
+    ) -> Tuple[gpd.GeoDataFrame, Tuple[Artifact, Artifact]]:
         """
         Get LULC classifications and LULC changes.
 
-        :param aoi: Area of interest
+        :param lulc_before: LULC classification at first timestamp
+        :param lulc_after: LULC classification at second timestamp
         :param emission_calculator: Class containing the emission estimation methods
         :param params: Operator input
         :param resources: Ephemeral computation resources
@@ -165,14 +186,6 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         :return: LULC classification artifacts at first and second timestamp
         :return: Artifacts containing a raster with LULC changes and a raster with pixel-wise emissions
         """
-        lulc_before, lulc_after = self.get_classifications(aoi, params)
-
-        classification_artifacts = create_classification_artifacts(
-            lulc_before,
-            lulc_after,
-            self.lulc_utility.get_class_legend().osm,
-            resources,
-        )
 
         change_raster, change_emissions_raster = emission_calculator.derive_lulc_changes(lulc_before, lulc_after)
         change_artifacts = create_change_artifacts(
@@ -185,7 +198,7 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
 
         change_df = emission_calculator.convert_change_raster(change_raster)
 
-        return change_df, [*classification_artifacts, *change_artifacts]
+        return change_df, change_artifacts
 
     def get_classifications(self, aoi: shapely.MultiPolygon, params: ComputeInput) -> Tuple[RasterInfo, RasterInfo]:
         """

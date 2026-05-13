@@ -1,5 +1,3 @@
-from climatoology.base.exception import ClimatoologyUserError
-import pytest
 import rasterio
 from climatoology.base.artifact import Artifact
 from climatoology.base.plugin_info import PluginInfo
@@ -40,10 +38,19 @@ def test_no_change_case(
     ]
     operator = GHGEmissionFromLULC(lulc_utility_mock)
 
-    with pytest.raises(
-        ClimatoologyUserError, match='No land use/land cover changes were detected between the two selected dates'
-    ):
-        _ = operator.compute(compute_resources, default_aoi, default_aoi_properties, expected_compute_input)
+    artifacts = operator.compute(
+        resources=compute_resources,
+        aoi=default_aoi,
+        aoi_properties=default_aoi_properties,
+        params=expected_compute_input,
+    )
+
+    assert compute_resources.artifact_errors == {
+        'LULC change results': 'No land use/land cover changes were detected between the two selected dates'
+    }
+    assert len(artifacts) == 2
+    for artifact in artifacts:
+        assert isinstance(artifact, Artifact)
 
 
 def test_plugin_compute_result(

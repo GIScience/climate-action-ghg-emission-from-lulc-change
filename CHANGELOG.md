@@ -10,6 +10,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 ### Changed
 
 - Serve LULC classifications when no LULC change is detected ([#116](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/work_items/116))
+- State how plugin relates to climate action in purpose.md ([#117](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/work_items/117))
 
 ## [2.3.5](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.5) - 2026-04-07
 

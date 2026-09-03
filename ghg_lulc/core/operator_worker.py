@@ -5,6 +5,7 @@ from typing import List, Tuple
 
 import geopandas as gpd
 import shapely
+from climatoology.base.aoi import CoveredByGeomConstraint, AreaConstraint
 from climatoology.base.artifact import RasterInfo
 from climatoology.base.baseoperator import BaseOperator, Artifact, AoiProperties
 from climatoology.base.computation import ComputationResources
@@ -17,8 +18,9 @@ from climatoology.base.plugin_info import (
     CustomAOI,
 )
 from climatoology.utility.lulc import LulcUtility, LulcWorkUnit, FusionMode
-from climatoology.base.exception import ClimatoologyUserError
-from pydantic import HttpUrl
+from pydantic import HttpUrl, BaseModel
+from pydantic_extra_types.language_code import LanguageAlpha2
+from shapely.geometry import mapping
 
 from ghg_lulc.components.raster_artifacts import (
     create_change_artifacts,
@@ -32,8 +34,6 @@ from ghg_lulc.components.utils import (
     calc_emission_factors,
     fetch_lulc,
     get_ghg_stock,
-    reproject_aoi,
-    GERMANY_BBOX_4326,
     CLASSIFICATION_THRESHOLD,
 )
 
@@ -51,6 +51,17 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         """
         :return: Info object with information about the plugin.
         """
+        germany = gpd.read_file('resources/germany_buffered_boundaries.geojson').buffer(2500).to_crs(4326)
+        aoi_constraints = [
+            [
+                AreaConstraint(max_area=1000),
+                CoveredByGeomConstraint(
+                    description='Germany',
+                    geom=mapping(germany.union_all()),
+                ),
+            ]
+        ]
+
         return generate_plugin_info(
             name='LULC Change',
             icon=PROJECT_DIR / 'resources/icon.jpeg',
@@ -90,14 +101,18 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
             computation_shelf_life=timedelta(weeks=52),
             demo_input_parameters=ComputeInput(start_year=2017, end_year=2024),
             demo_aoi=CustomAOI(name='Grünheide', path=Path(PROJECT_DIR / 'resources/gruenheide.geojson')),
+            aoi_constraints=aoi_constraints,
         )
 
     def compute(  # dead: disable
         self,
+        *,
         resources: ComputationResources,
         aoi: shapely.MultiPolygon,
         aoi_properties: AoiProperties,
-        params: ComputeInput,
+        params: ComputeInput | BaseModel,
+        language: LanguageAlpha2,
+        **kwargs,
     ) -> List[Artifact]:
         """
         Main method of the operator.
@@ -106,21 +121,9 @@ class GHGEmissionFromLULC(BaseOperator[ComputeInput]):
         :param aoi: Area of interest
         :param resources: Ephemeral computation resources
         :param params: Operator input
+        :param language: Language code for translation
         :return: List of produced artifacts
         """
-
-        trained_region_bbox = GERMANY_BBOX_4326
-
-        if not aoi.intersects(trained_region_bbox):
-            raise ClimatoologyUserError('The selected area is outside of Germany. Please select an area within Germany')
-
-        aoi_utm32n = reproject_aoi(aoi)
-        aoi_utm32n_area_km2 = round(aoi_utm32n.area / 1000000, 2)
-
-        if aoi_utm32n_area_km2 > 1000:
-            raise ClimatoologyUserError(
-                f'The selected area is too large: {aoi_utm32n_area_km2} km². Currently, the maximum allowed area is 1000 km². Please select a smaller area or a sub-region of your selected area'
-            )
 
         lulc_before, lulc_after = self.get_classifications(aoi, params)
         artifacts = create_classification_artifacts(

@@ -1,5 +1,6 @@
 import rasterio
 from climatoology.base.artifact import Artifact
+from climatoology.base.i18n import DEFAULT_LANGUAGE
 from climatoology.base.plugin_info import PluginInfo
 
 from ghg_lulc.core.operator_worker import GHGEmissionFromLULC
@@ -22,6 +23,7 @@ def test_plugin_compute_request(
         aoi=default_aoi,
         aoi_properties=default_aoi_properties,
         params=expected_compute_input,
+        language=DEFAULT_LANGUAGE,
     )
 
     assert len(computed_artifacts) == 10
@@ -43,6 +45,7 @@ def test_no_change_case(
         aoi=default_aoi,
         aoi_properties=default_aoi_properties,
         params=expected_compute_input,
+        language=DEFAULT_LANGUAGE,
     )
 
     assert compute_resources.artifact_errors == {
@@ -63,6 +66,7 @@ def test_plugin_compute_result(
         aoi=default_aoi,
         aoi_properties=default_aoi_properties,
         params=expected_compute_input,
+        language=DEFAULT_LANGUAGE,
     )
 
     assert len(artifacts) == 10

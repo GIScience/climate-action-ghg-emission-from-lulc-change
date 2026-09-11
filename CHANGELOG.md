@@ -7,6 +7,10 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 ## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.7...main)
 
+### Changed
+
+- Update climatoology to 7.4.1
+
 ## [2.3.7](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.7) - 2026-09-10
 
 ### Added

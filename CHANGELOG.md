@@ -7,6 +7,10 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 ## [Unreleased](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/compare/2.3.7...main)
 
+### Added
+
+- Data source for LULC classification to methodology.md ([#118](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/work_items/118))
+
 ### Changed
 
 - Update climatoology to 7.4.1

@@ -11,6 +11,10 @@ Computations are possible for time periods from 2017 onwards.
 To obtain the LULC classifications, images from July of the respective year are used.
 If the selected analysis period is e.g. 2017 to 2024, LULC changes from July 2017 until July 2024 will be computed.
 
+LULC at the beginning and end of the period is classified using a semantic segmentation model called [SegFormer](https://arxiv.org/abs/2105.15203).
+It has the ability to delineate homogenous regions precisely.
+The model is trained on OpenStreetMap LULC polygons and uses images from [Sentinel 1 and Sentinel 2](https://www.esa.int/Applications/Observing_the_Earth/Copernicus/The_Sentinel_missions), as well as a digital elevation model to classify LULC.
+
 The LULC classification has inherent uncertainties.
 For example, it is influenced by clouds, which may obstruct the area or parts of it in a single image.
 Aside from cloud cover, the LULC classification is subject to multiple inaccuracies which can potentially create random change pixels for unchanged regions, such as the salt-and-pepper effect, atmospheric influences, and mixed pixels.

@@ -1,7 +1,7 @@
 The model’s confidence for all areas that have been assigned a LULC class lies above the classification confidence threshold of 75 %.
 All areas where the model’s confidence lies below the threshold have been classified as “unknown”.
 
-LULC is classified by a deep learning model using Sentinel-2 satellite images.
+LULC is classified by a semantic segmentation model called [SegFormer](https://arxiv.org/abs/2105.15203) using OpenStreetMap LULC polygons, images from [Sentinel 1 and Sentinel 2](https://www.esa.int/Applications/Observing_the_Earth/Copernicus/The_Sentinel_missions), as well as a digital elevation model.
 Since clouds may obstruct the area or parts of it in a single image, the model uses images from the entire month of July in the selected year.
 Aside from cloud cover, the LULC classification is subject to multiple inaccuracies which can lead to misidentified change in unchanged regions, such as the salt-and-pepper effect[^1], atmospheric influences[^2], mixed pixels[^3], etc.
 

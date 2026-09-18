@@ -26,10 +26,14 @@ def init_plugin(settings: Settings) -> int:
     return start_plugin(operator=operator)
 
 
-if __name__ == '__main__':
+def main():
     settings = Settings()
 
     matplotlib.use(settings.mplbackend)
 
     exit_code = init_plugin(settings)
     log.info(f'Plugin exited with code {exit_code}')
+
+
+if __name__ == '__main__':
+    main()

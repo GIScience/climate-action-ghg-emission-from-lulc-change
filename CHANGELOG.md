@@ -14,6 +14,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 ### Changed
 
 - Update climatoology to 7.4.1
+- reduced size of docker image by using python-slim, multi-stage build, and including only the required files
 
 ## [2.3.7](https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change/-/releases/2.3.7) - 2026-09-10
 

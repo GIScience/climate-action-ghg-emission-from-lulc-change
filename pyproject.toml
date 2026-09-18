@@ -26,6 +26,9 @@ dependencies = [
 [project.urls]
 repository = "https://gitlab.heigit.org/climate-action/plugins/ghg-emission-from-lulc-change"
 
+[project.scripts]
+plugin = "ghg_lulc.plugin:main"
+
 [tool.poetry.group.test.dependencies]
 pytest = "^9.0.0"
 pytest-cov = "^7.0.0"

@@ -173,4 +173,4 @@ docker image push repo.heigit.org/climate-action/ghg-emission-from-lulc-change:d
 Contributions are welcome. Feel free to create a merge request and contact
 the [CA team](mailto:climate-action@heigit.org).
 
-You can find more information about the methodology of the plugin in the [documentation](resources/docs/documentation.md).
+You can find more information about the methodology of the plugin in the [documentation](docs/documentation.md).

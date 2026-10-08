@@ -133,7 +133,7 @@ def create_change_artifacts(
     patched_localised_emission_metadata = ArtifactMetadata(
         name='Localised carbon flows (tonnes per 100m²)',
         filename='LULC_change_emissions_patched',
-        summary='Carbon flows per pixel due to LULC change. Note: Transparent pixels within the area of interest '
+        summary='Carbon flows per pixel due to LULC change. Note: Black pixels within the area of interest '
         'represent areas where carbon flows from LULC change could not be estimated, either because the pixels could '
         'not be classified with sufficient confidence or they were classified as "permanent crops" or "water", for '
         'which no carbon stock values are available.',

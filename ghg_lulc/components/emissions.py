@@ -344,7 +344,7 @@ class EmissionCalculator:
             x=sort_emission['x'].to_list(),
             y=sort_emission['y'].to_list(),
             color=sort_emission['colors'].to_list(),
-            chart_type=ChartType.PIE,
+            chart_type=ChartType.BAR,
         )
         return area_chart_data
 

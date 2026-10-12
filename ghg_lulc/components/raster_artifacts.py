@@ -23,7 +23,6 @@ def create_classification_artifacts(
     labels: Dict[str, LabelDescriptor],
     resources: ComputationResources,
 ) -> Tuple[Artifact, Artifact]:
-    # Hack due to https://gitlab.gistools.geog.uni-heidelberg.de/climate-action/web-app/-/issues/114
     unknown_color = Color('gray')
     lulc_before.colormap[0] = unknown_color.as_rgb_tuple()
     lulc_after.colormap[0] = unknown_color.as_rgb_tuple()

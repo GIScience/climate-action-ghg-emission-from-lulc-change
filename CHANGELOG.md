@@ -13,7 +13,7 @@ and this project mostly adheres to [Semantic Versioning](https://semver.org/spec
 
 ### Changed
 
-- Update climatoology to 7.4.1
+- Update climatoology to 7.4.3
 - reduced size of docker image by using python-slim, multi-stage build, and including only the required files
 - Changed change area chart from pie chart to bar chart, so that it actually shows the areas, not percentages
 - Update CI and dockerfile to simplify and correct poetry installing location
